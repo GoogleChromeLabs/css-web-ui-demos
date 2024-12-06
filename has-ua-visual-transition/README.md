@@ -1,10 +1,11 @@
 # hasUAVisualTransition
 
-Testpage to see if `PopStateEvent#hasUAVisualTransition` is set or not.
+Testpages for `PopStateEvent#hasUAVisualTransition` and `NavigateEvent#hasUAVisualTransition`
 
 ## Instructions
 
 - Launch the project
+- Choose the flavor you want to test
 - Click the link a few times
 - Navigate back, using the UA back button or using a swipe gesture.
 - Check the reported value for `hasUAVisualTransition`
