@@ -1,0 +1,162 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Product Gallery</h2>
+      <div class="tags">
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        Classic product image gallery. Markers are mirrored images of the
+        products without duplicating elements.
+      </p>
+    </header>
+
+    <div class="carousel scroll-markers">
+      <picture style="--img: url(/carousel/fold-1.png)">
+        <img
+          src="/carousel/fold-1.png"
+          alt=""
+          width="1243"
+          height="1554"
+          loading="lazy"
+        />
+      </picture>
+      <picture style="--img: url(/carousel/fold-2.png)">
+        <img
+          src="/carousel/fold-2.png"
+          alt=""
+          width="1243"
+          height="1554"
+          loading="lazy"
+        />
+      </picture>
+      <picture style="--img: url(/carousel/fold-3.png)">
+        <img
+          src="/carousel/fold-3.png"
+          alt=""
+          width="1243"
+          height="1554"
+          loading="lazy"
+        />
+      </picture>
+      <picture style="--img: url(/carousel/fold-4.png)">
+        <img
+          src="/carousel/fold-4.png"
+          alt=""
+          width="1243"
+          height="1554"
+          loading="lazy"
+        />
+      </picture>
+      <picture style="--img: url(/carousel/fold-5.png)">
+        <img
+          src="/carousel/fold-5.png"
+          alt=""
+          width="1243"
+          height="1554"
+          loading="lazy"
+        />
+      </picture>
+    </div>
+  </section>
+
+  <style>
+    .carousel {
+      overflow-y: hidden;
+
+      display: grid;
+      grid-auto-columns: 100%;
+      grid-auto-flow: column;
+      gap: var(--size-5);
+      border-radius: var(--radius-4);
+
+      container-type: size scroll-state;
+      aspect-ratio: 146/117;
+      max-inline-size: var(--size-content-3);
+
+      @media (width > 640px) {
+        margin-inline-start: calc(var(--size-9) + var(--size-3));
+      }
+
+      & > picture {
+        border-radius: var(--radius-4);
+        background: var(--surface-2);
+
+        > img {
+          transition: opacity 0.3s;
+        }
+
+        @container not scroll-state(snapped: inline) {
+          > img {
+            opacity: 0.25;
+          }
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--link);
+          outline-offset: -2px;
+        }
+
+        &::scroll-marker {
+          content: "";
+          background-color: var(--surface-2);
+          background-image: var(--img);
+          background-size: contain;
+          background-position: center;
+          background-repeat: no-repeat;
+          border: 1px solid var(--surface-3);
+          transition:
+            transform 0.3s var(--ease-spring-2),
+            outline-offset 0.25s var(--ease-3),
+            border-color 0.3s var(--ease-3);
+        }
+
+        &::scroll-marker:target-current {
+          border-color: var(--link);
+          background-color: var(--surface-2);
+        }
+      }
+
+      &::scroll-marker-group {
+        inline-size: 12cqb;
+        block-size: 100cqb;
+        right: calc(anchor(left) + var(--size-3));
+        top: anchor(top);
+        grid-auto-flow: row;
+        grid-auto-columns: 12cqb;
+        margin-block: auto;
+        align-content: center;
+
+        mask: none; /* todo: remove this once scroll-state() used for group overflow */
+
+        @media (width <= 640px) {
+          margin-block: 0;
+          margin-inline: auto;
+
+          top: calc(anchor(bottom) + var(--size-3));
+          left: anchor(left);
+          right: anchor(right);
+
+          inline-size: 100cqi;
+          block-size: 12cqi;
+          grid-auto-columns: 12cqi;
+          grid-auto-flow: column;
+        }
+      }
+    }
+
+    section {
+      padding-inline: 5vmin;
+
+      & > header {
+        padding-inline: 0;
+      }
+    }
+  </style>
+</Layout>

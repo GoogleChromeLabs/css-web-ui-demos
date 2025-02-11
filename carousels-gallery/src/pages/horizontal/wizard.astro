@@ -1,0 +1,155 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Wizard</h2>
+      <div class="tags">
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>interactivity: inert</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        Keep track of user's along a guided process with scroll markers. The
+        scroll-state() queries inert any form the user isn't currently on.
+      </p>
+    </header>
+
+    <ul class="carousel scroll-markers">
+      <li id="step-1">
+        <form>
+          <header>
+            <h2>Onboarding Guide</h2>
+            <p>Let's get started with your name</p>
+          </header>
+
+          <input required type="text" placeholder="Name" />
+          <a class="btn" href="#step-2">Next Step</a>
+        </form>
+      </li>
+      <li id="step-2">
+        <form>
+          <header>
+            <h2>Onboarding Guide</h2>
+            <p>What is your email address?</p>
+          </header>
+
+          <input required type="email" placeholder="Email" />
+          <a class="btn" href="#step-3">Next Step</a>
+        </form>
+      </li>
+      <li id="step-3">
+        <form>
+          <header>
+            <h2>Almost Done!</h2>
+            <p>Review our <a href="#">terms and conditions</a></p>
+          </header>
+
+          <label>
+            <input type="checkbox" />
+            I agree to the terms and conditions
+          </label>
+          <button type="submit">Finish</button>
+        </form>
+      </li>
+    </ul>
+  </section>
+
+  <style>
+    ul {
+      /* Reset list styles */
+      list-style-type: none;
+      counter-reset: item;
+      margin-block-end: var(--size-7);
+      padding-inline: 0;
+
+      inline-size: min(var(--size-content-3), 100cqi);
+
+      display: grid;
+      grid-auto-flow: column;
+      justify-items: center;
+      grid-auto-columns: 100%;
+
+      scroll-marker-group: before;
+
+      &::scroll-marker-group {
+        top: auto;
+        bottom: anchor(top);
+
+        justify-content: space-around;
+        block-size: 3.5ch;
+        grid-auto-columns: 3ch;
+        gap: 1ch;
+        mask: none;
+        background: linear-gradient(
+          to bottom,
+          #0000 calc(50% - 1px),
+          var(--surface-4) 50%,
+          #0000 calc(50% + 1px) 100%
+        );
+      }
+
+      & > li {
+        scroll-snap-align: center;
+        padding: 0;
+        counter-increment: carousel-item;
+
+        &::scroll-marker {
+          display: flex;
+          place-content: center;
+          place-items: center;
+          background: var(--surface-1);
+          content: counter(carousel-item);
+          font-size: var(--font-size-0);
+        }
+
+        &:has(+ li::scroll-marker:target-current) {
+          border-color: var(--link);
+        }
+
+        &::scroll-marker:target-current {
+          background: var(--link);
+          color: var(--surface-1);
+        }
+      }
+    }
+
+    form {
+      display: grid;
+      gap: var(--size-4);
+      background: var(--surface-2);
+      padding: 5vmin;
+      border-radius: var(--radius-3);
+
+      transition: opacity 0.5s ease;
+
+      @container not scroll-state(snapped: inline) {
+        opacity: 0.25;
+        interactivity: inert;
+      }
+
+      header {
+        text-align: center;
+        margin-block-end: var(--size-5);
+      }
+
+      > label {
+        display: flex;
+        place-items: center;
+        gap: 1ch;
+        margin-inline: auto;
+      }
+    }
+
+    a.btn:hover {
+      text-decoration: none;
+    }
+
+    section {
+      place-items: center;
+    }
+  </style>
+</Layout>

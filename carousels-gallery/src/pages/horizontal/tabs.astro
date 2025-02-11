@@ -1,0 +1,198 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Tabs</h2>
+      <div class="tags">
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>interactivity: inert</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        Yep, these tab buttons on top are "just scroll markers" with contextual
+        text inside.
+      </p>
+      <p>
+        See also <a href="/carousel/horizontal/scrollspy/">Scrollspy</a>
+        and <a href="/carousel/horizontal/series/">TV Series</a>.
+      </p>
+    </header>
+
+    <div class="carousel tabs">
+      <div id="main" title="Main Section" class="container-wrap">
+        <section>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+        </section>
+      </div>
+
+      <div id="details" title="Details Section" class="container-wrap">
+        <section>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+        </section>
+      </div>
+
+      <div id="followup" title="Follow Up Section" class="container-wrap">
+        <section>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem id
+            cupiditate distinctio hic eum blanditiis in, temporibus itaque
+            dolore, unde explicabo! Voluptates veniam perferendis debitis
+            recusandae quod vero porro quidem!
+          </p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .tabs {
+      overflow-y: hidden;
+      scroll-marker-group: before;
+
+      inline-size: 50ch;
+      block-size: 10lh;
+      max-inline-size: 100cqi;
+      margin-block-start: 3lh; /* size of marker group */
+
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 100%;
+      gap: var(--size-5);
+
+      border: 1px solid var(--surface-2);
+      border-top-right-radius: var(--radius-2);
+
+      /* TODO: needs to inert the off screen articles */
+      /* > * {
+        @container not scroll-state(snapped) {
+          interactivity: inert;
+        }
+      } */
+
+      &::scroll-marker-group {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        inline-size: 100%;
+        max-inline-size: 100cqi;
+        block-size: 2lh;
+
+        position: absolute;
+        position-anchor: --carousel;
+        bottom: anchor(top);
+        left: anchor(left);
+        right: anchor(right);
+
+        display: flex;
+        column-gap: var(--size-1);
+        align-items: end;
+        justify-content: start;
+      }
+
+      > .container-wrap {
+        scroll-snap-align: start;
+        container-type: scroll-state;
+        overflow-y: auto;
+
+        > section {
+          display: grid;
+          gap: var(--size-3);
+          padding: var(--size-3);
+          transition: opacity 0.3s var(--ease-3);
+          background: light-dark(white, var(--surface-1));
+
+          @container not scroll-state(snapped) {
+            visibility: inert;
+            interactivity: inert;
+            overflow: hidden;
+            opacity: 0.5;
+          }
+        }
+
+        &::scroll-marker {
+          content: attr(title);
+          white-space: nowrap;
+          background: light-dark(white, var(--surface-2));
+          border: 1px solid var(--surface-2);
+          border-bottom: none;
+          padding-inline: var(--size-4);
+          padding-block: var(--size-2);
+          border-top-left-radius: var(--radius-2);
+          border-top-right-radius: var(--radius-2);
+        }
+
+        &::scroll-marker:not(:target-current, :focus-visible) {
+          color: var(--text-2);
+        }
+
+        &::scroll-marker:target-current {
+          color: var(--text-1);
+          border-bottom: 2px solid var(--link);
+        }
+
+        &::scroll-marker:focus-visible {
+          outline-offset: 2px;
+          outline: 2px solid var(--link);
+        }
+      }
+    }
+
+    :global(main) > section {
+      display: grid;
+      place-content: center;
+      place-items: center;
+      gap: 5vmin;
+      padding-block: 5vmin;
+    }
+  </style>
+</Layout>

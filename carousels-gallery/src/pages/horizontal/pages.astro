@@ -1,0 +1,123 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Automatic Pages</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Dynamic Columns</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        Pages are automatically generated based on the number of items that can
+        fit into a <code>::column</code>. Try resizing it to see the column
+        layout adjust the items per page.
+      </p>
+    </header>
+
+    <ul class="carousel scroll-markers scroll-buttons">
+      <li tabindex="0"><p>1</p></li>
+      <li tabindex="0"><p>2</p></li>
+      <li tabindex="0"><p>3</p></li>
+      <li tabindex="0"><p>4</p></li>
+      <li tabindex="0"><p>5</p></li>
+      <li tabindex="0"><p>6</p></li>
+      <li tabindex="0"><p>7</p></li>
+      <li tabindex="0"><p>8</p></li>
+      <li tabindex="0"><p>9</p></li>
+      <li tabindex="0"><p>10</p></li>
+      <li tabindex="0"><p>11</p></li>
+      <li tabindex="0"><p>12</p></li>
+      <li tabindex="0"><p>13</p></li>
+      <li tabindex="0"><p>14</p></li>
+      <li tabindex="0"><p>15</p></li>
+      <li tabindex="0"><p>16</p></li>
+    </ul>
+  </section>
+
+  <style>
+    .carousel::column::scroll-marker {
+      content: " ";
+      aspect-ratio: 1;
+      border-radius: var(--radius-round);
+    }
+
+    .carousel::column::scroll-marker {
+      border: 1px solid var(--surface-4);
+    }
+
+    .carousel::column::scroll-marker:target-current {
+      background: var(--link);
+      border-color: var(--link);
+    }
+
+    .carousel::column::scroll-marker:focus-visible {
+      outline-offset: 2px;
+      outline: 2px solid var(--link);
+    }
+
+    .carousel {
+      columns: 1;
+      text-align: center;
+      resize: both;
+      margin-inline: auto;
+
+      /* Reset list styles */
+      list-style-type: none;
+      counter-reset: item;
+
+      /* Styles and layout */
+      container-type: size scroll-state;
+      inline-size: 1024px;
+      max-inline-size: 100cqi;
+      block-size: var(--size-content-1);
+
+      &::column {
+        scroll-snap-align: center;
+      }
+
+      & > li {
+        scroll-snap-align: none;
+        background: light-dark(white, var(--surface-2));
+        padding: 0;
+
+        display: inline-flex;
+        place-items: center;
+        place-content: center;
+
+        block-size: 100cqb;
+        aspect-ratio: var(--ratio-portrait);
+
+        border: 1px solid var(--surface-3);
+        box-shadow: var(--shadow-2);
+        border-radius: var(--radius-2);
+
+        &::scroll-marker {
+          content: unset;
+        }
+
+        > p {
+          font-family: var(--font-antique);
+          font-size: var(--font-size-5);
+        }
+
+        @container scroll-state(snapped: inline) {
+          > p {
+            color: var(--link);
+            font-size: var(--font-size-7);
+          }
+        }
+
+        &:focus {
+          outline: 2px solid var(--link);
+          outline-offset: -2px;
+        }
+      }
+    }
+  </style>
+</Layout>

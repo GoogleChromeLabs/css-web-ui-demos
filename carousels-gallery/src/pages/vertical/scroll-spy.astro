@@ -1,0 +1,237 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Scroll Spy</h2>
+      <div class="tags">
+        <span>Scroll Markers</span>
+        <span>Grid</span>
+      </div>
+      <p>
+        This scroll spy component uses scroll markers as in-page links to a
+        section of content. Scroll markers are aware and stateful to the section
+        they were generated with, and we use this to highlight the titles.
+      </p>
+      <p>
+        Check the mobile layout, it looks a lot like <a
+          href="/carousel/horizontal/tabs/">tabs</a
+        >. It's also very much a vertical variant on the <a
+          href="/carousel/horizontal/series/">TV Series</a
+        > demo, but it doesn't start you at your current episode.
+      </p>
+    </header>
+
+    <div class="scroll-spy">
+      <!-- marker group here -->
+      <div class="carousel --vertical">
+        <section data-title="A vertical scroller">
+          <h2>A vertical scroller</h2>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+        </section>
+        <section data-title="Markers for sections">
+          <h2>Markers for sections</h2>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <h4>
+            Nice long section to show the spy stays highlighted for the entirety
+            of it's section.
+          </h4>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+        </section>
+        <section data-title="Grid to lay it all out">
+          <h2>Grid to lay it all out</h2>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
+            ipsam, animi, nemo eaque at dolorum ipsum cum velit error iste
+            magni. Ipsam commodi soluta corporis corrupti error eum reiciendis
+            sunt!
+          </p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .scroll-spy {
+      display: grid;
+      gap: var(--size-3);
+      grid-template-areas: "side main";
+      grid-template-columns: var(--size-content-1) 1fr;
+
+      overflow: hidden;
+      block-size: 60svh;
+      inline-size: 100cqi;
+      max-inline-size: 80ch;
+
+      border: 1px solid var(--surface-3);
+
+      @container (inline-size <= 50ch) {
+        gap: 0px;
+        grid-template-areas: "side" "main";
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+    }
+
+    .carousel {
+      grid-area: main;
+      scroll-snap-type: none;
+      scroll-marker-group: before;
+      display: grid;
+      row-gap: 10svh;
+      scrollbar-width: thin;
+
+      &::scroll-marker-group {
+        grid-area: side;
+        display: grid;
+        align-content: start;
+        justify-items: start;
+        block-size: 1lh;
+        gap: 1rem;
+        padding: 1rem;
+
+        @container (inline-size <= 50ch) {
+          grid-auto-flow: column;
+          max-width: 100cqi;
+          overflow-x: auto;
+          margin-block-start: 0;
+          scrollbar-width: none;
+          scroll-padding: 1rem;
+        }
+      }
+
+      > section {
+        place-items: start;
+        place-content: start;
+        display: grid;
+        gap: 1rem;
+
+        @container (inline-size <= 50ch) {
+          padding: 1rem;
+        }
+
+        &::scroll-marker {
+          --_bg: none;
+
+          content: attr(data-title);
+          padding-inline: 1ch;
+          color: var(--text-2);
+          cursor: pointer;
+          background: var(--_bg);
+          box-shadow:
+            0 0 0 5px var(--_bg),
+            var(--shadow-3);
+          border-radius: 3px;
+
+          @container (inline-size <= 50ch) {
+            white-space: nowrap;
+          }
+        }
+
+        &::scroll-marker:is(:hover, :focus-visible, :target-current) {
+          --_bg: light-dark(white, var(--surface-2));
+          color: var(--text-1);
+        }
+
+        &::scroll-marker:hover {
+          --_bg: light-dark(white, hsl(from var(--surface-2) h s l / 0.5));
+        }
+
+        &::scroll-marker:active {
+          --_bg: hsl(from var(--surface-3) h s l / 0.5);
+        }
+
+        &::scroll-marker:hover:target-current {
+          --_bg: var(--surface-3);
+        }
+      }
+    }
+
+    section {
+      place-items: center;
+    }
+  </style>
+</Layout>

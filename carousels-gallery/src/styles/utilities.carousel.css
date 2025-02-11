@@ -1,0 +1,299 @@
+/* todo:
+  - bring offscreen work into this file
+*/
+
+.carousel {
+  scrollbar-width: none;
+  anchor-name: --carousel;
+  
+  /* size and scroll state container */
+  container-type: inline-size scroll-state;
+
+  /* scroll styles */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+
+  &:focus-visible {
+    scrollbar-color: var(--link) transparent;
+    outline: none;
+  }
+
+  &:where(.--vertical) {
+    /* scroll styles */
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+  }
+
+  &:where(.--bidi) {
+    /* scroll styles */
+    overflow: auto;
+    overscroll-behavior: contain;
+    scroll-snap-type: both mandatory;
+  }
+
+  ul& {
+    padding-inline-start: 0;
+  }
+
+  /* &:focus-within {
+    outline-offset: 5px;
+    outline: 1px solid var(--link);
+  } */
+
+  @media (prefers-reduced-motion: no-preference) {
+    & {
+      scroll-behavior: smooth;
+    }
+  }
+
+  > * {
+    container-type: scroll-state;
+    scroll-snap-align: start;
+
+    /* todo: convert to SDA */
+    /* move this to a specialty demo */
+    /* > * {
+      @container not scroll-state(snapped) {
+        interactivity: inert;
+      }
+    } */
+  }
+}
+
+.scroll-markers {
+  scroll-marker-group: after;
+
+  &::scroll-marker-group {
+    position: absolute;
+    position-anchor: --carousel;
+
+    display: grid;
+    gap: var(--size-2);
+
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+  }
+
+  &:where(:not(.--vertical), .--bidi)::scroll-marker-group {
+    block-size: var(--size-3);
+    inline-size: 100%;
+    max-inline-size: min(90cqi, 285px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+
+    /* todo: only apply these styles if overflowing, use scroll-state(scrollable) */
+    padding-inline: 10px; /* space for mask */
+    scroll-padding-inline: 10px;
+    padding-block: 5px; /* space for focus rings on markers */
+    mask: linear-gradient(to right, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+
+    top: anchor(bottom);
+    left: calc(anchor(left) - 10%);
+    right: calc(anchor(right) - 10%);
+    margin-block: var(--size-3);
+
+    grid-auto-columns: var(--size-3);
+    grid-auto-flow: column;
+    place-content: safe center;
+    justify-self: center;
+
+    /* todo: put scroll buttons on the pagination if it has overflow */
+    /* &::scroll-button(right),
+    &::scroll-button(left) {
+      width: var(--size-3);
+      height: var(--size-3);
+    } */
+  }
+
+  &:where(.--vertical)::scroll-marker-group {
+    position-area: left center;
+    align-content: center;
+
+    margin-inline: var(--size-3);
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+
+    inline-size: var(--size-3);
+    block-size: 80cqb;
+
+    grid-auto-rows: var(--size-3);
+    grid-auto-flow: row;
+
+    padding-block: 10px; /* space for mask */
+    padding-inline: 10px; /* space for focus rings on markers */
+    scroll-padding-block: 10px;
+    mask: linear-gradient(to bottom, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+  }
+
+  > * {
+    &::scroll-marker {
+      content: " ";
+      scroll-snap-align: center;
+      aspect-ratio: 1;
+      border: 1px solid var(--surface-4);
+      border-radius: var(--radius-round);
+      cursor: pointer;
+      interactivity: auto;
+      transition: 
+        transform 0.3s var(--ease-spring-2), 
+        outline-offset 0.25s var(--ease-3)
+      ;
+    }
+
+    &::scroll-marker:target-current {
+      background: var(--link);
+      border-color: var(--link);
+    }
+
+    &::scroll-marker:not(:active):hover {
+      transform: scale(1.25);
+    }
+
+    /* todo: switch backt of focus-visible */
+    &::scroll-marker:not(:active):focus {
+      outline: 2px solid var(--link);
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* TODO: 
+  up, down
+  use scroll-state(scrollable) to auto generate buttons */
+.scroll-buttons {
+  &::scroll-button(*) {
+    cursor: pointer;
+
+    position: absolute;
+    z-index: 1;
+    position-anchor: --carousel;
+
+    font-size: var(--font-size-3);
+    inline-size: 44px;
+    margin: var(--size-3);
+
+    font-family: "Material Symbols Outlined";
+    line-height: 1;
+    font-variation-settings:
+      "FILL" 0,
+      "wght" 100,
+      "GRAD" 0,
+      "opsz" 24;
+
+    display: flex;
+    place-items: center;
+    place-content: center;
+    aspect-ratio: 1;
+    background: none;
+    border: 1px solid var(--surface-3);
+    border-radius: var(--radius-round);
+
+    transition:
+      transform 0.3s var(--ease-spring-3),
+      opacity 0.5s var(--ease-3),
+      background-color 0.3s var(--ease-3),
+      outline-offset 0.25s var(--ease-3);
+  }
+
+  &:where(:not(.--vertical), .--bidi) {
+    &::scroll-button(right) {
+      --_inner: center span-inline-start;
+      --_inner-under: block-end span-inline-start;
+      --_inner-over: block-start span-inline-start;
+      --_outer: inline-end center;
+      --_outer-under: end;
+      --_outer-over: block-start inline-end;
+
+      position-area: var(--_outer);
+      content: "arrow_forward" / "Scroll Right";
+    }
+    &::scroll-button(left) {
+      --_inner: center span-inline-end;
+      --_inner-under: block-end span-inline-end;
+      --_inner-over: block-start span-inline-end;
+      --_outer: inline-start center;
+      --_outer-under: block-end inline-start;
+      --_outer-over: start;
+
+      position-area: var(--_outer);
+      content: "arrow_back" / "Scroll Left";
+    }
+
+    /* 120px is both arrows plus their margins */
+    /* inner arrows when carousel is reaching full width of viewport or container */
+    @container (inline-size >= calc(100cqi - 120px)) {
+      &::scroll-button(right),
+      &::scroll-button(left) {
+        position-area: var(--_inner);
+      }
+    }
+  }
+
+  &:where(.--vertical, .--bidi) {
+    &::scroll-button(down) {
+      --_inner: center span-block-start;
+      --_inner-under: block-end span-inline-end;
+      --_inner-over: span-block-start span-inline-end;
+      --_outer: block-end;
+      --_outer-under: inline-start span-block-start;
+      --_outer-over: inline-start block-end;
+
+      position-area: var(--_outer);
+      content: "arrow_downward" / "Scroll Down";
+    }
+    &::scroll-button(up) {
+      --_inner: center span-block-end;
+      --_inner-under: span-inline-end block-start;
+      --_inner-over: span-inline-end span-block-end;
+      --_outer: block-start;
+      --_outer-under: inline-start span-block-end;
+      --_outer-over: block-start inline-start;
+
+      position-area: var(--_outer);
+      content: "arrow_upward" / "Scroll Up";
+    }
+
+    /* 120px is both arrows plus their margins */
+    /* inner arrows when carousel is reaching full height of viewport or container */
+    @container (block-size >= calc(100cqb - 120px)) {
+      &::scroll-button(up),
+      &::scroll-button(down) {
+        position-area: var(--_inner);
+      }
+    }
+  }
+
+  &::scroll-button(*):is(:hover, :focus-visible) {
+    background-color: light-dark(white, var(--surface-1));
+    border-color: var(--surface-4);
+    font-variation-settings: "opsz" 30;
+    transform: scale(1.1);
+  }
+  
+  &::scroll-button(*):not(:active):focus-visible {
+    outline-offset: 2px;
+    outline: 2px solid var(--link);
+  }
+
+  &::scroll-button(right):active {
+    transform: translateX(5px) scale(0.95);
+  }
+  &::scroll-button(left):active {
+    transform: translateX(-5px) scale(0.95);
+  }
+  &::scroll-button(up):active {
+    transform: translateY(-5px) scale(0.95);
+  }
+  &::scroll-button(down):active {
+    transform: translateY(5px) scale(0.95);
+  }
+  
+  &::scroll-button(*):disabled {
+    opacity: 0%;
+    cursor: not-allowed;
+    interactivity: inert;
+  }
+}
