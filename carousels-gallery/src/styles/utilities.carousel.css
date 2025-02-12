@@ -148,6 +148,13 @@
       border-color: var(--link);
     }
 
+    @media (forced-colors: active) {
+      &::scroll-marker:target-current {
+        background: Highlight;
+        border-color: Highlight;
+      }
+    }
+
     &::scroll-marker:not(:active):hover {
       transform: scale(1.25);
     }
@@ -196,6 +203,10 @@
       opacity 0.5s var(--ease-3),
       background-color 0.3s var(--ease-3),
       outline-offset 0.25s var(--ease-3);
+
+    @media (forced-colors: active) {
+      background: Canvas;
+    }
   }
 
   &:where(:not(.--vertical), .--bidi) {
