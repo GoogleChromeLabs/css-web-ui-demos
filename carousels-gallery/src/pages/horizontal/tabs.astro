@@ -144,6 +144,10 @@ import Layout from "../../layouts/Layout.astro";
         container-type: scroll-state;
         overflow-y: auto;
 
+        &:focus-visible {
+          outline-offset: -5px;
+        }
+
         > section {
           display: grid;
           gap: var(--size-3);
