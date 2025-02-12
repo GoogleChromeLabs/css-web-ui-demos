@@ -29,7 +29,7 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/netlify": "^6.0.0",
     "@astrojs/sitemap": "^3.2.1",
-    "astro": "^5.0.4",
+    "astro": "^5.2.6",
     "open-props": "^1.7.8",
     "typescript": "^5.7.2"
   }
