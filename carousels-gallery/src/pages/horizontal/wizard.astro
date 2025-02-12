@@ -49,7 +49,7 @@ import Layout from "../../layouts/Layout.astro";
           </header>
 
           <label>
-            <input type="checkbox" />
+            <input required type="checkbox" />
             I agree to the terms and conditions
           </label>
           <button type="submit">Finish</button>
@@ -74,6 +74,7 @@ import Layout from "../../layouts/Layout.astro";
       grid-auto-columns: 100%;
 
       scroll-marker-group: before;
+      scroll-timeline: --carousel-timeline x;
 
       &::scroll-marker-group {
         top: auto;
@@ -84,12 +85,17 @@ import Layout from "../../layouts/Layout.astro";
         grid-auto-columns: 3ch;
         gap: 1ch;
         mask: none;
-        background: linear-gradient(
-          to bottom,
-          #0000 calc(50% - 1px),
-          var(--surface-4) 50%,
-          #0000 calc(50% + 1px) 100%
-        );
+
+        background: linear-gradient(var(--link) 0 0),
+          linear-gradient(var(--surface-4) 0 0);
+        background-size:
+          var(--_progress, 20%) 3px,
+          100% 1px;
+        background-repeat: no-repeat;
+        background-position: left center;
+
+        animation: progress linear both;
+        animation-timeline: --carousel-timeline;
       }
 
       & > li {
@@ -104,15 +110,28 @@ import Layout from "../../layouts/Layout.astro";
           background: var(--surface-1);
           content: counter(carousel-item);
           font-size: var(--font-size-0);
+
+          transition:
+            background 0.3s var(--ease-3),
+            color 0.3s var(--ease-3),
+            border-color 0.3s var(--ease-3);
         }
 
-        &:has(+ li::scroll-marker:target-current) {
+        &:has(form input:user-valid)::scroll-marker {
+          background: var(--link);
           border-color: var(--link);
+          color: var(--surface-1);
+        }
+
+        &:has(form input:user-invalid)::scroll-marker {
+          background: light-dark(white, var(--surface-1));
+          border-color: var(--red-6);
+          color: var(--red-6);
         }
 
         &::scroll-marker:target-current {
-          background: var(--link);
-          color: var(--surface-1);
+          background: light-dark(white, var(--surface-2));
+          color: var(--text-1);
         }
       }
     }
@@ -120,10 +139,11 @@ import Layout from "../../layouts/Layout.astro";
     form {
       display: grid;
       gap: var(--size-4);
-      background: var(--surface-2);
+      background: light-dark(white, var(--surface-2));
       padding: 5vmin;
+      margin-block-end: 25px; /* for shadow */
       border-radius: var(--radius-3);
-
+      box-shadow: var(--shadow-4);
       transition: opacity 0.5s ease;
 
       @container not scroll-state(snapped: inline) {
@@ -150,6 +170,21 @@ import Layout from "../../layouts/Layout.astro";
 
     section {
       place-items: center;
+    }
+
+    @property --_progress {
+      syntax: "<percentage>";
+      inherits: false;
+      initial-value: 20%;
+    }
+
+    @keyframes progress {
+      50% {
+        --_progress: 50%;
+      }
+      100% {
+        --_progress: 100%;
+      }
     }
   </style>
 </Layout>
