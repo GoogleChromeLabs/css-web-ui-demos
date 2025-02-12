@@ -133,7 +133,7 @@
       content: " ";
       scroll-snap-align: center;
       aspect-ratio: 1;
-      border: 1px solid var(--surface-4);
+      border: 1px solid light-dark(var(--gray-6), var(--surface-4));
       border-radius: var(--radius-round);
       cursor: pointer;
       interactivity: auto;
