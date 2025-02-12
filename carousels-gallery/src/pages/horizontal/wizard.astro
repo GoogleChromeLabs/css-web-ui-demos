@@ -16,6 +16,13 @@ import Layout from "../../layouts/Layout.astro";
         Keep track of user's along a guided process with scroll markers. The
         scroll-state() queries inert any form the user isn't currently on.
       </p>
+      <p>
+        If there's no form elements or numbers, this is often called
+        "onboarding." Here's <a
+          href="https://speckyboy.com/onboarding-carousels-snippets/"
+          >a collection of onboarding demos</a
+        > that you could rebuild with CSS carousel markers easily.
+      </p>
     </header>
 
     <ul class="carousel scroll-markers">
@@ -113,7 +120,7 @@ import Layout from "../../layouts/Layout.astro";
 
           transition:
             transform 0.3s var(--ease-spring-2),
-            outline-offset 0.25s var(--ease-3), 
+            outline-offset 0.25s var(--ease-3),
             background 0.3s var(--ease-3),
             color 0.3s var(--ease-3),
             border-color 0.3s var(--ease-3);
