@@ -4,12 +4,130 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout title="Carousel Gallery">
   <section>
-    <h2>Welcome!</h2>
+    <header>
+      <h2>Welcome!</h2>
+      <p>
+        You've landed on the CSS Carousel Gallery site that showcases the
+        capabilities and potentials of CSS Carousel specs.
+      </p>
+      <p><b>There's not a single line of JavaScript in this gallery.</b></p>
+    </header>
+    <div class="intro">
+      <ol>
+        <li>
+          <svg
+            aria-hidden
+            xmlns="http://www.w3.org/2000/svg"
+            width="72"
+            height="72"
+            viewBox="0 0 512 512"
+            ><path
+              fill-rule="evenodd"
+              d="m380.656 106.622l-35.01 23.344l37.117 92.733l42.309-12.418zm-71.28 47.49L97.67 295.272l4.928 9.857l239.035-70.334zm90.3-111.445l83.57 194.995l-157.166 46.221l63.256 168.168l-39.95 14.982l-64.351-171.075l-28.928 8.49l-59.662 162.6l-39.217-16.808l47.999-130.816l-124.824 36.721l-37.736-75.472z"
+            ></path></svg
+          >
+          <div>
+            <b>Explore</b> the horizontal, vertical and bi-directional examples in
+            the left side navigation (or hambuger if on mobile)
+          </div>
+        </li>
+        <li>
+          <svg
+            aria-hidden
+            xmlns="http://www.w3.org/2000/svg"
+            width="72"
+            height="72"
+            viewBox="0 0 24 24"
+            ><path
+              d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"
+            ></path></svg
+          >
+          <div>
+            <b>Review</b> each demo's tags the CSS feature being showcased in the
+            example
+          </div>
+        </li>
+        <li>
+          <svg
+            aria-hidden
+            xmlns="http://www.w3.org/2000/svg"
+            width="72"
+            height="72"
+            viewBox="0 0 24 24"
+            ><path
+              d="M8 12v-2h8v2zm0-4V6h8v2zm-2 6h7.5q.725 0 1.35.313t1.05.887l2.1 2.75V4H6zm0 6h11.05l-2.725-3.575q-.15-.2-.362-.312T13.5 16H6zm12 2H6q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22M6 20V4zm0-4v-2z"
+            ></path></svg
+          >
+          <div>
+            <b>Checkout</b> the Resources to follow specs or reference details
+          </div>
+        </li>
+        <li>
+          <svg
+            aria-hidden
+            xmlns="http://www.w3.org/2000/svg"
+            width="72"
+            height="72"
+            viewBox="0 0 24 24"
+            ><path
+              d="M11.25 13.5q.95 0 1.6-.65t.65-1.6t-.65-1.6t-1.6-.65t-1.6.65t-.65 1.6t.65 1.6t1.6.65m4.825 4l-2.625-2.625q-.5.325-1.062.475t-1.138.15q-1.775 0-3.012-1.237T7 11.25t1.238-3.012T11.25 7t3.013 1.238T15.5 11.25q0 .575-.162 1.138t-.488 1.062l2.65 2.65zM5 21q-.825 0-1.412-.587T3 19v-4h2v4h4v2zm10 0v-2h4v-4h2v4q0 .825-.587 1.413T19 21zM3 9V5q0-.825.588-1.412T5 3h4v2H5v4zm16 0V5h-4V3h4q.825 0 1.413.588T21 5v4z"
+            ></path></svg
+          >
+          <div>
+            <b>Inspect</b> the CSS, review the DOM, and check the accessibility tree
+          </div>
+        </li>
+      </ol>
+    </div>
+    <footer>
+      <p>Built with ❤️ by <a href="https://nerdy.dev">Adam Argyle</a></p>
+    </footer>
   </section>
 </Layout>
 
 <style>
-  section {
+  :global(main) section {
     padding: 5vmin;
+
+    > header {
+      padding: 0;
+    }
+  }
+
+  .intro {
+    display: grid;
+    gap: var(--size-5);
+  }
+
+  ol {
+    list-style-type: none;
+    display: flex;
+    flex-wrap: wrap;
+    place-content: center;
+    gap: var(--size-5);
+    padding: 0;
+
+    > li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      place-items: center;
+      gap: var(--size-3);
+
+      border: 1px solid #0000;
+      background: light-dark(white, var(--surface-2));
+      box-shadow: var(--shadow-3);
+      padding: var(--size-5);
+      border-radius: var(--radius-3);
+
+      > svg {
+        fill: var(--link);
+      }
+    }
+  }
+
+  footer p {
+    place-self: center;
+    max-inline-size: max-content;
+    text-align: center;
   }
 </style>
