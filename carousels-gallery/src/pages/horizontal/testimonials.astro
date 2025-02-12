@@ -1,0 +1,113 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Testimonials</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Anchor</span>
+      </div>
+    </header>
+
+    <ul class="carousel scroll-markers scroll-buttons">
+      <li>
+        <figure class="testimonial">
+          <blockquote cite="https://www.huxley.net/bnw/four.html">
+            <p>
+              Words can be like X-rays, if you use them properly—they’ll go
+              through anything. You read and you’re pierced.
+            </p>
+          </blockquote>
+          <figcaption>
+            —Aldous Huxley, <cite>Brave New World</cite>
+          </figcaption>
+        </figure>
+      </li>
+      <li>
+        <figure class="testimonial">
+          <blockquote cite="https://www.huxley.net/bnw/four.html">
+            <p>
+              Words can be like X-rays, if you use them properly—they’ll go
+              through anything. You read and you’re pierced.
+            </p>
+          </blockquote>
+          <figcaption>
+            —Aldous Huxley, <cite>Brave New World</cite>
+          </figcaption>
+        </figure>
+      </li>
+      <li>
+        <figure class="testimonial">
+          <blockquote cite="https://www.huxley.net/bnw/four.html">
+            <p>
+              Words can be like X-rays, if you use them properly—they’ll go
+              through anything. You read and you’re pierced.
+            </p>
+          </blockquote>
+          <figcaption>
+            —Aldous Huxley, <cite>Brave New World</cite>
+          </figcaption>
+        </figure>
+      </li>
+    </ul>
+  </section>
+
+  <style>
+    ul {
+      /* Reset list styles */
+      list-style-type: none;
+      counter-reset: item;
+      margin-block-end: var(--size-7);
+      padding-inline: 0;
+
+      inline-size: min(var(--size-content-3), 100cqi);
+
+      display: grid;
+      grid-auto-flow: column;
+      justify-items: center;
+      grid-auto-columns: 100cqi;
+
+      mask: linear-gradient(to right, #0000, #000 20%, #000 80%, #0000);
+
+      &::scroll-button(left),
+      &::scroll-button(right) {
+        position-area: var(--_inner);
+      }
+
+      & > li {
+        scroll-snap-align: center;
+        padding: 0;
+      }
+    }
+
+    .testimonial {
+      transition: opacity 0.5s ease;
+
+      @container not scroll-state(snapped: inline) {
+        opacity: 0.25;
+      }
+
+      > blockquote,
+      cite {
+        border-inline-start: none;
+      }
+
+      p {
+        font-size: var(--font-size-5);
+        font-weight: var(--font-weight-2);
+        line-height: var(--font-lineheight-0);
+        text-align: center;
+      }
+    }
+
+    section {
+      place-items: center;
+      text-align: center;
+    }
+  </style>
+</Layout>

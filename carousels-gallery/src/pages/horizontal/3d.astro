@@ -1,0 +1,177 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>3D</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll Driven Animation</span>
+        <span>Scroll Initial Target</span>
+        <span>Anchor</span>
+      </div>
+      <p></p>
+    </header>
+
+    <ul class="carousel scroll-markers scroll-buttons">
+      <li tabindex="0">
+        <div class="card"><p>1</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>2</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>3</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>4</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>5</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>6</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>7</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>8</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>9</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>10</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>11</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>12</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>13</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>14</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>15</p></div>
+      </li>
+      <li tabindex="0">
+        <div class="card"><p>16</p></div>
+      </li>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .carousel {
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    inline-size: 100cqi;
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 30vmin;
+    gap: var(--size-4);
+    padding-block: 20vmin 10vmin;
+    padding-inline: 5vmin;
+    scroll-padding-inline: 5vmin;
+
+    perspective: 100vmax;
+
+    @container (inline-size <= 640px) {
+      grid-auto-columns: 60vmin;
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      inline-size: 85cqi;
+    }
+
+    &::scroll-button(left),
+    &::scroll-button(right) {
+      position-area: var(--_inner);
+    }
+
+    /* todo: maybe nest this above? */
+    &:hover::scroll-button(left),
+    &:hover::scroll-button(right) {
+      background-color: light-dark(white, var(--surface-1));
+    }
+
+    & > li {
+      display: grid;
+      padding: 0;
+      transform-style: preserve-3d;
+      scroll-snap-align: center;
+      container-type: scroll-state;
+
+      &:nth-of-type(4) {
+        scroll-initial-target: nearest;
+      }
+
+      & > .card {
+        background: light-dark(#fffa, var(--surface-2));
+
+        display: inline-flex;
+        place-items: center;
+        place-content: center;
+
+        aspect-ratio: var(--ratio-portrait);
+
+        border: 1px solid var(--surface-3);
+        box-shadow: var(--shadow-2);
+        border-radius: var(--radius-2);
+
+        transform-style: preserve-3d;
+        animation: carousel linear both;
+        animation-timeline: view(x);
+        animation-range: contain;
+
+        > p {
+          transform-style: preserve-3d;
+          transform: translateZ(2.5vw);
+
+          font-family: var(--font-antique);
+          font-size: 10cqi;
+
+          transition: scale 1s var(--ease-spring-4);
+
+          @container scroll-state(snapped: inline) {
+            color: var(--link);
+            scale: 1.75;
+          }
+        }
+
+        /* todo: maybe remove? */
+        &:focus {
+          outline: 2px solid var(--link);
+          outline-offset: -2px;
+        }
+      }
+    }
+  }
+
+  @keyframes carousel {
+    0% {
+      transform: rotateY(-0.25turn) translateZ(-1vmin) scale(0.75);
+    }
+    50% {
+      transform: none;
+    }
+    100% {
+      transform: rotateY(0.25turn) translateZ(-1vmin) scale(0.75);
+    }
+  }
+</style>

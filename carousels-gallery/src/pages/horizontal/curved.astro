@@ -1,0 +1,109 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Curved</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Lazy loading</span>
+        <span>Anchor</span>
+      </div>
+      <p>Just a neat mask illusion.</p>
+    </header>
+
+    <ul class="carousel scroll-buttons">
+      {
+        Array.from({ length: 30 }).map((_, i) => (
+          <li>
+            <figure>
+              <img
+                src={`https://picsum.photos/seed/${i + 1}/300/600`}
+                width="300"
+                height="600"
+                alt={`Image ${i}`}
+                loading="lazy"
+              />
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .carousel {
+    /* dramatic overlap */
+    margin-block-start: -15vh;
+
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    inline-size: 100cqi;
+
+    display: grid;
+    grid-auto-flow: column;
+
+    /* curve effect */
+    --_curve: 100px;
+    mask: radial-gradient(
+      52% var(--_curve) ellipse at 50% var(--_curve),
+      #0000 calc(100% - 2px),
+      #000 100%
+    );
+    mask-position: 0 calc(var(--_curve) * -1);
+
+    @container (width <= 700px) {
+      --_curve: 60px;
+      margin-block-start: -5vh;
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      inline-size: 85cqi;
+    }
+
+    &::scroll-button(left),
+    &::scroll-button(right) {
+      margin: var(--size-1);
+    }
+
+    &::scroll-button(left) {
+      position-area: unset;
+      bottom: anchor(bottom);
+      right: anchor(center);
+    }
+    &::scroll-button(right) {
+      position-area: unset;
+      bottom: anchor(bottom);
+      left: anchor(center);
+    }
+
+    & > li {
+      inline-size: 30vh;
+      scroll-snap-align: center;
+
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
+
+      img {
+        width: 100%;
+      }
+
+      &:nth-child(15) {
+        scroll-initial-target: nearest;
+      }
+    }
+  }
+
+  header {
+    text-align: center;
+  }
+</style>

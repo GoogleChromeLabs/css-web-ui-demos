@@ -1,0 +1,13 @@
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-2);
+  max-inline-size: var(--size-content-3);
+
+  > * {
+    background: light-dark(white, var(--surface-2));
+    padding: var(--size-1) var(--size-3);
+    border-radius: var(--radius-round);
+    box-shadow: var(--shadow-1);
+  }
+}

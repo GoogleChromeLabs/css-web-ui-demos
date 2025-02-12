@@ -1,0 +1,292 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Video Slider</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Driven Animation</span>
+        <span>Anchor</span>
+        <span>Sticky</span>
+      </div>
+      <p>
+        This example demonstrates a horizontal video slider with scroll buttons.
+        Scroll driven animation creates a neat parallax and mask effect as you
+        scroll AND scroll driven animation is incrementing a counter to show the
+        current page against the total.
+      </p>
+    </header>
+
+    <ul class="carousel">
+      <li>
+        <figure class="parallax-item">
+          <video
+            width="1280"
+            height="720"
+            src="https://storage.googleapis.com/atoms-sandbox.google.com.a.appspot.com/244754_small.mp4"
+            autoplay
+            muted
+            loop></video>
+          <figcaption>It's a turtle!</figcaption>
+        </figure>
+      </li>
+
+      <li>
+        <figure class="parallax-item">
+          <video
+            width="1280"
+            height="720"
+            src="https://storage.googleapis.com/atoms-sandbox.google.com.a.appspot.com/stock-snow.mp4"
+            autoplay
+            muted
+            loop></video>
+          <figcaption>Falling Snow</figcaption>
+        </figure>
+      </li>
+
+      <li>
+        <figure class="parallax-item">
+          <video
+            width="1280"
+            height="720"
+            src="https://storage.googleapis.com/atoms-sandbox.google.com.a.appspot.com/stock-wheel.mp4"
+            autoplay
+            muted
+            loop></video>
+          <figcaption>Ferris Wheel</figcaption>
+        </figure>
+      </li>
+
+      <li>
+        <figure class="parallax-item">
+          <video
+            width="1280"
+            height="720"
+            src="https://storage.googleapis.com/atoms-sandbox.google.com.a.appspot.com/stock-chameleon.mp4"
+            autoplay
+            muted
+            loop></video>
+          <figcaption>I See You</figcaption>
+        </figure>
+      </li>
+    </ul>
+    <div class="fixed-logo">
+      <img
+        src="https://assets.codepen.io/2585/googletv-logo.svg"
+        alt="Google TV"
+        width="300"
+        height="52"
+      />
+    </div>
+  </section>
+</Layout>
+
+<style>
+  @keyframes squeeze {
+    entry 0% {
+      clip-path: inset(0% 100% 0% 0%);
+    }
+    entry 100% {
+      clip-path: inset(0% 0% 0% 0%);
+    }
+    exit 0% {
+      clip-path: inset(0% 0% 0% 0%);
+    }
+    exit 100% {
+      clip-path: inset(0% 0% 0% 100%);
+    }
+  }
+
+  @keyframes stay-centered {
+    entry 0% {
+      translate: -50%;
+    }
+    entry 100% {
+      translate: 0%;
+    }
+    exit 0% {
+      translate: 0%;
+    }
+    exit 100% {
+      translate: 50%;
+    }
+  }
+
+  @keyframes count-before {
+    0% {
+      counter-increment: page curpage;
+    }
+    100% {
+      counter-increment: page curpage;
+    }
+  }
+
+  .carousel {
+    counter-reset: page curpage;
+
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    border-radius: 20px;
+    box-shadow: var(--shadow-6);
+
+    /* undo list styles */
+    list-style-type: none;
+    padding: 0;
+    margin: 5vmin;
+
+    scroll-marker-group: before;
+
+    &::after {
+      content: counter(curpage) " / " counter(page);
+      position: absolute;
+      position-anchor: --carousel;
+      position-area: top span-left;
+      margin-inline: 30px;
+      margin-block: 10px;
+    }
+
+    @media (width >= 1200px) {
+      inline-size: min(80cqi, 1280px);
+    }
+
+    > li {
+      scroll-snap-stop: always;
+
+      counter-increment: page;
+      animation: count-before linear forwards;
+      animation-timeline: view(x);
+      animation-range: contain;
+
+      padding: 0;
+      max-inline-size: initial;
+
+      flex-shrink: 0;
+      inline-size: 100cqi;
+      overflow: clip;
+
+      contain-intrinsic-inline-size: 100cqi;
+      content-visibility: auto;
+    }
+
+    &::scroll-button(left) {
+      content: "Previous";
+      background-image: url(https://api.iconify.design/material-symbols:chevron-left.svg?color=%23ffffff);
+      position-area: center span-inline-end;
+    }
+
+    &::scroll-button(right) {
+      content: "Next";
+      background-image: url(https://api.iconify.design/material-symbols:chevron-right.svg?color=%23ffffff);
+      position-area: center span-inline-start;
+    }
+
+    &::scroll-button(*) {
+      background-color: #fff4;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 80%;
+      backdrop-filter: blur(10px);
+
+      text-indent: 100vw;
+      inline-size: 50px;
+      block-size: 50px;
+      border-radius: 1e3px;
+      border: none;
+
+      cursor: pointer;
+
+      position: fixed;
+      position-anchor: --carousel;
+      margin-inline: 30px;
+
+      transition:
+        transform 0.3s var(--ease-spring-3),
+        opacity 0.5s var(--ease-3),
+        outline-offset 0.25s var(--ease-3);
+    }
+
+    &::scroll-button(*):is(:hover, :focus-visible) {
+      background-color: #fff3;
+      transform: scale(1.1);
+    }
+
+    &::scroll-button(*):focus-visible:not(:active) {
+      outline-offset: 2px;
+      outline: 2px solid var(--link);
+    }
+
+    &::scroll-button(right):active {
+      transform: translateX(5px) scale(0.95);
+    }
+    &::scroll-button(left):active {
+      transform: translateX(-5px) scale(0.95);
+    }
+
+    &::scroll-button(*):disabled {
+      opacity: 0%;
+      cursor: not-allowed;
+    }
+
+    &::scroll-marker-group {
+      content: "Hi";
+
+      position: absolute;
+      position-anchor: --carousel;
+      inset-block-start: calc(anchor(top) - 30px - 10px);
+      inset-inline-end: calc(anchor(right) - 30px);
+
+      display: grid;
+
+      background: none; /* todo: get rid of this when scroll-button(*) stops matching */
+    }
+  }
+
+  .parallax-item {
+    display: grid;
+    place-items: end start;
+
+    animation: squeeze linear both;
+    animation-timeline: view(inline);
+    timeline-scope: --parallax-item;
+
+    > * {
+      grid-area: 1/1;
+    }
+
+    > video {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+    }
+
+    > figcaption {
+      padding: 30px;
+      font-size: 1.5rem;
+      font-weight: 200;
+
+      position: sticky;
+      left: 0;
+    }
+
+    & video {
+      animation: stay-centered linear both;
+      animation-timeline: view(x);
+      timeline-scope: --parallax-item;
+    }
+  }
+
+  .fixed-logo {
+    position: fixed;
+    position-anchor: --carousel;
+
+    inset-block-start: calc(anchor(top) + 30px);
+    inset-inline-start: calc(anchor(left) + 30px);
+
+    max-inline-size: 150px;
+  }
+</style>

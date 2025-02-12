@@ -1,0 +1,36 @@
+{
+  "name": "carousels-gallery",
+  "type": "module",
+  "author": {
+    "name": "Adam Argyle",
+    "url": "https://nerdy.dev"
+  },
+  "description": "Collection of rad CSS only carousels.",
+  "keywords": [
+    "CSS",
+    "Scroll Markers",
+    "Scroll Buttons",
+    "Scroll State Queries",
+    "Scroll Driven Animation",
+    "Scroll Snap",
+    "interactivity: inert"
+  ],
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "deploy": "npm run add-gitignores && cp package.json dist/ && gsutil -m rsync -rd dist gs://chrome-dev-demos/public/carousel",
+    "add-gitignores": "find dist -type d -mindepth 1 -exec touch {}/.ignore \\;"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/netlify": "^6.0.0",
+    "@astrojs/sitemap": "^3.2.1",
+    "astro": "^5.0.4",
+    "open-props": "^1.7.8",
+    "typescript": "^5.7.2"
+  }
+}

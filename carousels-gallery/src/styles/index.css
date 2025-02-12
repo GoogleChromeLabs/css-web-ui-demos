@@ -1,0 +1,12 @@
+@layer system, components, utilities;
+
+@import "open-props/style" layer(system);
+@import "open-props/normalize" layer(system);
+@import "open-props/buttons" layer(system);
+
+@import "./fonts.css" layer(system);
+@import "./utilities.css" layer(utilities);
+
+@view-transition {
+  navigation: auto;
+}

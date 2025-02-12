@@ -1,0 +1,126 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Virtualized List</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Lazy loading</span>
+        <span>Anchor</span>
+        <span>content-visibility</span>
+        <span>interactivity: inert</span>
+      </div>
+      <p>
+        1,000 items: virtualized with <code>content-visibility</code> with
+       lazy loaded images.
+      </p>
+    </header>
+
+    <ul class="carousel scroll-markers scroll-buttons">
+      {
+        Array.from({ length: 1000 }).map((_, i) => (
+          <li tabindex="0">
+            <figure>
+              <img
+                src={`https://picsum.photos/seed/${i + 1}/400/300`}
+                width="400"
+                height="300"
+                alt={`Image ${i}`}
+                loading="lazy"
+              />
+              <figcaption>{i + 1}</figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  /* must be 20% in view or else inert */
+  @keyframes offscreen-inert {
+    entry 0%,
+    entry 19%,
+    exit 100% {
+      interactivity: inert;
+      opacity: 0.25;
+    }
+    entry 20%,
+    exit 99% {
+      interactivity: auto;
+      opacity: 1;
+    }
+  }
+
+  .carousel {
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    inline-size: 100cqi;
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--size-content-1);
+    gap: var(--size-4);
+    padding-inline: 5vmin;
+    padding-block: var(--size-2);
+    scroll-padding-inline: 5vmin;
+
+    /* debug */
+    scrollbar-width: thin;
+
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      inline-size: 85cqi;
+    }
+
+    &::scroll-button(left),
+    &::scroll-button(right) {
+      position-area: var(--_inner);
+    }
+
+    & > li {
+      contain-intrinsic-inline-size: var(--size-content-1);
+      content-visibility: auto;
+
+      animation: offscreen-inert linear both;
+      animation-timeline: view(x);
+
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
+
+      display: inline-flex;
+      place-content: start;
+
+      border: 1px solid var(--surface-3);
+      box-shadow: var(--shadow-2);
+      border-radius: var(--radius-2);
+
+      figcaption {
+        font-family: var(--font-antique);
+        font-size: var(--font-size-5);
+        transition: color 1s var(--ease-3);
+      }
+
+      figure {
+        gap: 0;
+      }
+
+      @container scroll-state(snapped: inline) {
+        figcaption {
+          color: var(--link);
+        }
+      }
+    }
+  }
+</style>

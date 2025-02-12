@@ -1,0 +1,129 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Hubs</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Paged</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        These are established pages in the markup. See <a
+          href="/horizonta/pages">Pages</a
+        > for an automatic paging example.
+      </p>
+    </header>
+
+    <div class="carousel scroll-buttons scroll-markers">
+      <section class="hub bento-lg">
+        <div style="--sibling-index: 1"></div>
+        <div style="--sibling-index: 2"></div>
+        <div style="--sibling-index: 3"></div>
+        <div style="--sibling-index: 4"></div>
+        <div style="--sibling-index: 5"></div>
+      </section>
+      <section class="hub bento-md">
+        <div style="--sibling-index: 1"></div>
+        <div style="--sibling-index: 2"></div>
+        <div style="--sibling-index: 3"></div>
+      </section>
+      <section class="hub grid">
+        <div style="--sibling-index: 1"></div>
+        <div style="--sibling-index: 2"></div>
+        <div style="--sibling-index: 3"></div>
+        <div style="--sibling-index: 4"></div>
+        <div style="--sibling-index: 5"></div>
+        <div style="--sibling-index: 6"></div>
+        <div style="--sibling-index: 7"></div>
+        <div style="--sibling-index: 8"></div>
+        <div style="--sibling-index: 9"></div>
+        <div style="--sibling-index: 10"></div>
+      </section>
+    </div>
+  </section>
+
+  <style>
+    .carousel {
+      display: grid;
+      grid-auto-columns: 100%;
+      grid-auto-flow: column;
+      inline-size: 100cqi;
+
+      > * {
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+
+        &::scroll-marker {
+          aspect-ratio: var(--ratio-ultrawide);
+          border-radius: 0;
+
+          &:not(:checked) {
+            background: var(--surface-4);
+          }
+        }
+      }
+
+      &::scroll-marker-group {
+        margin-block-start: var(--size-8);
+      }
+
+      &::scroll-button(right),
+      &::scroll-button(left) {
+        position-area: var(--_inner);
+      }
+    }
+
+    .hub {
+      display: grid;
+      gap: var(--size-5);
+      margin-inline: auto;
+
+      &.bento-lg {
+        grid-template-columns: repeat(4, 15cqi);
+
+        > :nth-child(1) {
+          grid-column: span 2;
+          grid-row: span 2;
+        }
+      }
+
+      &.bento-md {
+        grid-template-columns: repeat(4, 15cqi);
+
+        > :nth-child(1) {
+          aspect-ratio: initial;
+          grid-column: span 3;
+          grid-row: span 2;
+        }
+      }
+
+      &.grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      > div {
+        transition: opacity 2s var(--ease-3);
+        transition-delay: calc(var(--sibling-index) * 150ms);
+
+        aspect-ratio: var(--ratio-square);
+        background: var(--indigo-4);
+        box-shadow: var(--shadow-3);
+        border: 1px solid transparent;
+
+        @container not scroll-state(snapped: inline) {
+          opacity: 0;
+        }
+      }
+    }
+
+    :global(main) > section {
+      padding-inline: 0;
+    }
+  </style>
+</Layout>

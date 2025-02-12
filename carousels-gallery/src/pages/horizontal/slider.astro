@@ -1,0 +1,177 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Hero Slider</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll-State Queries</span>
+        <span>Anchor</span>
+      </div>
+    </header>
+
+    <div class="carousel scroll-buttons">
+      <div class="slide">
+        <img
+          src="/carousel/flora-1.jpg"
+          alt=""
+          width="2400"
+          height="1600"
+          loading="lazy"
+        />
+        <div>
+          <h3>We know clients.</h3>
+          <p>
+            Tired of software that's more glitch than glitter? We craft elegant,
+            powerful solutions that not only function flawlessly but also
+            deliver an amazing user experience.
+          </p>
+        </div>
+      </div>
+      <div class="slide">
+        <img
+          src="/carousel/flora-2.jpg"
+          alt=""
+          width="2400"
+          height="1602"
+          loading="lazy"
+        />
+        <div>
+          <h3>Innovate. Automate. Elevate.</h3>
+          <p>
+            Don't just keep up – surge ahead. We help you harness the power of
+            innovation and automation to streamline your operations, boost
+            efficiency, and elevate your business to new heights.
+          </p>
+        </div>
+      </div>
+      <div class="slide">
+        <img
+          src="/carousel/flora-3.jpg"
+          alt=""
+          width="2400"
+          height="1800"
+          loading="lazy"
+        />
+        <div>
+          <h3>Your Vision, Our Code, Limitless Possibilities.</h3>
+          <p>
+            Every great idea starts with a vision. We transform your vision into
+            reality with cutting-edge software solutions tailored to your unique
+            needs. Let's unlock limitless possibilities together.
+          </p>
+        </div>
+      </div>
+      <div class="slide">
+        <img
+          src="/carousel/flora-4.jpg"
+          alt=""
+          width="2400"
+          height="1598"
+          loading="lazy"
+        />
+        <div>
+          <h3>Software Solutions,<br />Simplified.</h3>
+          <p>
+            Say goodbye to complex, clunky software. We believe in simplicity
+            without compromise. Our intuitive solutions are designed to make
+            your life easier, so you can focus on what matters most.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .carousel {
+      display: grid;
+      grid-auto-columns: 100%;
+      grid-auto-flow: column;
+      gap: var(--size-5);
+
+      inline-size: 100cqi;
+      max-block-size: 100svh;
+      background: light-dark(var(--surface-2), black);
+
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        inline-size: 50cqi;
+      }
+
+      > * {
+        scroll-snap-align: center;
+        background: black;
+        display: grid;
+
+        > * {
+          grid-area: 1 / 1;
+        }
+
+        > img {
+          opacity: 0.3;
+          inline-size: 100%;
+          block-size: 100%;
+          max-block-size: 100svh;
+          object-fit: cover;
+
+          transition: opacity 0.3s var(--ease-3);
+
+          @container not scroll-state(snapped: inline) {
+            opacity: 0;
+          }
+        }
+
+        > div {
+          z-index: 1;
+          display: grid;
+          gap: var(--size-5);
+          color: white;
+          place-self: center start;
+          margin-inline-start: 15cqi;
+
+          > h3 {
+            font-family: var(--font-transitional);
+            font-size: var(--font-size-7);
+
+            transition:
+              transform 1.1s var(--ease-out-5) 0.3s,
+              opacity 1.1s var(--ease-out-5) 0.3s;
+
+            @container not scroll-state(snapped: inline) {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+          }
+
+          > p {
+            color: var(--gray-4);
+            max-inline-size: var(--size-content-2);
+            font-size: var(--font-size-4);
+            font-weight: 200;
+            line-height: 1.75;
+
+            transition:
+              transform 1.1s var(--ease-out-5) 0.35s,
+              opacity 1.1s var(--ease-out-5) 0.35s;
+
+            @container not scroll-state(snapped: inline) {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+          }
+        }
+      }
+
+      &::scroll-button(left),
+      &::scroll-button(right) {
+        position-area: var(--_inner);
+        color: white;
+      }
+    }
+  </style>
+</Layout>

@@ -1,0 +1,137 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Image Gallery</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Anchor</span>
+      </div>
+    </header>
+
+    <div class="carousel scroll-buttons scroll-markers">
+      <picture>
+        <img
+          src="/carousel/neon-wolf.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+      <picture>
+        <img
+          src="/carousel/neon-raptor.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+      <picture>
+        <img
+          src="/carousel/flying-cars.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+      <picture>
+        <img
+          src="/carousel/neon-trex.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+      <picture>
+        <img
+          src="/carousel/flying-cars-2.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+      <picture>
+        <img
+          src="/carousel/flying-cars-3.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+      <picture>
+        <img
+          src="/carousel/neon-city.jpg"
+          alt=""
+          width="500"
+          height="500"
+          loading="lazy"
+        />
+      </picture>
+    </div>
+  </section>
+
+  <style>
+    .carousel {
+      display: grid;
+      grid-auto-columns: 100%;
+      grid-auto-flow: column;
+      place-items: center;
+      gap: var(--size-5);
+
+      block-size: max(500px, 50cqb);
+      inline-size: 100cqi;
+      background: black;
+
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        inline-size: 50cqi;
+      }
+
+      > * {
+        scroll-snap-align: center;
+
+        > img {
+          transition: filter 0.3s var(--ease-3);
+
+          @container not scroll-state(snapped: inline) {
+            filter: grayscale(1);
+          }
+        }
+      }
+
+      &::scroll-marker-group {
+        block-size: 1.5lh;
+        position-area: none;
+        bottom: anchor(bottom);
+        justify-self: center;
+        margin-block-end: var(--size-2);
+
+        border-radius: var(--radius-round);
+        border: 1px solid var(--surface-3);
+        background-color: light-dark(#fff3, #fff2);
+        mask: none; /* todo: remove this once scroll-state() used for group overflow */
+
+        inline-size: 15rem;
+      }
+
+      &::scroll-button(left),
+      &::scroll-button(right) {
+        position-area: var(--_inner);
+        color: white;
+      }
+    }
+  </style>
+</Layout>

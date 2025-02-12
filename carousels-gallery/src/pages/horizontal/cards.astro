@@ -1,0 +1,218 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Horizontal Cards</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Scroll Initial Target</span>
+        <span>Anchor</span>
+        <span>Full Bleed</span>
+      </div>
+      <p>Buttons and markers both anchored to the bottom</p>
+    </header>
+
+    <ul class="carousel scroll-markers scroll-buttons">
+      <article class="card snapped">
+        <figure>
+          <picture>
+            <img
+              src="https://assets.codepen.io/2585/Roboto.svg"
+              alt="placeholder-hand-drawn-vector"
+              height="500"
+              width="500"
+            />
+          </picture>
+          <figcaption>
+            <h5>Cyber Jumper</h5>
+            <p>
+              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quae,
+              neque.
+            </p>
+            <a href="#">Check it out</a>
+          </figcaption>
+        </figure>
+      </article>
+
+      <article class="card">
+        <figure>
+          <picture>
+            <img
+              src="https://assets.codepen.io/2585/Entertainment.svg"
+              alt="placeholder-hand-drawn-vector"
+              height="500"
+              width="500"
+            />
+          </picture>
+          <figcaption>
+            <h5>Jam Strut</h5>
+            <p>
+              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </p>
+            <a href="#">Check it out</a>
+          </figcaption>
+        </figure>
+      </article>
+
+      <article class="card scroll-start">
+        <figure>
+          <picture>
+            <img
+              src="https://assets.codepen.io/2585/Mechanical+Love.svg"
+              alt="placeholder-hand-drawn-vector"
+              height="500"
+              width="500"
+            />
+          </picture>
+          <figcaption>
+            <h5>Mechanical Love</h5>
+            <p>
+              Duis aute irure dolor in reprehenderit in voluptate velit esse
+              cillum dolore eu fugiat nulla pariatur.
+            </p>
+            <a href="#">Check it out</a>
+          </figcaption>
+        </figure>
+      </article>
+
+      <article class="card">
+        <figure>
+          <picture>
+            <img
+              src="https://assets.codepen.io/2585/Waiting.svg"
+              height="500"
+              width="500"
+            />
+          </picture>
+          <figcaption>
+            <h5>Waiting Patiently</h5>
+            <p>
+              Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+              officia deserunt mollit anim id est laborum.
+            </p>
+            <a href="#">Check it out</a>
+          </figcaption>
+        </figure>
+      </article>
+
+      <article class="card">
+        <figure>
+          <picture>
+            <img
+              src="https://assets.codepen.io/2585/New+Beginnings.svg"
+              alt="placeholder-hand-drawn-vector"
+              height="500"
+              width="500"
+            />
+          </picture>
+          <figcaption>
+            <h5>New Beginnings Are Beautiful</h5>
+            <p>
+              Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+              accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
+              quae ab illo inventore veritatis et quasi architecto beatae vitae
+              dicta sunt explicabo.
+            </p>
+            <a href="#">Check it out</a>
+          </figcaption>
+        </figure>
+      </article>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  ul {
+    inline-size: 100cqi;
+    list-style-type: none;
+    padding: var(--size-3);
+    scroll-padding: var(--size-3);
+
+    display: grid;
+    grid-auto-flow: column;
+    gap: var(--size-5);
+
+    &::scroll-marker-group {
+      padding-block: 0;
+      block-size: 44px; /* match buttons */
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      inline-size: 50cqi;
+    }
+
+    > * {
+      container-type: scroll-state;
+      scroll-snap-align: center;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      & {
+        scroll-behavior: smooth;
+      }
+
+      @container not scroll-state(snapped: inline) {
+        figcaption {
+          transform: translateY(100%);
+        }
+      }
+    }
+
+    &::scroll-button(right),
+    &::scroll-button(left) {
+      position-area: var(--_inner-under);
+    }
+  }
+
+  .card {
+    inline-size: min(var(--size-content-2), 90cqi);
+    background: var(--surface-2);
+    border-radius: var(--radius-3);
+    box-shadow: var(--shadow-2);
+    overflow: clip;
+    align-content: end;
+
+    > figure {
+      display: grid;
+      place-items: end stretch;
+
+      > * {
+        grid-area: 1 / 1;
+      }
+
+      > figcaption {
+        max-inline-size: 100%;
+        display: grid;
+        justify-items: start;
+        gap: var(--size-2);
+        transition:
+          transform 0.3s var(--ease-3),
+          opacity 0.3s var(--ease-3);
+        background: linear-gradient(to top, #000, 75%, #0000);
+        padding-inline: var(--size-5);
+        padding-block: var(--size-9) var(--size-3);
+
+        & h5 {
+          color: var(--gray-0);
+        }
+
+        & p {
+          color: var(--gray-4);
+        }
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      background: white;
+    }
+  }
+</style>

@@ -1,0 +1,130 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Wheel</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Scroll Driven Animation</span>
+        <span>Anchor</span>
+      </div>
+      <p>A classic vertical wheel of choices carousel.</p>
+    </header>
+
+    <ul class="carousel --vertical scroll-markers">
+      <li><h3>Super Mario Bros.</h3></li>
+      <li><h3>The Legend of Zelda</h3></li>
+      <li><h3>Metroid</h3></li>
+      <li><h3>Castlevania</h3></li>
+      <li><h3>Mega Man 2</h3></li>
+      <li><h3>Final Fantasy</h3></li>
+      <li><h3>Contra</h3></li>
+      <li><h3>Ninja Gaiden</h3></li>
+      <li><h3>Tecmo Bowl</h3></li>
+      <li><h3>Punch-Out</h3></li>
+      <li><h3>Excitebike</h3></li>
+      <li><h3>Kid Icarus</h3></li>
+      <li><h3>Double Dragon</h3></li>
+      <li><h3>Bubble Bobble</h3></li>
+      <li><h3>Kirby's Adventure</h3></li>
+      <li><h3>Tetris</h3></li>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .carousel {
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    block-size: 100svh;
+    inline-size: 100cqi;
+    overflow-x: hidden;
+
+    display: grid;
+    grid-auto-flow: row;
+    justify-content: end;
+    place-self: center end;
+    gap: var(--size-4);
+    padding-inline-end: max(5vw, var(--size-8));
+
+    &::scroll-marker-group {
+      position-area: center span-left;
+      margin: 0;
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      block-size: 85cqb;
+    }
+
+    & > li {
+      padding: 0;
+      scroll-snap-align: center;
+      text-align: end;
+      block-size: 10svb;
+
+      &:nth-of-type(9) {
+        scroll-initial-target: nearest;
+      }
+
+      > h3 {
+        white-space: nowrap;
+        font-family: var(--font-antique);
+        font-size: var(--font-size-5);
+        transition: scale 1s var(--ease-spring-4);
+
+        transform-origin: right center;
+        animation: wheel-rotate linear both;
+        animation-timeline: view();
+        animation-range: contain 0% contain 106%;
+      }
+
+      @container scroll-state(snapped: block) {
+        > h3 {
+          color: var(--link);
+          scale: 3;
+        }
+      }
+
+      /* todo: maybe remove? */
+      &:focus {
+        outline: 2px solid var(--link);
+        outline-offset: -2px;
+      }
+    }
+  }
+
+  :global(main) > section {
+    padding: 0;
+
+    > * {
+      grid-area: 1 / 1;
+    }
+
+    > header {
+      place-self: start;
+    }
+  }
+
+  @keyframes wheel-rotate {
+    0% {
+      transform: translateX(150px) rotate(-30deg);
+    }
+    50% {
+      transform: translateX(0px) rotate(0deg);
+    }
+    100% {
+      transform: translateX(150px) rotate(30deg);
+    }
+  }
+</style>

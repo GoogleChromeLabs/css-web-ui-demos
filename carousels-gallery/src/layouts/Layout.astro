@@ -1,0 +1,139 @@
+---
+import Sidebar from "../components/Sidebar.astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Collection of CSS only carousel demos by Adam Argyle." />
+    <meta name="viewport" content="width=device-width, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/carousel/favicon.svg" />
+    <link
+      rel="preload"
+      href="/carousel/material-symbols.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <script type="speculationrules">
+      {
+        "prerender": [
+          {
+            "source": "document",
+            "where": {
+              "and": [{ "href_matches": "/*" }]
+            },
+            "eagerness": "moderate"
+          }
+        ]
+      }
+    </script>
+    <title>{title}</title>
+  </head>
+  <body>
+    <button class="sidenav" onclick="sidenav.showModal()">
+      <span class="icon">menu</span>
+    </button>
+    <div class="support-banner">
+      <h2>Experimental Feature</h2>
+      <h3>⚠️ Unsupported ⚠️</h3>
+      <p>
+        This gallery requires a few CSS features that aren't present in
+        your current browser.
+      </p>
+      <p>
+        To try this out, download Canary and visit <a
+          href="chrome://flags/#enable-experimental-web-platform-features"
+          >chrome://flags/#enable-experimental-web-platform-features</a
+        > in a tab, enable it, and reload this page.
+      </p>
+    </div>
+    <main>
+      <Sidebar />
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  @import "/src/styles/index.css";
+</style>
+
+<style>
+  main {
+    display: grid;
+
+    @media (width >= 1024px) {
+      grid-template-columns: max-content 1fr;
+    }
+  }
+
+  main > :global(section) {
+    container-type: inline-size;
+    display: grid;
+    place-content: center;
+    gap: 5vmin;
+    padding-block: 5vmin 15vmin;
+
+    > header {
+      display: grid;
+      gap: var(--size-3);
+      padding: 5vmin;
+
+      > p {
+        max-inline-size: var(--size-content-3);
+        line-height: 1.75;
+      }
+    }
+  }
+
+  :global(main > section > header > h2) {
+    view-transition-name: --header;
+  }
+
+  :global(main > section > header) {
+    justify-self: center;
+  }
+
+  .sidenav {
+    position: fixed;
+    z-index: 1;
+    top: var(--size-3);
+    right: var(--size-3);
+
+    padding: var(--size-3);
+    aspect-ratio: 1;
+    border-radius: var(--radius-round);
+
+    @media (width >= 1024px) {
+      display: none;
+    }
+  }
+
+  .support-banner {
+    display: none;
+
+    border: 1px solid var(--surface-3);
+    padding-inline: var(--size-8);
+    padding-block: var(--size-7);
+    box-shadow: var(--shadow-5);
+
+    @supports not selector(::scroll-marker) {
+      display: grid;
+      place-content: center;
+      place-items: center;
+      gap: var(--size-3);
+    }
+
+    & > :is(h2, h3) {
+      text-align: center;
+    }
+  }
+</style>
