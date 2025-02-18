@@ -7,9 +7,10 @@ import Layout from "../../layouts/Layout.astro";
     <header>
       <h2>Product Gallery</h2>
       <div class="tags">
+        <span>Grid</span>
         <span>Scroll Markers</span>
+        <span>Container Queries</span>
         <span>Scroll-State Queries</span>
-        <span>Anchor</span>
       </div>
       <p>
         Classic product image gallery. Markers are mirrored images of the
@@ -17,59 +18,92 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <div class="carousel scroll-markers">
-      <picture style="--img: url(/carousel/fold-1.png)">
-        <img
-          src="/carousel/fold-1.png"
-          alt=""
-          width="1243"
-          height="1554"
-          loading="lazy"
-        />
-      </picture>
-      <picture style="--img: url(/carousel/fold-2.png)">
-        <img
-          src="/carousel/fold-2.png"
-          alt=""
-          width="1243"
-          height="1554"
-          loading="lazy"
-        />
-      </picture>
-      <picture style="--img: url(/carousel/fold-3.png)">
-        <img
-          src="/carousel/fold-3.png"
-          alt=""
-          width="1243"
-          height="1554"
-          loading="lazy"
-        />
-      </picture>
-      <picture style="--img: url(/carousel/fold-4.png)">
-        <img
-          src="/carousel/fold-4.png"
-          alt=""
-          width="1243"
-          height="1554"
-          loading="lazy"
-        />
-      </picture>
-      <picture style="--img: url(/carousel/fold-5.png)">
-        <img
-          src="/carousel/fold-5.png"
-          alt=""
-          width="1243"
-          height="1554"
-          loading="lazy"
-        />
-      </picture>
+    <div class="product-carousel">
+      <ul class="carousel scroll-markers">
+        <li style="--img: url(/carousel/fold-1.png)">
+          <picture>
+            <img
+              src="/carousel/fold-1.png"
+              alt=""
+              width="1243"
+              height="1554"
+              loading="lazy"
+            />
+          </picture>
+        </li>
+        <li style="--img: url(/carousel/fold-2.png)">
+          <picture>
+            <img
+              src="/carousel/fold-2.png"
+              alt=""
+              width="1243"
+              height="1554"
+              loading="lazy"
+            />
+          </picture>
+        </li>
+        <li style="--img: url(/carousel/fold-3.png)">
+          <picture>
+            <img
+              src="/carousel/fold-3.png"
+              alt=""
+              width="1243"
+              height="1554"
+              loading="lazy"
+            />
+          </picture>
+        </li>
+        <li style="--img: url(/carousel/fold-4.png)">
+          <picture>
+            <img
+              src="/carousel/fold-4.png"
+              alt=""
+              width="1243"
+              height="1554"
+              loading="lazy"
+            />
+          </picture>
+        </li>
+        <li style="--img: url(/carousel/fold-5.png)">
+          <picture>
+            <img
+              src="/carousel/fold-5.png"
+              alt=""
+              width="1243"
+              height="1554"
+              loading="lazy"
+            />
+          </picture>
+        </li>
+      </ul>
     </div>
   </section>
 
   <style>
-    .carousel {
-      overflow-y: hidden;
+    .product-carousel {
+      --_marker-size: 75px;
 
+      display: grid;
+      grid-template-columns: [carousel--markers] var(--_marker-size) [carousel] 1fr;
+      max-inline-size: max-content;
+
+      > .carousel {
+        grid-area: carousel;
+
+        &::scroll-marker-group {
+          grid-area: carousel--markers;
+        }
+      }
+
+      @container (width <= 550px) {
+        grid-template-columns: 1fr;
+        grid-template-rows: [carousel] 1fr [carousel--markers] var(
+            --_marker-size
+          );
+      }
+    }
+
+    .carousel {
       display: grid;
       grid-auto-columns: 100%;
       grid-auto-flow: column;
@@ -77,31 +111,22 @@ import Layout from "../../layouts/Layout.astro";
       border-radius: var(--radius-4);
 
       container-type: size scroll-state;
-      aspect-ratio: 146/117;
-      max-inline-size: var(--size-content-3);
+      block-size: 480px;
+      aspect-ratio: 1;
 
-      @media (width > 640px) {
-        margin-inline-start: calc(var(--size-9) + var(--size-3));
+      list-style-type: none;
+
+      @container (width <= 550px) {
+        inline-size: 90vw;
+        block-size: auto;
       }
 
-      & > picture {
+      & > li {
+        padding: 0;
         border-radius: var(--radius-4);
         background: var(--surface-2);
 
-        > img {
-          transition: opacity 0.3s;
-        }
-
-        @container not scroll-state(snapped: inline) {
-          > img {
-            opacity: 0.25;
-          }
-        }
-
-        &:focus-visible {
-          outline: 2px solid var(--link);
-          outline-offset: -2px;
-        }
+        display: grid;
 
         &::scroll-marker {
           content: "";
@@ -121,31 +146,48 @@ import Layout from "../../layouts/Layout.astro";
           border-color: var(--link);
           background-color: var(--surface-2);
         }
+
+        &::scroll-marker:is(:hover, :focus-visible) {
+          border-color: var(--link);
+          transform: scale(1.05);
+        }
+      }
+
+      & picture {
+        transition: opacity 0.6s;
+        transition-delay: 0.1s;
+
+        @container not scroll-state(snapped: inline) {
+          opacity: 0.25;
+        }
+
+        > img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+        }
       }
 
       &::scroll-marker-group {
-        inline-size: 12cqb;
-        block-size: 100cqb;
-        right: calc(anchor(left) + var(--size-3));
-        top: anchor(top);
+        --padding-inline: 10px;
+
+        position: unset;
+        block-size: 100%;
+        box-sizing: border-box;
         grid-auto-flow: row;
-        grid-auto-columns: 12cqb;
+        grid-auto-columns: calc(
+          var(--_marker-size) - (var(--padding-inline) * 2)
+        );
         margin-block: auto;
         align-content: center;
 
         mask: none; /* todo: remove this once scroll-state() used for group overflow */
 
-        @media (width <= 640px) {
-          margin-block: 0;
-          margin-inline: auto;
-
-          top: calc(anchor(bottom) + var(--size-3));
-          left: anchor(left);
-          right: anchor(right);
-
-          inline-size: 100cqi;
-          block-size: 12cqi;
-          grid-auto-columns: 12cqi;
+        @container (width <= 550px) {
+          inline-size: 100%;
+          max-inline-size: 100%;
+          block-size: var(--_marker-size);
           grid-auto-flow: column;
         }
       }

@@ -138,9 +138,7 @@ const links = {
           >
         </li>
         <li>
-          <a href="https://codepen.io/web-dot-dev/full/jOjaaEP"
-            >Snap Events</a
-          >
+          <a href="https://codepen.io/web-dot-dev/full/jOjaaEP">Snap Events</a>
         </li>
         <li>
           <a href="https://carousel-configurator.netlify.app/">Configurator</a>
@@ -277,6 +275,16 @@ const links = {
         > header {
           display: none;
         }
+      }
+    }
+
+    @media (height < 1024px) {
+      aside {
+        overflow: clip;
+      }
+
+      aside > footer {
+        display: none;
       }
     }
   }

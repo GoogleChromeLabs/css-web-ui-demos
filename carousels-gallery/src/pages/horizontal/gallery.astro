@@ -130,6 +130,10 @@ import Layout from "../../layouts/Layout.astro";
       &::scroll-button(left),
       &::scroll-button(right) {
         position-area: var(--_inner);
+      }
+
+      &::scroll-button(left):not(:hover, :focus-visible),
+      &::scroll-button(right):not(:hover, :focus-visible) {
         color: white;
       }
     }
