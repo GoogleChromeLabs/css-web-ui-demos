@@ -75,11 +75,17 @@ import Layout from "../../layouts/Layout.astro";
       bottom: anchor(bottom);
       max-inline-size: 33cqi;
 
-      border: 1px solid light-dark(#fff9, #0009);
-      background: #0003;
+      border: 1px solid light-dark(var(--surface-3), #0009);
+      background: light-dark(white, #0003);
       backdrop-filter: blur(10px);
       border-radius: 20px;
       mask: none;
+    }
+
+    @media (prefers-color-scheme: light) {
+      &::scroll-marker-group {
+        box-shadow: var(--shadow-5);
+      }
     }
 
     & > li {
