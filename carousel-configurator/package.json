@@ -2,17 +2,17 @@
 	"name": "carousel-configurator",
 	"version": "1.0.0",
 	"author": {
-    "name": "Adam Argyle",
-    "url": "https://nerdy.dev"
-  },
+		"name": "Adam Argyle",
+		"url": "https://nerdy.dev"
+	},
 	"description": "Build a carousel while learning the CSS to make it.",
-  "keywords": [
-    "CSS",
-    "Scroll Markers",
-    "Scroll Buttons",
+	"keywords": [
+		"CSS",
+		"Scroll Markers",
+		"Scroll Buttons",
 		"Columns",
-    "interactivity: inert"
-  ],
+		"interactivity: inert"
+	],
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -33,6 +33,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@sveltejs/adapter-static": "^3.0.8",
 		"open-props": "^1.7.6"
 	}
 }
