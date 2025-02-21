@@ -108,7 +108,7 @@
   anchor-name: --carousel;
   
   columns: 1;
-  block-size: 25cqi;
+  block-size: 10lh;
   text-align: center;
 
   &::column {
@@ -147,12 +147,12 @@
     position: fixed;
     position-anchor: --carousel;
     position-area: block-end;
-    margin: var(--size-3);
+    margin: 10px;
 
     display: grid;
-    grid-auto-columns: var(--size-3);
+    grid-auto-columns: 20px;
     grid-auto-flow: column;
-    gap: var(--size-3);
+    gap: 20px;
   }
 
   `}{#if paged === 'No'}{`& > li::scroll-marker {
@@ -189,6 +189,7 @@
     /* Styles and layout */
     padding: var(--size-3);
     scroll-padding: var(--size-3);
+    resize: both;
     
     container-type: inline-size scroll-state;
     inline-size: 1024px;
@@ -198,11 +199,12 @@
 
     &.with-pages {
       columns: 1;
-      block-size: 300px;
+      block-size: 13lh;
       text-align: center;
 
       & > li {
-        inline-size: 200px;
+        block-size: 100%;
+        margin: var(--size-2);
       }
 
       &::column {
@@ -245,7 +247,6 @@
         outline: 2px solid var(--link);
       }
 
-      /* svelte-ignore unknown-css */
       /* @container scroll-state(snapped: x) {
         outline: 2px solid red;
       } */
