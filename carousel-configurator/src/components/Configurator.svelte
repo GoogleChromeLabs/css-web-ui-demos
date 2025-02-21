@@ -90,8 +90,6 @@
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-
-  container-type: scroll-state;
   anchor-name: --carousel;
 
   > li {
@@ -103,8 +101,6 @@
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-
-  container-type: scroll-state;
   anchor-name: --carousel;
   
   columns: 1;
@@ -171,12 +167,54 @@
   }
 }`}{/if}
 </code></pre></div>{/if}
+
+{#if inerted === 'Yes'}
+  <div>
+      <p>Inert Interactivity</p>
+      {#if paged === 'No'}<pre><code>{`.carousel {
+  > li {
+    container-type: scroll-state;
+
+    > .card {
+      @container not scroll-state(snapped: x) {
+        interactivity: inert;
+        opacity: .25;
+      }
+    }
+  }
+}
+`}</code></pre>{/if}
+      {#if paged === 'Yes'}<pre><code>{`.carousel {
+  &::column {
+    container-type: scroll-state;
+
+    > .card {
+      @container not scroll-state(snapped: x) {
+        interactivity: inert;
+        opacity: .25;
+      }
+    }
+  }
+}`}</code></pre>{/if}
+    </div>
+{/if}
 </div>
+
+{@html `<style>${`
+  .with-inert .card {
+    transition: opacity .5s ease;
+
+    @container not scroll-state(snapped: x) {
+      interactivity: inert;
+      opacity: .25;
+    }
+  }
+}`}</style>`}
 
 <style>
   .carousel {
     /* Scrolling behavior. */
-    overflow: auto;
+    overflow-x: auto;
     scroll-behavior: smooth;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
@@ -189,7 +227,6 @@
     /* Styles and layout */
     padding: var(--size-3);
     scroll-padding: var(--size-3);
-    resize: both;
     
     container-type: inline-size scroll-state;
     inline-size: 1024px;
@@ -200,6 +237,7 @@
     &.with-pages {
       columns: 1;
       block-size: 13lh;
+      resize: both;
       text-align: center;
 
       & > li {
@@ -209,6 +247,7 @@
 
       &::column {
         scroll-snap-align: center;
+        container-type: scroll-state;
       }
     }
 
@@ -220,10 +259,12 @@
 
       & > li {
         scroll-snap-align: center;
+        container-type: scroll-state;
       }
     }
 
     & li {
+      container-type: scroll-state;
       padding: 0;
       display: inline-grid;
       counter-increment: item;
@@ -246,10 +287,6 @@
       &:focus {
         outline: 2px solid var(--link);
       }
-
-      /* @container scroll-state(snapped: x) {
-        outline: 2px solid red;
-      } */
     }
 
     /* Scroll marker pages */
@@ -393,15 +430,27 @@
 
     & > section {
       display: grid;
-      gap: var(--size-2);
+      gap: var(--size-8);
+
+      & > div {
+        display: grid;
+        align-items: start;
+
+        & > * {
+          grid-area: 1/1;
+        }
+      }
 
       & p {
-        margin-block-end: var(--size-2);
+        z-index: 1;
+        margin-block-start: -.75lh;
+        margin-inline-start: .5lh;
         max-inline-size: max-content;
-        padding-inline: .75ch;
+        padding-inline: 1ch;
         padding-block: .25ch;
-        background: var(--surface-2);
-        border-radius: var(--radius-2);
+        background: light-dark(white, var(--surface-2));
+        border-radius: var(--radius-round);
+        box-shadow: var(--shadow-3);
       }
     }
 
