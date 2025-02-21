@@ -172,6 +172,11 @@ import Layout from "../../layouts/Layout.astro";
           overflow-y: auto;
           max-block-size: 10lh;
 
+          @container not scroll-state(snapped) {
+            interactivity: inert;
+            opacity: 0.5;
+          }
+
           &:focus-visible {
             outline-offset: -5px;
           }
@@ -182,12 +187,6 @@ import Layout from "../../layouts/Layout.astro";
             padding: var(--size-3);
             transition: opacity 0.3s var(--ease-3);
             background: light-dark(white, var(--surface-1));
-
-            @container not scroll-state(snapped) {
-              interactivity: inert;
-              overflow: hidden;
-              opacity: 0.5;
-            }
           }
         }
       }
