@@ -79,13 +79,13 @@
   &:where(:not(.--vertical), .--bidi)::scroll-marker-group {
     block-size: var(--size-3);
     inline-size: 100%;
-    max-inline-size: min(90cqi, 285px);
+    max-inline-size: min(90cqi, 100px);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     overscroll-behavior-x: contain;
 
     /* todo: only apply these styles if overflowing, use scroll-state(scrollable) */
-    padding-inline: 10px; /* space for mask */
+    padding-inline: 100px; /* space for mask */
     scroll-padding-inline: 10px;
     padding-block: 5px; /* space for focus rings on markers */
     mask: linear-gradient(to right, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
@@ -97,7 +97,6 @@
 
     grid-auto-columns: var(--size-3);
     grid-auto-flow: column;
-    place-content: safe center;
     justify-self: center;
 
     /* todo: put scroll buttons on the pagination if it has overflow */
@@ -108,24 +107,32 @@
     } */
   }
 
-  &:where(.--vertical)::scroll-marker-group {
-    position-area: left center;
-    align-content: center;
+  &.--vertical {
+    &::scroll-marker-group {
+      position-area: left center;
 
-    margin-inline: var(--size-3);
-    overflow-y: auto;
-    scroll-snap-type: y mandatory;
+      margin-inline: var(--size-3);
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
 
-    inline-size: var(--size-3);
-    block-size: 80cqb;
+      inline-size: var(--size-3);
+      block-size: 80cqb;
+      max-block-size: min(50cqb, 100px);
 
-    grid-auto-rows: var(--size-3);
-    grid-auto-flow: row;
+      grid-auto-rows: var(--size-3);
+      grid-auto-flow: row;
 
-    padding-block: 10px; /* space for mask */
-    padding-inline: 10px; /* space for focus rings on markers */
-    scroll-padding-block: 10px;
-    mask: linear-gradient(to bottom, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+      padding-block: 100px; /* space for mask */
+      padding-inline: 10px; /* space for focus rings on markers */
+      scroll-padding-block: 10px;
+      mask: linear-gradient(to bottom, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+    }
+
+    & > * {
+      &::scroll-marker {
+        animation-timeline: view(y);
+      }
+    }
   }
 
   > * {
@@ -136,11 +143,14 @@
       border: 1px solid light-dark(var(--gray-6), var(--surface-4));
       border-radius: var(--radius-round);
       cursor: pointer;
-      interactivity: auto;
+      text-decoration: none;
+      interactivity: auto; /* remove this? */
       transition: 
         transform 0.3s var(--ease-spring-2), 
         outline-offset 0.25s var(--ease-3)
       ;
+      animation: scale linear both;
+      animation-timeline: view(x);
     }
 
     &::scroll-marker:target-current {
@@ -306,5 +316,14 @@
     opacity: 0%;
     cursor: not-allowed;
     interactivity: inert;
+  }
+}
+
+@keyframes scale {
+  0%, 100% {
+    transform: scale(.5);
+  }
+  10%, 90% {
+    transform: scale(1);
   }
 }
