@@ -137,7 +137,7 @@ import Layout from "../../layouts/Layout.astro";
   <style>
     .scroll-spy {
       display: grid;
-      gap: var(--size-3);
+      gap: var(--size-1);
       grid-template-areas: "side main";
       grid-template-columns: var(--size-content-1) 1fr;
 
@@ -145,6 +145,8 @@ import Layout from "../../layouts/Layout.astro";
       block-size: 60svh;
       inline-size: 100cqi;
       max-inline-size: 80ch;
+
+      container-type: size;
 
       border: 1px solid var(--surface-3);
 
@@ -162,6 +164,7 @@ import Layout from "../../layouts/Layout.astro";
       scroll-marker-group: before;
       display: grid;
       row-gap: 10svh;
+      padding: var(--size-3);
       scrollbar-width: thin;
 
       &::scroll-marker-group {
@@ -169,13 +172,13 @@ import Layout from "../../layouts/Layout.astro";
         display: grid;
         align-content: start;
         justify-items: start;
-        block-size: 1lh;
-        gap: 1rem;
-        padding: 1rem;
+        gap: var(--size-2);
+        padding: var(--size-3);
 
         @container (inline-size <= 50ch) {
           grid-auto-flow: column;
           max-width: 100cqi;
+          block-size: 1.5lh;
           overflow-x: auto;
           margin-block-start: 0;
           scrollbar-width: none;
@@ -190,30 +193,39 @@ import Layout from "../../layouts/Layout.astro";
         gap: 1rem;
 
         @container (inline-size <= 50ch) {
-          padding: 1rem;
+          padding: var(--size-3);
         }
 
         &::scroll-marker {
           --_bg: none;
 
           content: attr(data-title);
-          padding-inline: 1ch;
+          padding-inline: 1.75ch;
+          padding-block: 1ch;
           color: var(--text-2);
           cursor: pointer;
           background: var(--_bg);
-          box-shadow:
-            0 0 0 5px var(--_bg),
-            var(--shadow-3);
-          border-radius: 3px;
+          border: 1px solid #0000;
+          border-radius: var(--radius-3);
 
           @container (inline-size <= 50ch) {
             white-space: nowrap;
+          }
+
+          @media (forced-colors: active) {
+            border-width: 0px;
           }
         }
 
         &::scroll-marker:is(:hover, :focus-visible, :target-current) {
           --_bg: light-dark(white, var(--surface-2));
           color: var(--text-1);
+          box-shadow: var(--shadow-2);
+          border-color: var(--surface-2);
+
+          @media (forced-colors: active) {
+            border-width: 1px;
+          }
         }
 
         &::scroll-marker:hover {
@@ -225,7 +237,7 @@ import Layout from "../../layouts/Layout.astro";
         }
 
         &::scroll-marker:hover:target-current {
-          --_bg: var(--surface-3);
+          border-color: var(--surface-3);
         }
       }
     }
