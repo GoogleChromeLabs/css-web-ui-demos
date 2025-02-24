@@ -185,15 +185,20 @@
 }
 `}</code></pre>{/if}
       {#if paged === 'Yes'}<pre><code>{`.carousel {
-  &::column {
-    container-type: scroll-state;
+  [tabindex] {
+    animation: offscreen-inert linear both;
+    animation-timeline: view(x);
+  }
+}
 
-    > .card {
-      @container not scroll-state(snapped: x) {
-        interactivity: inert;
-        opacity: .25;
-      }
-    }
+@keyframes offscreen-inert {
+  entry 0%, entry 19%, exit 100% {
+    interactivity: inert;
+    opacity: .25;
+  }
+  entry 20%, exit 99% {
+    interactivity: auto;
+    opacity: 1;
   }
 }`}</code></pre>{/if}
     </div>
@@ -207,6 +212,22 @@
     @container not scroll-state(snapped: x) {
       interactivity: inert;
       opacity: .25;
+    }
+  }
+
+  .with-inert.with-pages .card {
+    animation: offscreen-inert linear both;
+    animation-timeline: view(x);
+  }
+
+  @keyframes offscreen-inert {
+    entry 0%, entry 19%, exit 100% {
+      interactivity: inert;
+      opacity: .25;
+    }
+    entry 20%, exit 99% {
+      interactivity: auto;
+      opacity: 1;
     }
   }
 }`}</style>`}
@@ -448,7 +469,8 @@
         max-inline-size: max-content;
         padding-inline: 1ch;
         padding-block: .25ch;
-        background: light-dark(white, var(--surface-2));
+        background: var(--link);
+        color: light-dark(white, black);
         border-radius: var(--radius-round);
         box-shadow: var(--shadow-3);
       }
