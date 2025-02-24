@@ -7,6 +7,13 @@
   let inerted = 'No';
 </script>
 
+<section>
+  <pre><code>{`<ul class="carousel">
+  <li>…</li>
+  <li>…</li>
+  …
+<ul>`}</section>
+
 <div class="settings">
   <Switch bind:value={buttons} label="Scroll Buttons" design="multi" options={['No', 'Yes']}/>
   <Switch bind:value={dots} label="Dot Navigation" design="multi" options={['No', 'Yes']}/>
@@ -73,17 +80,6 @@
 
 <div class="example-code">
   <section>
-    <h3>HTML</h3>
-    <pre><code>{`<ul class="carousel">
-  <li>…</li>
-  <li>…</li>
-  <li>…</li>
-  <li>…</li>
-  <li>…</li>
-  …
-<ul>`}</section>
-  <section>
-    <h3>CSS</h3>
     <div>
       <p>Snap Scroller</p>
       {#if paged === 'No'}<pre><code>{`.carousel {
@@ -111,9 +107,9 @@
     scroll-snap-align: center;
   }
 }`}</code></pre>{/if}
-    </div>
+    </div></section>
     
-    {#if buttons === 'Yes'}<div>
+    {#if buttons === 'Yes'}<section><div>
       <p>Scroll Buttons</p>
       <pre><code>{`.carousel {
   &::scroll-button(*) {
@@ -132,9 +128,9 @@
     content: 'arrow_back' / 'Previous';
   }
 }
-`}</code></pre></div>{/if}
+`}</code></pre></div></section>{/if}
 
-  {#if dots === 'Yes'}<div>
+  {#if dots === 'Yes'}<section><div>
       <p>Scroll Markers</p>
       <pre><code>{`.carousel {
   scroll-marker-group: after;
@@ -166,10 +162,10 @@
     }
   }
 }`}{/if}
-</code></pre></div>{/if}
+</code></pre></div></section>{/if}
 
 {#if inerted === 'Yes'}
-  <div>
+  <section><div>
       <p>Inert Interactivity</p>
       {#if paged === 'No'}<pre><code>{`.carousel {
   > li {
@@ -201,7 +197,7 @@
     opacity: 1;
   }
 }`}</code></pre>{/if}
-    </div>
+    </div></section>
 {/if}
 </div>
 
@@ -444,9 +440,10 @@
 
   .example-code {
     display: flex;
-    flex-wrap: wrap;
-    place-items: start;
-    gap: var(--size-4);
+    flex-flow: row wrap;
+    place-items: start center;
+    place-content: start center;
+    gap: var(--size-9) var(--size-7);
     padding: var(--size-5);
 
     & > section {
