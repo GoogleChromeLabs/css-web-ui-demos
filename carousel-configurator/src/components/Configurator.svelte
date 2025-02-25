@@ -338,6 +338,11 @@
       border-color: var(--link);
     }
 
+    &.with-pages::column::scroll-marker:focus-visible {
+      outline-offset: 2px;
+      outline: 2px solid var(--link);
+    }
+
     &:not(.with-pages) > li {
       &::scroll-marker {
         content: ' ';
