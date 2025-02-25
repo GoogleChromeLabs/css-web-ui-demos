@@ -1,0 +1,163 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Vertical Stack</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Driven Animation</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        A vertical scroll that creates a stack effect. Most of the effect is
+        scroll driven animation but the added scroll button is a meaningful
+        affordance and scroll hint.
+      </p>
+    </header>
+
+    <ul class="carousel --vertical scroll-buttons">
+      <li>
+        <div class="card">
+          <p>news source</p>
+          <h2>Lorem ipsum dolor sit amet consectetur adipisicing elit</h2>
+          <time>2 minutes ago</time>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <p>news source</p>
+          <h2>Lorem ipsum dolor sit</h2>
+          <time>3 hours ago</time>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <p>news source</p>
+          <h2>Sit amet consectetur adipisicing elit</h2>
+          <time>5 hours ago</time>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <p>news source</p>
+          <h2>Lorem ipsum dolor sit amet consectetur adipisicing elit</h2>
+          <time>1 day ago</time>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <p>news source</p>
+          <h2>Ipsum dolor sit amet elit</h2>
+          <time>2 days ago</time>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <p>news source</p>
+          <h2>Amet consectetur adipisicing elit dolor</h2>
+          <time>5 days ago</time>
+        </div>
+      </li>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .carousel {
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    aspect-ratio: var(--ratio-portrait);
+    inline-size: 50%;
+    justify-self: center;
+
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: 100%;
+    gap: var(--size-10);
+
+    perspective: 1000px;
+
+    &::after {
+      content: "";
+      display: block;
+      block-size: 50cqi;
+    }
+
+    &::scroll-button(up),
+    &::scroll-button(down) {
+      position-area: right center;
+    }
+
+    &::scroll-button(up) {
+      translate: 0 -55%;
+    }
+    &::scroll-button(down) {
+      translate: 0 55%;
+    }
+
+    & > li {
+      scroll-snap-align: none;
+      position: sticky;
+      top: 0px;
+
+      max-inline-size: 100%;
+      display: grid;
+      align-items: start;
+      padding: 0;
+      transform-style: preserve-3d;
+    }
+  }
+
+  .card {
+    animation: stack linear forwards;
+    animation-timeline: view();
+
+    background: light-dark(white, var(--surface-2));
+
+    block-size: calc(100% - 75px);
+    display: grid;
+    gap: var(--size-2);
+    place-content: center;
+    padding: var(--size-7);
+
+    border: 1px solid var(--surface-3);
+    box-shadow: var(--shadow-2);
+    border-radius: var(--radius-2);
+
+    > p,
+    > time {
+      color: var(--text-2);
+    }
+
+    > p {
+      text-transform: uppercase;
+      font-size: var(--font-size-1);
+    }
+
+    > time {
+      font-size: var(--font-size-0);
+    }
+
+    @container scroll-state(stuck: top) {
+      color: var(--link);
+    }
+  }
+
+  @keyframes stack {
+    entry 0% {
+      transform: translateY(0px);
+    }
+    entry 80% {
+      transform: translateY(75px);
+    }
+    exit 100% {
+      transform: translateY(-50px) translateZ(-150px);
+    }
+  }
+</style>

@@ -1,0 +1,83 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Vertical Slides</h2>
+      <div class="tags">
+        <span>Scroll Markers</span>
+        <span>Scroll-State Queries</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        A basic vertical set of slides with scroll-state() for knowing which
+        slide is active and anchoring for easily positioning the markers.
+      </p>
+    </header>
+
+    <ul class="carousel --vertical scroll-markers">
+      <li><p>My Slides</p></li>
+      <li><p>Slide 1</p></li>
+      <li><p>Slide 2</p></li>
+      <li><p>Slide 3</p></li>
+      <li><p>The End</p></li>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .carousel {
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    aspect-ratio: var(--ratio-landscape);
+    inline-size: 100%;
+
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: 100%;
+    gap: var(--size-4);
+
+    &::scroll-marker-group {
+      position-area: span-left center;
+      overflow: unset;
+    }
+
+    & > li {
+      max-inline-size: 100%;
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
+
+      display: inline-flex;
+      place-items: center;
+      place-content: center;
+
+      border: 1px solid var(--surface-3);
+      box-shadow: var(--shadow-2);
+      border-radius: var(--radius-2);
+
+      > p {
+        font-family: var(--font-antique);
+        font-size: var(--font-size-5);
+        transition: font-size 1s var(--ease-spring-4) .5s;
+      }
+
+      @container scroll-state(snapped: block) {
+        > p {
+          color: var(--link);
+          font-size: var(--font-size-7);
+        }
+      }
+
+      /* todo: maybe remove? */
+      &:focus {
+        outline: 2px solid var(--link);
+        outline-offset: -2px;
+      }
+    }
+  }
+</style>
