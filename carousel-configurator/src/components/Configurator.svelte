@@ -294,6 +294,7 @@
 
       aspect-ratio: var(--ratio-portrait);
 
+      background: light-dark(white, var(--surface-2));
       border: 1px solid var(--surface-3);
       box-shadow: var(--shadow-2);
       border-radius: var(--radius-2);
@@ -390,15 +391,18 @@
         color: var(--text-2);
         border: 1px solid var(--surface-3);
         border-radius: var(--radius-round);
+        margin: var(--size-3);
       }
       &::scroll-button(right):not(:disabled):hover,
       &::scroll-button(left):not(:disabled):hover {
+        background: light-dark(white, var(--surface-2));
         border-color: var(--surface-4);
         color: var(--text-1);
         font-variation-settings: 'opsz' 30;
       }
       &::scroll-button(right):focus-visible,
       &::scroll-button(left):focus-visible {
+        background: light-dark(white, var(--surface-2));
         outline-offset: 2px;
         outline: 2px solid var(--link);
       }
