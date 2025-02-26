@@ -37,7 +37,7 @@
     and <a href="https://flackr.github.io/carousel/inert/">inertness</a>.
   </p>
   <br />
-	<p><a href="https://drafts.csswg.org/css-overflow-5/">Spec</a> · <a href="https://chrome.dev/carousel/">Carousel Gallery</a></p>
+	<p><a href="https://drafts.csswg.org/css-overflow-5/">Spec</a> · <a href="https://chrome.dev/carousel/">Gallery</a></p>
 </header>
 
 <Configurator />
