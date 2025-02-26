@@ -22,42 +22,42 @@ import Layout from "../../layouts/Layout.astro";
     <ul class="carousel --vertical scroll-buttons">
       <li>
         <div class="card">
-          <p>news source</p>
+          <p>CNN</p>
           <h2>Lorem ipsum dolor sit amet consectetur adipisicing elit</h2>
           <time>2 minutes ago</time>
         </div>
       </li>
       <li>
         <div class="card">
-          <p>news source</p>
+          <p>BBC News</p>
           <h2>Lorem ipsum dolor sit</h2>
           <time>3 hours ago</time>
         </div>
       </li>
       <li>
         <div class="card">
-          <p>news source</p>
+          <p>The New York Times</p>
           <h2>Sit amet consectetur adipisicing elit</h2>
           <time>5 hours ago</time>
         </div>
       </li>
       <li>
         <div class="card">
-          <p>news source</p>
+          <p>Reuters</p>
           <h2>Lorem ipsum dolor sit amet consectetur adipisicing elit</h2>
           <time>1 day ago</time>
         </div>
       </li>
       <li>
         <div class="card">
-          <p>news source</p>
+          <p>Associated Press</p>
           <h2>Ipsum dolor sit amet elit</h2>
           <time>2 days ago</time>
         </div>
       </li>
       <li>
         <div class="card">
-          <p>news source</p>
+          <p>The Guardian</p>
           <h2>Amet consectetur adipisicing elit dolor</h2>
           <time>5 days ago</time>
         </div>
@@ -123,13 +123,17 @@ import Layout from "../../layouts/Layout.astro";
 
     block-size: calc(100% - 75px);
     display: grid;
-    gap: var(--size-2);
+    gap: var(--size-4);
     place-content: center;
     padding: var(--size-7);
 
     border: 1px solid var(--surface-3);
     box-shadow: var(--shadow-2);
     border-radius: var(--radius-2);
+
+    > p, > h2 {
+      text-box: trim-both cap alphabetic;
+    }
 
     > p,
     > time {
