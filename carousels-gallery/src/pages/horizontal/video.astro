@@ -116,9 +116,7 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   @keyframes count-before {
-    0% {
-      counter-increment: page curpage;
-    }
+    1%,
     100% {
       counter-increment: page curpage;
     }
@@ -160,7 +158,7 @@ import Layout from "../../layouts/Layout.astro";
       counter-increment: page;
       animation: count-before linear forwards;
       animation-timeline: view(x);
-      animation-range: contain;
+      animation-range: entry 50% entry 50%;
 
       padding: 0;
       max-inline-size: initial;
