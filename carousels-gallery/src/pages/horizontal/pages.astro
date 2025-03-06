@@ -67,11 +67,11 @@ import Layout from "../../layouts/Layout.astro";
         border-radius: var(--radius-round);
         animation: scale-in-and-out linear both;
         animation-timeline: view(x);
-        animation-range: contain;
       }
 
       &::column::scroll-marker {
         border: 1px solid var(--surface-4);
+        scroll-snap-align: center;
       }
 
       &::column::scroll-marker:target-current {
