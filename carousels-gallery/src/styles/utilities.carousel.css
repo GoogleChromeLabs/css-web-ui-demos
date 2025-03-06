@@ -69,25 +69,26 @@
     position: absolute;
     position-anchor: --carousel;
 
+    container: marker-group / inline-size;
+
     display: grid;
     gap: var(--size-2);
+    place-content: safe center;
+    box-sizing: border-box;
 
     scrollbar-width: none;
     scroll-behavior: smooth;
   }
 
   &:where(:not(.--vertical), .--bidi)::scroll-marker-group {
-    block-size: var(--size-3);
     inline-size: 100%;
-    max-inline-size: min(90cqi, 100px);
+    max-inline-size: min(90cqi, 210px);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     overscroll-behavior-x: contain;
 
-    /* todo: only apply these styles if overflowing, use scroll-state(scrollable) */
-    padding-inline: 100px; /* space for mask */
+    padding: 5px 10px; /* space for focus and scroll */
     scroll-padding-inline: 10px;
-    padding-block: 5px; /* space for focus rings on markers */
     mask: linear-gradient(to right, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
 
     top: anchor(bottom);
@@ -144,13 +145,13 @@
       border-radius: var(--radius-round);
       cursor: pointer;
       text-decoration: none;
-      interactivity: auto; /* remove this? */
       transition: 
         transform 0.3s var(--ease-spring-2), 
         outline-offset 0.25s var(--ease-3)
       ;
-      animation: scale linear both;
+      animation: scale-in-and-out linear both;
       animation-timeline: view(x);
+      interactivity: auto; /* todo: remove once they dont inherit none from inerted origin elements */
     }
 
     &::scroll-marker:target-current {
@@ -319,11 +320,18 @@
   }
 }
 
-@keyframes scale {
-  0%, 100% {
-    transform: scale(.5);
-  }
-  10%, 90% {
-    transform: scale(1);
-  }
+@keyframes scale-in-and-out {
+	entry 0%  {
+		transform: scale(.25);
+	}
+	entry 100%  {
+		transform: scale(1);
+	}
+
+	exit 0% {
+		transform: scale(1);
+	}
+	exit 100% {
+		transform: scale(.25);
+	}
 }

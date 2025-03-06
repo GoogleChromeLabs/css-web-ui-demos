@@ -114,7 +114,7 @@ import Layout from "../../layouts/Layout.astro";
 
       &::scroll-marker-group {
         block-size: 1.5lh;
-        max-inline-size: max-content;
+        max-inline-size: 190px;
         position-area: none;
         bottom: anchor(bottom);
         justify-self: center;
@@ -124,6 +124,7 @@ import Layout from "../../layouts/Layout.astro";
         border-radius: var(--radius-round);
         border: 1px solid var(--surface-3);
         background-color: light-dark(#fff3, #fff2);
+        overflow: clip;
         mask: none; /* todo: remove this once scroll-state() used for group overflow */
       }
 
