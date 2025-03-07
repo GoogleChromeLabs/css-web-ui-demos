@@ -441,14 +441,33 @@ import Layout from "../../layouts/Layout.astro";
         white-space: nowrap;
         font-size: var(--font-size-3);
         font-variation-settings: "wght" 300;
+        color: var(--text-2);
+        text-decoration: underline 2px #0000;
         text-underline-offset: 5px;
         cursor: pointer;
-        transition: font-variation-settings 0.3s ease;
+
+        @media (prefers-reduced-motion: no-preference) {
+          transition:
+            text-decoration 0.8s ease,
+            font-variation-settings 0.3s ease;
+        }
+      }
+
+      &.season-start::scroll-marker:is(
+          :hover,
+          :focus-visible,
+          :target-current
+        ) {
+        color: var(--text-1);
       }
 
       &.season-start::scroll-marker:target-current {
-        text-decoration: underline 2px light-dark(hotpink, yellow);
+        text-decoration-color: var(--link);
         font-variation-settings: "wght" 800;
+      }
+
+      &.season-start::scroll-marker:focus-visible {
+        outline-offset: 10px;
       }
     }
   }
