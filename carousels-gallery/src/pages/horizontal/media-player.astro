@@ -1,0 +1,194 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Carousel Gallery">
+  <section>
+    <header>
+      <h2>Media Player</h2>
+      <div class="tags">
+        <span>Scroll Buttons</span>
+        <span>Scroll Markers</span>
+        <span>Scroll Driven Animation</span>
+        <span>interactivity: inert</span>
+        <span>Anchor</span>
+      </div>
+      <p>
+        Scroll buttons are used as next and previous track controls and scroll
+        markers are each track, appearing to be a playlist while still
+        functioning the same as if they were dots.
+      </p>
+      <p>Very nice that the next and previous track buttons automatically disable when at the end or beginning.</p>
+    </header>
+
+    <div class="media-player">
+      <ul class="carousel scroll-buttons">
+        <li title="Track 1"></li>
+        <li title="Track 2"></li>
+        <li title="Track 3"></li>
+        <li title="Track 4"></li>
+        <li title="Track 5"></li>
+        <li title="Track 6"></li>
+        <li title="Track 7"></li>
+        <li title="Track 8"></li>
+        <li title="Track 9"></li>
+        <li title="Track 10"></li>
+        <li title="Track 11"></li>
+        <li title="Track 12"></li>
+        <li title="Track 13"></li>
+        <li title="Track 14"></li>
+        <li title="Track 15"></li>
+        <li title="Track 16"></li>
+      </ul>
+      <footer>
+        <p>Cyborg Telekinetics</p>
+        <p>Waveshaper</p>
+      </footer>
+      <progress value="30" max="100"></progress>
+      <div class="controls">
+        <button aria-label="Pause">
+          <div class="icon">pause</div>
+        </button>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* must be 20% in view or else inert */
+  @keyframes offscreen-inert {
+    entry 0%,
+    exit 100% {
+      interactivity: inert;
+      opacity: 0.25;
+    }
+    entry 20%,
+    exit 80% {
+      interactivity: auto;
+      opacity: 1;
+    }
+  }
+
+  .media-player {
+    display: grid;
+    gap: var(--size-5);
+    place-items: center;
+
+    > footer {
+      display: grid;
+      place-items: center;
+
+      > p:nth-child(1) {
+        font-size: var(--font-size-4);
+        font-weight: 700;
+        color: var(--text-1);
+      }
+
+      > p:nth-child(2) {
+        font-weight: 100;
+        letter-spacing: 0.1ch;
+        color: var(--text-2);
+      }
+    }
+
+    > progress {
+      appearance: none;
+      block-size: 5px;
+      border: none;
+      border-radius: var(--radius-round);
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
+      margin: 0;
+
+      &::-webkit-progress-bar,
+      &::-webkit-progress-value {
+        border-radius: var(--radius-round);
+      }
+
+      &::-webkit-progress-bar {
+        background: var(--surface-3);
+      }
+
+      &::-webkit-progress-value {
+        background: var(--link);
+      }
+    }
+  }
+
+  .carousel {
+    /* Reset list styles */
+    list-style-type: none;
+    counter-reset: item;
+
+    /* Styles and layout */
+    --album-size: min(var(--size-content-2), 80vw);
+    inline-size: var(--album-size);
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--album-size);
+    grid-template-rows: var(--album-size);
+    gap: var(--size-4);
+    padding: 0;
+    scroll-padding: 0;
+
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      inline-size: 85cqi;
+    }
+
+    &::scroll-button(left),
+    &::scroll-button(right) {
+      position-anchor: --media-controls;
+      position-area: var(--_outer) !important;
+    }
+
+    &::scroll-button(left) {
+      content: "skip_previous";
+    }
+    &::scroll-button(right) {
+      content: "skip_next";
+    }
+
+    &::scroll-button(left):disabled,
+    &::scroll-button(right):disabled {
+      opacity: 1;
+    }
+
+    & > li {
+      animation: offscreen-inert linear both;
+      animation-timeline: view(x);
+
+      background-color: light-dark(white, var(--surface-2));
+      background-image: url(/public/hot-fuss.jpg);
+      background-size: cover;
+      padding: 0;
+
+      display: inline-flex;
+      place-items: center;
+      place-content: center;
+
+      aspect-ratio: 1;
+
+      border: 1px solid var(--surface-3);
+      box-shadow: var(--shadow-2);
+      border-radius: var(--radius-4);
+    }
+  }
+
+  .controls {
+    display: flex;
+    gap: var(--size-5);
+
+    anchor-name: --media-controls;
+
+    > button {
+      aspect-ratio: 1;
+      background: light-dark(white, var(--surface-2));
+      border: 1px solid var(--surface-3);
+      border-radius: var(--radius-round);
+    }
+  }
+</style>
