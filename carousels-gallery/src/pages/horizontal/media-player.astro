@@ -18,31 +18,28 @@ import Layout from "../../layouts/Layout.astro";
         markers are each track, appearing to be a playlist while still
         functioning the same as if they were dots.
       </p>
-      <p>Very nice that the next and previous track buttons automatically disable when at the end or beginning.</p>
+      <p>
+        Very nice that the next and previous track buttons automatically disable
+        when at the end or beginning.
+      </p>
     </header>
 
     <div class="media-player">
       <ul class="carousel scroll-buttons">
-        <li title="Track 1"></li>
-        <li title="Track 2"></li>
-        <li title="Track 3"></li>
-        <li title="Track 4"></li>
-        <li title="Track 5"></li>
-        <li title="Track 6"></li>
-        <li title="Track 7"></li>
-        <li title="Track 8"></li>
-        <li title="Track 9"></li>
-        <li title="Track 10"></li>
-        <li title="Track 11"></li>
-        <li title="Track 12"></li>
-        <li title="Track 13"></li>
-        <li title="Track 14"></li>
-        <li title="Track 15"></li>
-        <li title="Track 16"></li>
+        <li title="Jenny Was a Friend of Mine"></li>
+        <li title="Mr. Brightside"></li>
+        <li title="Smile Like You Mean It"></li>
+        <li title="Somebody Told Me"></li>
+        <li title="All These Things That I've Done"></li>
+        <li title="Andy, You're a Star"></li>
+        <li title="On Top"></li>
+        <li title="Change Your Mind"></li>
+        <li title="Believe Me Natalie"></li>
+        <li title="Midnight Show"></li>
+        <li title="Everything Will Be Alright"></li>
       </ul>
       <footer>
-        <p>Cyborg Telekinetics</p>
-        <p>Waveshaper</p>
+        <p title="Artist name">The Killers</p>
       </footer>
       <progress value="30" max="100"></progress>
       <div class="controls">
@@ -74,20 +71,17 @@ import Layout from "../../layouts/Layout.astro";
     gap: var(--size-5);
     place-items: center;
 
+    --album-size: min(var(--size-content-2), 80vw);
+
     > footer {
       display: grid;
       place-items: center;
 
-      > p:nth-child(1) {
-        font-size: var(--font-size-4);
-        font-weight: 700;
-        color: var(--text-1);
-      }
-
-      > p:nth-child(2) {
+      > p {
         font-weight: 100;
         letter-spacing: 0.1ch;
         color: var(--text-2);
+        margin-block-start: calc(-1 * var(--size-5));
       }
     }
 
@@ -116,12 +110,14 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   .carousel {
+    scroll-marker-group: after;
+    container-type: inline-size;
+
     /* Reset list styles */
     list-style-type: none;
     counter-reset: item;
 
     /* Styles and layout */
-    --album-size: min(var(--size-content-2), 80vw);
     inline-size: var(--album-size);
 
     display: grid;
@@ -157,12 +153,38 @@ import Layout from "../../layouts/Layout.astro";
       opacity: 1;
     }
 
+    &::scroll-marker-group {
+      display: grid;
+      grid-auto-flow: column;
+      place-items: center;
+      grid-template-columns: 100%;
+      gap: 50cqi;
+
+      inline-size: 100%;
+      max-inline-size: var(--album-size);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      mask: linear-gradient(
+        to right,
+        transparent 0,
+        black 10px,
+        black calc(100% - 10px),
+        transparent 100%
+      );
+
+      font-size: var(--font-size-4);
+      block-size: 1lh;
+    }
+
     & > li {
       animation: offscreen-inert linear both;
       animation-timeline: view(x);
 
       background-color: light-dark(white, var(--surface-2));
-      background-image: url(/public/hot-fuss.jpg);
+      background-image: url(/carousel/hot-fuss.jpg);
       background-size: cover;
       padding: 0;
 
@@ -175,6 +197,16 @@ import Layout from "../../layouts/Layout.astro";
       border: 1px solid var(--surface-3);
       box-shadow: var(--shadow-2);
       border-radius: var(--radius-4);
+
+      &::scroll-marker {
+        content: attr(title);
+        white-space: nowrap;
+        font-weight: 700;
+        color: var(--text-1);
+        text-decoration: none;
+        scroll-snap-align: center;
+        font-size: var(--font-size-4);
+      }
     }
   }
 
@@ -190,5 +222,9 @@ import Layout from "../../layouts/Layout.astro";
       border: 1px solid var(--surface-3);
       border-radius: var(--radius-round);
     }
+  }
+
+  :global(main > section) {
+    place-items: center;
   }
 </style>
