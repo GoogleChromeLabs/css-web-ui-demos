@@ -51,6 +51,11 @@ import Layout from "../../layouts/Layout.astro";
     grid-auto-flow: row;
     gap: var(--size-4);
 
+    @media (width <= 650px) {
+      margin-inline-start: 55px;
+      margin-inline-end: 5vmin;
+    }
+
     &::before,
     &::after {
       content: "";
@@ -94,6 +99,8 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   section > header {
-    padding-inline: 0;
+    @media (width > 650px) {
+      padding-inline: 0;
+    }
   }
 </style>
