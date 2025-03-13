@@ -206,6 +206,12 @@ import Layout from "../../layouts/Layout.astro";
         text-decoration: none;
         scroll-snap-align: center;
         font-size: var(--font-size-4);
+        interactivity: auto;
+      }
+
+      &::scroll-marker:focus-visible {
+        outline: none;
+        color: var(--link);
       }
     }
   }
