@@ -139,6 +139,10 @@ import Layout from "../../layouts/Layout.astro";
     &::scroll-button(right) {
       position-anchor: --media-controls;
       position-area: var(--_outer) !important;
+
+      @media (prefers-color-scheme: light) {
+        background-color: white;
+      }
     }
 
     &::scroll-button(left) {
@@ -163,10 +167,9 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: 100%;
       max-inline-size: var(--album-size);
       overflow-x: auto;
-      overscroll-behavior-x: contain;
       scrollbar-width: none;
       scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
+
       mask: linear-gradient(
         to right,
         transparent 0,
@@ -199,14 +202,33 @@ import Layout from "../../layouts/Layout.astro";
       border-radius: var(--radius-4);
 
       &::scroll-marker {
+        /* track title pulled from <li> title attribute */
         content: attr(title);
+
+        text-align: center;
         white-space: nowrap;
         font-weight: 700;
         color: var(--text-1);
         text-decoration: none;
+
+        /* forces centering of each track when album cover snaps */
         scroll-snap-align: center;
+
+        /* ellipse overflow */
+        inline-size: 100cqi;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
         font-size: var(--font-size-4);
-        interactivity: auto;
+
+        /* animate when current snap */
+        opacity: 0;
+        transition: opacity 1.5s var(--ease-5);
+      }
+
+      &::scroll-marker:target-current {
+        opacity: 1;
       }
 
       &::scroll-marker:focus-visible {
