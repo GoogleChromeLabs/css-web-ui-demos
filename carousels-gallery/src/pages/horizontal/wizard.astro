@@ -91,7 +91,8 @@ import Layout from "../../layouts/Layout.astro";
         block-size: 3.5ch;
         grid-auto-columns: 3ch;
         gap: 1ch;
-        padding: 1ch;
+        padding-inline: 1ch;
+        padding-block: 0;
         max-inline-size: min(90cqi, 250px);
         mask: none;
 
@@ -172,6 +173,11 @@ import Layout from "../../layouts/Layout.astro";
         place-items: center;
         gap: 1ch;
         margin-inline: auto;
+      }
+
+      input:user-invalid {
+        outline: 2px solid var(--red-6);
+        outline-offset: 2px;
       }
     }
 

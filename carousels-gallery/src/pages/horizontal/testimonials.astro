@@ -15,7 +15,7 @@ import Layout from "../../layouts/Layout.astro";
       <p>
         <b>Conditional scroll buttons</b> featured in this demo. Hidden, unless
         the visiting user has a hover enabled device and is actively hovering the
-        carousel.
+        carousel or keyboard focus is active within the carousel.
       </p>
     </header>
 
@@ -80,8 +80,7 @@ import Layout from "../../layouts/Layout.astro";
       mask: linear-gradient(to right, #0000, #000 20%, #000 80%, #0000);
 
       @media (hover) {
-        &:not(:hover)::scroll-button(left),
-        &:not(:hover)::scroll-button(right) {
+        &:not(:hover, :focus-within)::scroll-button(*) {
           opacity: 0;
         }
       }
