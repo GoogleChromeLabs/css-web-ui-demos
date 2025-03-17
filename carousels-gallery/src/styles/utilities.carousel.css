@@ -144,6 +144,7 @@
       border: 1px solid light-dark(var(--gray-6), var(--surface-4));
       border-radius: var(--radius-round);
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
       text-decoration: none;
       -webkit-tap-highlight-color: transparent;
       transition: 
