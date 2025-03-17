@@ -185,6 +185,7 @@
 .scroll-buttons {
   &::scroll-button(*) {
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 
     position: absolute;
     z-index: 1;
