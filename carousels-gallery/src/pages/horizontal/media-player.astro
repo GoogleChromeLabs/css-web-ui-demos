@@ -127,6 +127,7 @@ import Layout from "../../layouts/Layout.astro";
     gap: var(--size-4);
     padding: 0;
     scroll-padding: 0;
+    border-radius: var(--radius-4);
 
     &::before,
     &::after {
@@ -211,9 +212,6 @@ import Layout from "../../layouts/Layout.astro";
         color: var(--text-1);
         text-decoration: none;
 
-        /* forces centering of each track when album cover snaps */
-        scroll-snap-align: center;
-
         /* ellipse overflow */
         inline-size: 100cqi;
         overflow: hidden;
@@ -221,6 +219,9 @@ import Layout from "../../layouts/Layout.astro";
         white-space: nowrap;
 
         font-size: var(--font-size-4);
+
+        /* forces centering of each track when album cover snaps */
+        scroll-snap-align: center;
 
         /* animate when current snap */
         opacity: 0;
