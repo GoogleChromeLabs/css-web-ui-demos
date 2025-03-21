@@ -291,7 +291,7 @@
     }
   }
 
-  &::scroll-button(*):is(:hover, :focus-visible) {
+  &::scroll-button(*):not(:disabled):is(:hover, :focus-visible) {
     background-color: light-dark(white, var(--surface-1));
     border-color: var(--surface-4);
     font-variation-settings: "opsz" 30;
@@ -303,23 +303,22 @@
     outline: 2px solid var(--link);
   }
 
-  &::scroll-button(right):active {
+  &::scroll-button(right):not(:disabled):active {
     transform: translateX(5px) scale(0.95);
   }
-  &::scroll-button(left):active {
+  &::scroll-button(left):not(:disabled):active {
     transform: translateX(-5px) scale(0.95);
   }
-  &::scroll-button(up):active {
+  &::scroll-button(up):not(:disabled):active {
     transform: translateY(-5px) scale(0.95);
   }
-  &::scroll-button(down):active {
+  &::scroll-button(down):not(:disabled):active {
     transform: translateY(5px) scale(0.95);
   }
   
   &::scroll-button(*):disabled {
-    opacity: 0%;
+    opacity: 25%;
     cursor: not-allowed;
-    interactivity: inert;
   }
 }
 
