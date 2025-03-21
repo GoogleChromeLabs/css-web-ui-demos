@@ -172,6 +172,11 @@ import Layout from "../../layouts/Layout.astro";
         position-area: var(--_inner);
         color: white;
       }
+
+      &::scroll-button(left):hover,
+      &::scroll-button(right):hover {
+        color: black;
+      }
     }
   </style>
 </Layout>
