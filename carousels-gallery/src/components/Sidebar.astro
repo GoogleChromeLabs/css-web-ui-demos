@@ -158,6 +158,7 @@ const links = {
 </dialog>
 
 <script>
+  // polyfill closedBy
   if (!HTMLDialogElement.prototype.hasOwnProperty("closedBy")) {
     // @ts-ignore: sidenav is the ID of an element
     sidenav.addEventListener("click", ({ target: dialog }) => {
@@ -281,13 +282,23 @@ const links = {
       }
     }
 
-    @media (height < 1024px) {
-      aside {
-        overflow: clip;
+    @media (height < 768px) {
+      aside > footer {
+        overflow-x: auto;
+
+        > h2 {
+          position: sticky;
+          left: 0;
+        }
       }
 
-      aside > footer {
-        display: none;
+      aside > footer > ul {
+        grid-auto-flow: column;
+        gap: var(--size-5);
+
+        > li {
+          white-space: nowrap;
+        }
       }
     }
   }
