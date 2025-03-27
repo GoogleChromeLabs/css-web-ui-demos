@@ -26,17 +26,17 @@ import Layout from "../../layouts/Layout.astro";
 
     <div class="media-player">
       <ul class="carousel scroll-buttons">
-        <li title="Jenny Was a Friend of Mine"></li>
-        <li title="Mr. Brightside"></li>
-        <li title="Smile Like You Mean It"></li>
-        <li title="Somebody Told Me"></li>
-        <li title="All These Things That I've Done"></li>
-        <li title="Andy, You're a Star"></li>
-        <li title="On Top"></li>
-        <li title="Change Your Mind"></li>
-        <li title="Believe Me Natalie"></li>
-        <li title="Midnight Show"></li>
-        <li title="Everything Will Be Alright"></li>
+        <li aria-label="Jenny Was a Friend of Mine"></li>
+        <li aria-label="Mr. Brightside"></li>
+        <li aria-label="Smile Like You Mean It"></li>
+        <li aria-label="Somebody Told Me"></li>
+        <li aria-label="All These Things That I've Done"></li>
+        <li aria-label="Andy, You're a Star"></li>
+        <li aria-label="On Top"></li>
+        <li aria-label="Change Your Mind"></li>
+        <li aria-label="Believe Me Natalie"></li>
+        <li aria-label="Midnight Show"></li>
+        <li aria-label="Everything Will Be Alright"></li>
       </ul>
       <footer>
         <p title="Artist name">The Killers</p>
@@ -203,8 +203,8 @@ import Layout from "../../layouts/Layout.astro";
       border-radius: var(--radius-4);
 
       &::scroll-marker {
-        /* track title pulled from <li> title attribute */
-        content: attr(title);
+        /* track title pulled from <li> aria-label attribute */
+        content: attr(aria-label);
 
         text-align: center;
         white-space: nowrap;
