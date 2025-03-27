@@ -23,7 +23,7 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div class="carousel tabs">
-      <div title="Main Section" class="carousel--snap">
+      <div aria-label="Main Section" class="carousel--snap">
         <div class="carousel--scroller">
           <section>
             <p>
@@ -48,7 +48,7 @@ import Layout from "../../layouts/Layout.astro";
         </div>
       </div>
 
-      <div title="Details Section" class="carousel--snap">
+      <div aria-label="Details Section" class="carousel--snap">
         <div class="carousel--scroller">
           <section>
             <p>
@@ -73,7 +73,7 @@ import Layout from "../../layouts/Layout.astro";
         </div>
       </div>
 
-      <div title="Follow Up Section" class="carousel--snap">
+      <div aria-label="Follow Up Section" class="carousel--snap">
         <div class="carousel--scroller">
           <section>
             <p>
@@ -142,7 +142,7 @@ import Layout from "../../layouts/Layout.astro";
           container-type: scroll-state;
 
           &::scroll-marker {
-            content: attr(title);
+            content: attr(aria-label);
             text-decoration: none;
             -webkit-tap-highlight-color: transparent;
             white-space: nowrap;
