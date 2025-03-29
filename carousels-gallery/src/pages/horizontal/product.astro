@@ -14,13 +14,18 @@ import Layout from "../../layouts/Layout.astro";
       </div>
       <p>
         Classic product image gallery. Markers are mirrored images of the
-        products without duplicating elements.
+        products without duplicating elements. The screen reader experience when
+        navigating via the scroll markers is provided the alt text from the
+        image.
       </p>
     </header>
 
     <div class="product-carousel">
       <ul class="carousel scroll-markers">
-        <li style="--img: url(/carousel/fold-1.png)">
+        <li
+          style="--img: url(/carousel/fold-1.png)"
+          data-accessible-preview="Device facing the camera, partially folded"
+        >
           <picture>
             <img
               src="/carousel/fold-1.png"
@@ -31,7 +36,10 @@ import Layout from "../../layouts/Layout.astro";
             />
           </picture>
         </li>
-        <li style="--img: url(/carousel/fold-2.png)">
+        <li
+          style="--img: url(/carousel/fold-2.png)"
+          data-accessible-preview="Device viewed from the side"
+        >
           <picture>
             <img
               src="/carousel/fold-2.png"
@@ -42,7 +50,10 @@ import Layout from "../../layouts/Layout.astro";
             />
           </picture>
         </li>
-        <li style="--img: url(/carousel/fold-3.png)">
+        <li
+          style="--img: url(/carousel/fold-3.png)"
+          data-accessible-preview="Device viewed from the back"
+        >
           <picture>
             <img
               src="/carousel/fold-3.png"
@@ -53,7 +64,10 @@ import Layout from "../../layouts/Layout.astro";
             />
           </picture>
         </li>
-        <li style="--img: url(/carousel/fold-4.png)">
+        <li
+          style="--img: url(/carousel/fold-4.png)"
+          data-accessible-preview="Device unfolded in landscape mode"
+        >
           <picture>
             <img
               src="/carousel/fold-4.png"
@@ -64,7 +78,10 @@ import Layout from "../../layouts/Layout.astro";
             />
           </picture>
         </li>
-        <li style="--img: url(/carousel/fold-5.png)">
+        <li
+          style="--img: url(/carousel/fold-5.png)"
+          data-accessible-preview="Device partially folder and sitting on the table with the upper screen oriented towards the camera"
+        >
           <picture>
             <img
               src="/carousel/fold-5.png"
@@ -129,7 +146,9 @@ import Layout from "../../layouts/Layout.astro";
         display: grid;
 
         &::scroll-marker {
-          content: "";
+          /* make the marker meaningful for screen readers */
+          content: "" / attr(data-accessible-preview);
+          
           background-color: var(--surface-2);
           background-image: var(--img);
           background-size: contain;
