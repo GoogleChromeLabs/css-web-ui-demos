@@ -75,14 +75,14 @@
     gap: var(--size-2);
     place-content: safe center;
     box-sizing: border-box;
+    border-radius: var(--radius-round);
 
     scrollbar-width: none;
     scroll-behavior: smooth;
   }
 
   /* &::scroll-marker-group:focus-within {
-    outline: 1px solid var(--link);
-    outline-offset: 5px;
+    background: light-dark(white, var(--surface-1));
   } */
 
   &:where(:not(.--vertical), .--bidi)::scroll-marker-group {

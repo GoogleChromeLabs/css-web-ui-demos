@@ -10,3 +10,13 @@
 @view-transition {
   navigation: auto;
 }
+
+code {
+  background: light-dark(white, var(--gray-10));
+  
+  @supports (text-box: cap alphabetic) {
+    text-box: cap alphabetic;
+    line-height: 1cap;
+    padding-block: .25cap;
+  }
+}
