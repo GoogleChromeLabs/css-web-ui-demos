@@ -203,6 +203,10 @@ import Layout from "../../layouts/Layout.astro";
         padding-inline: var(--size-5);
         padding-block: var(--size-9) var(--size-3);
 
+        &:focus-within {
+          transform: translateY(0%);
+        }
+
         & h5 {
           color: var(--gray-0);
         }

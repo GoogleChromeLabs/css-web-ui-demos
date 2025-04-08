@@ -80,6 +80,11 @@
     scroll-behavior: smooth;
   }
 
+  /* &::scroll-marker-group:focus-within {
+    outline: 1px solid var(--link);
+    outline-offset: 5px;
+  } */
+
   &:where(:not(.--vertical), .--bidi)::scroll-marker-group {
     inline-size: 100%;
     max-inline-size: min(90cqi, 210px);
