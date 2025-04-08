@@ -27,7 +27,7 @@ import Layout from "../../layouts/Layout.astro";
     <div class="scroll-spy">
       <!-- marker group here -->
       <div class="carousel --vertical">
-        <section data-title="A vertical scroller">
+        <section aria-label="A vertical scroller">
           <h2>A vertical scroller</h2>
           <p>
             Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
@@ -48,7 +48,7 @@ import Layout from "../../layouts/Layout.astro";
             sunt!
           </p>
         </section>
-        <section data-title="Markers for sections">
+        <section aria-label="Markers for sections">
           <h2>Markers for sections</h2>
           <p>
             Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
@@ -109,7 +109,7 @@ import Layout from "../../layouts/Layout.astro";
             sunt!
           </p>
         </section>
-        <section data-title="Grid to lay it all out">
+        <section aria-label="Grid to lay it all out">
           <h2>Grid to lay it all out</h2>
           <p>
             Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laborum
@@ -199,7 +199,7 @@ import Layout from "../../layouts/Layout.astro";
         &::scroll-marker {
           --_bg: none;
 
-          content: attr(data-title);
+          content: attr(aria-label);
           padding-inline: 1.75ch;
           padding-block: 1ch;
           color: var(--text-2);
@@ -235,7 +235,7 @@ import Layout from "../../layouts/Layout.astro";
         }
 
         &::scroll-marker:active {
-          --_bg: hsl(from var(--surface-3) h s l / 0.5);
+          border-color: var(--link);
         }
 
         &::scroll-marker:hover:target-current {
