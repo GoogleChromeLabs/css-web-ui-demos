@@ -62,7 +62,8 @@ import Layout from "../../layouts/Layout.astro";
       }
 
       &::column::scroll-marker {
-        content: " ";
+        /* make the marker meaningful for screen readers */
+        content: "" / "Carousel item marker";
         aspect-ratio: 1;
         border-radius: var(--radius-round);
         animation: scale-in-and-out linear both;

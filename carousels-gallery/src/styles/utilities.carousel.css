@@ -5,7 +5,7 @@
 .carousel {
   scrollbar-width: none;
   anchor-name: --carousel;
-  
+
   /* size and scroll state container */
   container-type: inline-size scroll-state;
 
@@ -143,7 +143,7 @@
 
   > * {
     &::scroll-marker {
-      content: " ";
+      content: "" / "Carousel item marker";
       scroll-snap-align: center;
       aspect-ratio: 1;
       border: 1px solid light-dark(var(--gray-6), var(--surface-4));
@@ -152,8 +152,8 @@
       -webkit-tap-highlight-color: transparent;
       text-decoration: none;
       -webkit-tap-highlight-color: transparent;
-      transition: 
-        transform 0.3s var(--ease-spring-2), 
+      transition:
+        transform 0.3s var(--ease-spring-2),
         outline-offset 0.25s var(--ease-3)
       ;
       animation: scale-in-and-out linear both;
@@ -185,7 +185,7 @@
   }
 }
 
-/* TODO: 
+/* TODO:
   up, down
   use scroll-state(scrollable) to auto generate buttons */
 .scroll-buttons {
@@ -302,7 +302,7 @@
     font-variation-settings: "opsz" 30;
     transform: scale(1.1);
   }
-  
+
   &::scroll-button(*):not(:active):focus-visible {
     outline-offset: 2px;
     outline: 2px solid var(--link);
@@ -320,7 +320,7 @@
   &::scroll-button(down):not(:disabled):active {
     transform: translateY(5px) scale(0.95);
   }
-  
+
   &::scroll-button(*):disabled {
     opacity: 25%;
     cursor: not-allowed;
