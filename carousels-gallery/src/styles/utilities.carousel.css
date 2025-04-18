@@ -63,7 +63,7 @@
 }
 
 .scroll-markers {
-  scroll-marker-group: after;
+  scroll-marker-group: before;
 
   &::scroll-marker-group {
     position: absolute;
