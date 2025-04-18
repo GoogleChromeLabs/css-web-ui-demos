@@ -25,15 +25,15 @@ const links = {
     { title: "3D", href: "3d" },
     { title: "Curved", href: "curved" },
     { title: "Weather", href: "weather" },
-    { title: "Picker", href: "#" },
+    // { title: "Picker", href: "#" },
     { title: "Media Player", href: "media-player" },
     { title: "Wizard", href: "wizard" },
-    { title: "Recommendations", href: "#" },
-    { title: "Lightbox", href: "#" },
-    { title: "Adaptive", href: "#" },
-    { title: "Editable", href: "#" },
-    { title: "Unlocker", href: "#" },
-    { title: "Circular Lock", href: "#" },
+    // { title: "Recommendations", href: "#" },
+    // { title: "Lightbox", href: "#" },
+    // { title: "Adaptive", href: "#" },
+    // { title: "Editable", href: "#" },
+    // { title: "Unlocker", href: "#" },
+    // { title: "Circular Lock", href: "#" },
   ],
   vertical: [
     { title: "List", href: "list" },
@@ -41,18 +41,18 @@ const links = {
     { title: "Scrollyspy", href: "scroll-spy", badge: "Dev's Choice" },
     { title: "Slides", href: "slides" },
     { title: "Stack", href: "stack" },
-    { title: "Cards", href: "#" },
-    { title: "Gallery", href: "#" },
-    { title: "Scrollytelling", href: "#" },
-    { title: "Table Of Contents", href: "#" },
-    { title: "Restaurant Menu", href: "#" },
-    { title: "Date/Time Picker", href: "#" },
-    { title: "Color Picker", href: "#" },
-    { title: "Slot Machine", href: "#" },
+    // { title: "Cards", href: "#" },
+    // { title: "Gallery", href: "#" },
+    // { title: "Scrollytelling", href: "#" },
+    // { title: "Table Of Contents", href: "#" },
+    // { title: "Restaurant Menu", href: "#" },
+    // { title: "Date/Time Picker", href: "#" },
+    // { title: "Color Picker", href: "#" },
+    // { title: "Slot Machine", href: "#" },
   ],
   bidi: [
     { title: "Grid", href: "grid" },
-    { title: "Slides", href: "#" },
+    // { title: "Slides", href: "#" },
   ],
 };
 ---
@@ -108,14 +108,10 @@ const links = {
                     pathname === `/carousel/${key}/${link.href}` ? "active" : ""
                   }
                 >
-                  {link.href === "#" ? (
-                    <a>{link.title}</a>
-                  ) : (
-                    <a href={`/carousel/${key}/` + link.href + "/"}>
-                      {link.title}{" "}
-                      {link.badge && <span class="badge">{link.badge}</span>}
-                    </a>
-                  )}
+                  <a href={`/carousel/${key}/` + link.href + "/"}>
+                    {link.title}{" "}
+                    {link.badge && <span class="badge">{link.badge}</span>}
+                  </a>
                 </li>
               ))}
             </ul>
