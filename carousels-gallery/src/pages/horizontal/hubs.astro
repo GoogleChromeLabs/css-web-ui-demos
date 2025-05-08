@@ -20,20 +20,27 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <div class="carousel scroll-buttons scroll-markers">
-      <section class="hub bento-lg">
+    <div
+      class="carousel --offscreen-inert scroll-buttons scroll-markers"
+      role="region"
+      aria-label="Hubs carousel demo"
+      aria-live="polite"
+    >
+      <section class="hub bento-lg" role="tabpanel" aria-label="Demo slide 1">
         <div style="--sibling-index: 1"></div>
         <div style="--sibling-index: 2"></div>
         <div style="--sibling-index: 3"></div>
         <div style="--sibling-index: 4"></div>
         <div style="--sibling-index: 5"></div>
       </section>
-      <section class="hub bento-md">
+
+      <section class="hub bento-md" role="tabpanel" aria-label="Demo slide 2">
         <div style="--sibling-index: 1"></div>
         <div style="--sibling-index: 2"></div>
         <div style="--sibling-index: 3"></div>
       </section>
-      <section class="hub grid">
+
+      <section class="hub grid" role="tabpanel" aria-label="Demo slide 3">
         <div style="--sibling-index: 1"></div>
         <div style="--sibling-index: 2"></div>
         <div style="--sibling-index: 3"></div>
@@ -56,6 +63,7 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: 100cqi;
 
       > * {
+        margin-inline: auto;
         scroll-snap-align: center;
         scroll-snap-stop: always;
 
@@ -82,7 +90,7 @@ import Layout from "../../layouts/Layout.astro";
     .hub {
       display: grid;
       gap: var(--size-5);
-      margin-inline: auto;
+      container-type: scroll-state;
 
       &.bento-lg {
         grid-template-columns: repeat(4, 15cqi);

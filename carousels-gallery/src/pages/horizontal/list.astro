@@ -27,43 +27,33 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel scroll-markers scroll-buttons">
-      <li tabindex="0"><p>1</p></li>
-      <li tabindex="0"><p>2</p></li>
-      <li tabindex="0"><p>3</p></li>
-      <li tabindex="0"><p>4</p></li>
-      <li tabindex="0"><p>5</p></li>
-      <li tabindex="0"><p>6</p></li>
-      <li tabindex="0"><p>7</p></li>
-      <li tabindex="0"><p>8</p></li>
-      <li tabindex="0"><p>9</p></li>
-      <li tabindex="0"><p>10</p></li>
-      <li tabindex="0"><p>11</p></li>
-      <li tabindex="0"><p>12</p></li>
-      <li tabindex="0"><p>13</p></li>
-      <li tabindex="0"><p>14</p></li>
-      <li tabindex="0"><p>15</p></li>
-      <li tabindex="0"><p>16</p></li>
+    <ul
+      class="carousel --offscreen-inert scroll-markers scroll-buttons"
+      role="region"
+      aria-label="List carousel demo"
+      aria-live="polite"
+    >
+      <li tabindex="0" aria-label="Demo slide 1"><p>1</p></li>
+      <li tabindex="0" aria-label="Demo slide 2"><p>2</p></li>
+      <li tabindex="0" aria-label="Demo slide 3"><p>3</p></li>
+      <li tabindex="0" aria-label="Demo slide 4"><p>4</p></li>
+      <li tabindex="0" aria-label="Demo slide 5"><p>5</p></li>
+      <li tabindex="0" aria-label="Demo slide 6"><p>6</p></li>
+      <li tabindex="0" aria-label="Demo slide 7"><p>7</p></li>
+      <li tabindex="0" aria-label="Demo slide 8"><p>8</p></li>
+      <li tabindex="0" aria-label="Demo slide 9"><p>9</p></li>
+      <li tabindex="0" aria-label="Demo slide 10"><p>10</p></li>
+      <li tabindex="0" aria-label="Demo slide 11"><p>11</p></li>
+      <li tabindex="0" aria-label="Demo slide 12"><p>12</p></li>
+      <li tabindex="0" aria-label="Demo slide 13"><p>13</p></li>
+      <li tabindex="0" aria-label="Demo slide 14"><p>14</p></li>
+      <li tabindex="0" aria-label="Demo slide 15"><p>15</p></li>
+      <li tabindex="0" aria-label="Demo slide 16"><p>16</p></li>
     </ul>
   </section>
 </Layout>
 
 <style>
-  /* must be 20% in view or else inert */
-  @keyframes offscreen-inert {
-    entry 0%,
-    entry 19%,
-    exit 100% {
-      interactivity: inert;
-      opacity: 0.25;
-    }
-    entry 20%,
-    exit 99% {
-      interactivity: auto;
-      opacity: 1;
-    }
-  }
-
   .carousel {
     /* Reset list styles */
     list-style-type: none;
@@ -93,8 +83,7 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     & > li {
-      animation: offscreen-inert linear both;
-      animation-timeline: view(x);
+      container-type: scroll-state;
 
       background: light-dark(white, var(--surface-2));
       padding: 0;

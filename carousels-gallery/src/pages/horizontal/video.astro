@@ -20,9 +20,14 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel">
-      <li>
-        <figure class="parallax-item">
+    <ul
+      class="carousel --unsnapped-inert"
+      role="region"
+      aria-label="Video carousel demo"
+      aria-live="polite"
+    >
+      <li id="demo-slide-1" aria-label="Demo slide 1">
+        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-1">
           <video
             width="1280"
             height="720"
@@ -34,8 +39,8 @@ import Layout from "../../layouts/Layout.astro";
         </figure>
       </li>
 
-      <li>
-        <figure class="parallax-item">
+      <li id="demo-slide-2" aria-label="Demo slide 2">
+        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-2">
           <video
             width="1280"
             height="720"
@@ -47,8 +52,8 @@ import Layout from "../../layouts/Layout.astro";
         </figure>
       </li>
 
-      <li>
-        <figure class="parallax-item">
+      <li id="demo-slide-3" aria-label="Demo slide 3">
+        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-3">
           <video
             width="1280"
             height="720"
@@ -60,8 +65,8 @@ import Layout from "../../layouts/Layout.astro";
         </figure>
       </li>
 
-      <li>
-        <figure class="parallax-item">
+      <li id="demo-slide-4" aria-label="Demo slide 4">
+        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-4">
           <video
             width="1280"
             height="720"

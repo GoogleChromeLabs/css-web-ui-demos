@@ -1,7 +1,3 @@
-/* todo:
-  - bring offscreen work into this file
-*/
-
 .carousel {
   scrollbar-width: none;
   anchor-name: --carousel;
@@ -35,6 +31,7 @@
 
   ul& {
     padding-inline-start: 0;
+    list-style-type: none;
   }
 
   /* &:focus-within {
@@ -43,22 +40,31 @@
   } */
 
   @media (prefers-reduced-motion: no-preference) {
-    & {
-      scroll-behavior: smooth;
-    }
+    scroll-behavior: smooth;
   }
 
   > * {
-    container-type: scroll-state;
     scroll-snap-align: start;
+  }
 
-    /* todo: convert to SDA */
-    /* move this to a specialty demo */
-    /* > * {
-      @container not scroll-state(snapped) {
-        interactivity: inert;
+  &:where([aria-live]):where(.--offscreen-inert) {
+    > * {
+      animation: offscreen-inert linear both;
+      animation-timeline: view(x);
+    }
+  }
+
+  &:where([aria-live]):where(.--unsnapped-inert) {
+    > * {
+      container-type: scroll-state;
+
+      [role="tabpanel"] {
+        @container not scroll-state(snapped) {
+          interactivity: inert;
+          opacity: 0.25;
+        }
       }
-    } */
+    }
   }
 }
 
@@ -143,7 +149,7 @@
 
   > * {
     &::scroll-marker {
-      content: "" / "Carousel item marker";
+      content: "" / attr(aria-label);
       scroll-snap-align: center;
       aspect-ratio: 1;
       border: 1px solid light-dark(var(--gray-6), var(--surface-4));
@@ -158,7 +164,9 @@
       ;
       animation: scale-in-and-out linear both;
       animation-timeline: view(x);
-      interactivity: auto; /* todo: remove once they dont inherit none from inerted origin elements */
+
+      /* todo: remove once marker `interactivity` is inherited from `::scroll-marker-group` */
+      interactivity: auto;
     }
 
     &::scroll-marker:target-current {
@@ -341,4 +349,16 @@
 	exit 100% {
 		transform: scale(.25);
 	}
+}
+
+/* A scroll-driven animation to set items to inert when offscreen. */
+@keyframes offscreen-inert {
+  entry 0%, exit 100% {
+    interactivity: inert;
+    opacity: 0.25;
+  }
+  entry 100%, exit 0% {
+    interactivity: auto;
+    opacity: 1;
+  }
 }
