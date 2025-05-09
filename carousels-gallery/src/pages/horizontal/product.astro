@@ -20,13 +20,18 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <div class="product-carousel">
-      <ul class="carousel scroll-markers">
-        <li
+    <div
+      class="product-carousel"
+      role="region"
+      aria-label="Product carousel demo"
+    >
+      <div class="carousel carousel--scroll-markers carousel--unsnapped-inert">
+        <div
+          class="carousel__slide"
           style="--img: url(/carousel/fold-1.png)"
-          data-accessible-preview="Device facing the camera, partially folded"
+          data-label="Device facing the camera, partially folded"
         >
-          <picture>
+          <picture role="tabpanel" aria-label="Slide 1">
             <img
               src="/carousel/fold-1.png"
               alt="Device facing the camera, partially folded"
@@ -35,12 +40,13 @@ import Layout from "../../layouts/Layout.astro";
               loading="lazy"
             />
           </picture>
-        </li>
-        <li
+        </div>
+        <div
+          class="carousel__slide"
           style="--img: url(/carousel/fold-2.png)"
-          data-accessible-preview="Device viewed from the side"
+          data-label="Device viewed from the side"
         >
-          <picture>
+          <picture role="tabpanel" aria-label="Slide 2">
             <img
               src="/carousel/fold-2.png"
               alt="Device viewed from the side"
@@ -49,12 +55,13 @@ import Layout from "../../layouts/Layout.astro";
               loading="lazy"
             />
           </picture>
-        </li>
-        <li
+        </div>
+        <div
+          class="carousel__slide"
           style="--img: url(/carousel/fold-3.png)"
-          data-accessible-preview="Device viewed from the back"
+          data-label="Device viewed from the back"
         >
-          <picture>
+          <picture role="tabpanel" aria-label="Slide 3">
             <img
               src="/carousel/fold-3.png"
               alt="Device viewed from the back"
@@ -63,12 +70,13 @@ import Layout from "../../layouts/Layout.astro";
               loading="lazy"
             />
           </picture>
-        </li>
-        <li
+        </div>
+        <div
+          class="carousel__slide"
           style="--img: url(/carousel/fold-4.png)"
-          data-accessible-preview="Device unfolded in landscape mode"
+          data-label="Device unfolded in landscape mode"
         >
-          <picture>
+          <picture role="tabpanel" aria-label="Slide 4">
             <img
               src="/carousel/fold-4.png"
               alt="Device unfolded in landscape mode"
@@ -77,12 +85,13 @@ import Layout from "../../layouts/Layout.astro";
               loading="lazy"
             />
           </picture>
-        </li>
-        <li
+        </div>
+        <div
+          class="carousel__slide"
           style="--img: url(/carousel/fold-5.png)"
-          data-accessible-preview="Device partially folder and sitting on the table with the upper screen oriented towards the camera"
+          data-label="Device partially folder and sitting on the table with the upper screen oriented towards the camera"
         >
-          <picture>
+          <picture role="tabpanel" aria-label="Slide 5">
             <img
               src="/carousel/fold-5.png"
               alt="Device partially folder and sitting on the table with the upper screen oriented towards the camera"
@@ -91,8 +100,8 @@ import Layout from "../../layouts/Layout.astro";
               loading="lazy"
             />
           </picture>
-        </li>
-      </ul>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -138,7 +147,7 @@ import Layout from "../../layouts/Layout.astro";
         block-size: auto;
       }
 
-      & > li {
+      .carousel__slide {
         padding: 0;
         border-radius: var(--radius-4);
         background: var(--surface-2);
@@ -147,8 +156,8 @@ import Layout from "../../layouts/Layout.astro";
 
         &::scroll-marker {
           /* make the marker meaningful for screen readers */
-          content: "" / attr(data-accessible-preview);
-          
+          content: "" / attr(data-label);
+
           background-color: var(--surface-2);
           background-image: var(--img);
           background-size: contain;

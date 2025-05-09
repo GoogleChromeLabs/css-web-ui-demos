@@ -17,77 +17,83 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel scroll-markers">
-      <li class="weather-card">
-        <h3>Today 81° / 58°</h3>
-        <p>
-          <svg
-            aria-hidden
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 72 72"
-            ><path
-              fill="#fcea2b"
-              d="M18.458 38.68c-5.417-2.593-8.903-9.198-7.25-12.825c1.696-3.72 6.313-8.266 12.555-6.1s6.472 8.252 6.472 8.252l-.594 2.621l4.687-3.895c.65-.656.542-2.395-.545-2.006l-4.943-1.586l1.513-7.245l-6.547 3.455l-3.03-6.755l-3.266 6.647l-6.424-3.685l1.266 7.295l-7.36.796l5.305 5.16l-5.482 4.972l7.325 1.055l-.348 5.312c.06 1.245 1.293 1.542 2.124 1.076z"
-            ></path><path
-              fill="#fcea2b"
-              d="M30.235 28.007c-.493-4.948-4.668-8.812-9.745-8.812c-5.41 0-9.794 4.385-9.794 9.794c0 3.89 2.267 7.25 5.553 8.83l2.21.86l3.497-.363l1.82-4.613l4.697-2.915l1.482-.415z"
-            ></path><path
-              fill="#fff"
-              d="M22.342 37.713a.81.81 0 0 1-.723.729c-4.621.495-8.176 5.045-8.176 10.584c0 5.87 4.07 10.628 9.092 10.628h34.662c5.516 0 9.989-5.029 9.989-11.231c0-5.945-4.108-10.81-9.305-11.206a.865.865 0 0 1-.796-.698c-1.161-5.962-6.518-10.443-12.85-10.443c-4.116 0-7.782 1.863-10.163 4.828c-.233.29-.623.422-.966.278c-.917-.384-1.884-.57-2.967-.57c-4.09 0-7.449 3.122-7.797 7.101"
-            ></path><g
-              fill="none"
-              stroke="#000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              ><path
-                stroke-width="1.726"
-                d="m13.533 40.45l-2.907 1.632l1.513-7.245l-7.325-1.056l5.483-4.971l-5.306-5.161l7.361-.796l-1.266-7.295l6.424 3.685l3.266-6.647l3.029 6.755l6.548-3.455l-1.513 7.245l7.325 1.055l-2.656 2.164"
-              ></path><path
-                stroke-width="1.726"
-                d="M16.249 37.819a9.8 9.8 0 0 1-5.553-8.83c0-5.41 4.385-9.794 9.794-9.794c5.077 0 9.252 3.864 9.745 8.812"
-              ></path><path
-                stroke-width="1.817"
-                d="M22.342 37.713a.81.81 0 0 1-.723.729c-4.621.495-8.176 5.045-8.176 10.584c0 5.87 4.07 10.628 9.092 10.628h34.662c5.516 0 9.989-5.029 9.989-11.231c0-5.945-4.108-10.81-9.305-11.206a.865.865 0 0 1-.796-.698c-1.161-5.962-6.518-10.443-12.85-10.443c-4.116 0-7.782 1.863-10.163 4.828c-.233.29-.623.422-.966.278c-.917-.384-1.884-.57-2.967-.57c-4.09 0-7.449 3.122-7.797 7.101"
-              ></path></g
-            ></svg
-          >
-          Partly cloudy
-        </p>
-      </li>
-      <li class="weather-card">
-        <h3>Tomorrow 91° / 78°</h3>
-        <p>
-          <svg
-            aria-hidden
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 72 72"
-            ><path
-              fill="#FCEA2B"
-              d="m66 36l-10.676 5.182l6.658 9.824l-11.84-.864l.864 11.84l-9.825-6.658L36 66l-5.182-10.676l-9.824 6.658l.864-11.84l-11.84.864l6.658-9.825L6 36l10.677-5.182l-6.659-9.824l11.84.864l-.864-11.84l9.825 6.658L36 6l5.182 10.677l9.824-6.659l-.864 11.84l11.84-.864l-6.658 9.825z"
-            ></path><g
-              fill="none"
-              stroke="#000"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-miterlimit="10"
-              stroke-width="2"
-              ><circle cx="36" cy="35.95" r="19.828"></circle><path
-                d="m66 36l-10.676 5.182l6.658 9.824l-11.84-.864l.864 11.84l-9.825-6.658L36 66l-5.182-10.676l-9.824 6.658l.864-11.84l-11.84.864l6.658-9.825L6 36l10.677-5.182l-6.659-9.824l11.84.864l-.864-11.84l9.825 6.658L36 6l5.182 10.677l9.824-6.659l-.864 11.84l11.84-.864l-6.658 9.825z"
-              ></path></g
-            ></svg
-          >
-          Mostly sunny
-        </p>
-      </li>
-    </ul>
+    <div role="region" aria-label="Weather carousel demo">
+      <div class="carousel carousel--scroll-markers carousel--unsnapped-inert">
+        <div class="carousel__slide" data-label="Slide 1">
+          <div class="weather-card" role="tabpanel">
+            <h3>Today 81° / 58°</h3>
+            <p>
+              <svg
+                aria-hidden
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 72 72"
+                ><path
+                  fill="#fcea2b"
+                  d="M18.458 38.68c-5.417-2.593-8.903-9.198-7.25-12.825c1.696-3.72 6.313-8.266 12.555-6.1s6.472 8.252 6.472 8.252l-.594 2.621l4.687-3.895c.65-.656.542-2.395-.545-2.006l-4.943-1.586l1.513-7.245l-6.547 3.455l-3.03-6.755l-3.266 6.647l-6.424-3.685l1.266 7.295l-7.36.796l5.305 5.16l-5.482 4.972l7.325 1.055l-.348 5.312c.06 1.245 1.293 1.542 2.124 1.076z"
+                ></path><path
+                  fill="#fcea2b"
+                  d="M30.235 28.007c-.493-4.948-4.668-8.812-9.745-8.812c-5.41 0-9.794 4.385-9.794 9.794c0 3.89 2.267 7.25 5.553 8.83l2.21.86l3.497-.363l1.82-4.613l4.697-2.915l1.482-.415z"
+                ></path><path
+                  fill="#fff"
+                  d="M22.342 37.713a.81.81 0 0 1-.723.729c-4.621.495-8.176 5.045-8.176 10.584c0 5.87 4.07 10.628 9.092 10.628h34.662c5.516 0 9.989-5.029 9.989-11.231c0-5.945-4.108-10.81-9.305-11.206a.865.865 0 0 1-.796-.698c-1.161-5.962-6.518-10.443-12.85-10.443c-4.116 0-7.782 1.863-10.163 4.828c-.233.29-.623.422-.966.278c-.917-.384-1.884-.57-2.967-.57c-4.09 0-7.449 3.122-7.797 7.101"
+                ></path><g
+                  fill="none"
+                  stroke="#000"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path
+                    stroke-width="1.726"
+                    d="m13.533 40.45l-2.907 1.632l1.513-7.245l-7.325-1.056l5.483-4.971l-5.306-5.161l7.361-.796l-1.266-7.295l6.424 3.685l3.266-6.647l3.029 6.755l6.548-3.455l-1.513 7.245l7.325 1.055l-2.656 2.164"
+                  ></path><path
+                    stroke-width="1.726"
+                    d="M16.249 37.819a9.8 9.8 0 0 1-5.553-8.83c0-5.41 4.385-9.794 9.794-9.794c5.077 0 9.252 3.864 9.745 8.812"
+                  ></path><path
+                    stroke-width="1.817"
+                    d="M22.342 37.713a.81.81 0 0 1-.723.729c-4.621.495-8.176 5.045-8.176 10.584c0 5.87 4.07 10.628 9.092 10.628h34.662c5.516 0 9.989-5.029 9.989-11.231c0-5.945-4.108-10.81-9.305-11.206a.865.865 0 0 1-.796-.698c-1.161-5.962-6.518-10.443-12.85-10.443c-4.116 0-7.782 1.863-10.163 4.828c-.233.29-.623.422-.966.278c-.917-.384-1.884-.57-2.967-.57c-4.09 0-7.449 3.122-7.797 7.101"
+                  ></path></g
+                ></svg
+              >
+              Partly cloudy
+            </p>
+          </div>
+        </div>
+        <div class="carousel__slide" data-label="Slide 2">
+          <div class="weather-card" role="tabpanel">
+            <h3>Tomorrow 91° / 78°</h3>
+            <p>
+              <svg
+                aria-hidden
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 72 72"
+                ><path
+                  fill="#FCEA2B"
+                  d="m66 36l-10.676 5.182l6.658 9.824l-11.84-.864l.864 11.84l-9.825-6.658L36 66l-5.182-10.676l-9.824 6.658l.864-11.84l-11.84.864l6.658-9.825L6 36l10.677-5.182l-6.659-9.824l11.84.864l-.864-11.84l9.825 6.658L36 6l5.182 10.677l9.824-6.659l-.864 11.84l11.84-.864l-6.658 9.825z"
+                ></path><g
+                  fill="none"
+                  stroke="#000"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="2"
+                  ><circle cx="36" cy="35.95" r="19.828"></circle><path
+                    d="m66 36l-10.676 5.182l6.658 9.824l-11.84-.864l.864 11.84l-9.825-6.658L36 66l-5.182-10.676l-9.824 6.658l.864-11.84l-11.84.864l6.658-9.825L6 36l10.677-5.182l-6.659-9.824l11.84.864l-.864-11.84l9.825 6.658L36 6l5.182 10.677l9.824-6.659l-.864 11.84l11.84-.864l-6.658 9.825z"
+                  ></path></g
+                ></svg
+              >
+              Mostly sunny
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <style>
-    ul {
+    .carousel {
       /* Reset list styles */
       list-style-type: none;
       counter-reset: item;
@@ -114,35 +120,35 @@ import Layout from "../../layouts/Layout.astro";
         content: "";
         display: block;
       }
+    }
 
-      & > li {
-        scroll-snap-align: center;
+    .carousel__slide {
+      scroll-snap-align: center;
 
-        inline-size: inherit;
-        padding: 0;
-        display: grid;
-        gap: var(--size-2);
+      inline-size: inherit;
+      padding: 0;
+      display: grid;
+      gap: var(--size-2);
 
-        > h3 {
-          font-size: var(--font-size-4);
-          font-weight: 200;
-        }
+      h3 {
+        font-size: var(--font-size-4);
+        font-weight: 200;
+      }
 
-        > p {
-          display: flex;
-          gap: 1ch;
-          place-items: center;
-          color: var(--text-2);
-        }
+      p {
+        display: flex;
+        gap: 1ch;
+        place-items: center;
+        color: var(--text-2);
+      }
 
-        &::scroll-marker {
-          background: var(--surface-4);
-        }
+      &::scroll-marker {
+        background: var(--surface-4);
+      }
 
-        &::scroll-marker:target-current {
-          background: var(--text-1);
-          border-color: var(--text-1);
-        }
+      &::scroll-marker:target-current {
+        background: var(--text-1);
+        border-color: var(--text-1);
       }
     }
 

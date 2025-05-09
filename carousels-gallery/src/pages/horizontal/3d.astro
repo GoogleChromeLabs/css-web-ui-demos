@@ -16,56 +16,61 @@ import Layout from "../../layouts/Layout.astro";
       <p></p>
     </header>
 
-    <ul class="carousel scroll-markers scroll-buttons">
-      <li tabindex="0">
-        <div class="card"><p>1</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>2</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>3</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>4</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>5</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>6</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>7</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>8</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>9</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>10</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>11</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>12</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>13</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>14</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>15</p></div>
-      </li>
-      <li tabindex="0">
-        <div class="card"><p>16</p></div>
-      </li>
-    </ul>
+    <div role="region" aria-label="3D carousel demo">
+      <div
+        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" tabindex="0" data-label="Slide 1">
+          <div class="card"><p>1</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 2">
+          <div class="card"><p>2</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 3">
+          <div class="card"><p>3</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 4">
+          <div class="card"><p>4</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 5">
+          <div class="card"><p>5</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 6">
+          <div class="card"><p>6</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 7">
+          <div class="card"><p>7</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 8">
+          <div class="card"><p>8</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 9">
+          <div class="card"><p>9</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 10">
+          <div class="card"><p>10</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 11">
+          <div class="card"><p>11</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 12">
+          <div class="card"><p>12</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 13">
+          <div class="card"><p>13</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 14">
+          <div class="card"><p>14</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 15">
+          <div class="card"><p>15</p></div>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 16">
+          <div class="card"><p>16</p></div>
+        </div>
+      </div>
+    </div>
   </section>
 </Layout>
 
@@ -109,56 +114,56 @@ import Layout from "../../layouts/Layout.astro";
     &:hover::scroll-button(right) {
       background-color: light-dark(white, var(--surface-1));
     }
+  }
 
-    & > li {
-      display: grid;
-      padding: 0;
+  .carousel__slide {
+    display: grid;
+    padding: 0;
+    transform-style: preserve-3d;
+    scroll-snap-align: center;
+    container-type: scroll-state;
+
+    &:nth-of-type(4) {
+      scroll-initial-target: nearest;
+    }
+
+    > .card {
+      background: light-dark(#fffa, var(--surface-2));
+
+      display: inline-flex;
+      place-items: center;
+      place-content: center;
+
+      aspect-ratio: var(--ratio-portrait);
+
+      border: 1px solid var(--surface-3);
+      box-shadow: var(--shadow-2);
+      border-radius: var(--radius-2);
+
       transform-style: preserve-3d;
-      scroll-snap-align: center;
-      container-type: scroll-state;
+      animation: carousel linear both;
+      animation-timeline: view(x);
+      animation-range: contain;
 
-      &:nth-of-type(4) {
-        scroll-initial-target: nearest;
+      > p {
+        transform-style: preserve-3d;
+        transform: translateZ(2.5vw);
+
+        font-family: var(--font-antique);
+        font-size: 10cqi;
+
+        transition: scale 1s var(--ease-spring-4);
+
+        @container scroll-state(snapped: inline) {
+          color: var(--link);
+          scale: 1.75;
+        }
       }
 
-      & > .card {
-        background: light-dark(#fffa, var(--surface-2));
-
-        display: inline-flex;
-        place-items: center;
-        place-content: center;
-
-        aspect-ratio: var(--ratio-portrait);
-
-        border: 1px solid var(--surface-3);
-        box-shadow: var(--shadow-2);
-        border-radius: var(--radius-2);
-
-        transform-style: preserve-3d;
-        animation: carousel linear both;
-        animation-timeline: view(x);
-        animation-range: contain;
-
-        > p {
-          transform-style: preserve-3d;
-          transform: translateZ(2.5vw);
-
-          font-family: var(--font-antique);
-          font-size: 10cqi;
-
-          transition: scale 1s var(--ease-spring-4);
-
-          @container scroll-state(snapped: inline) {
-            color: var(--link);
-            scale: 1.75;
-          }
-        }
-
-        /* todo: maybe remove? */
-        &:focus {
-          outline: 2px solid var(--link);
-          outline-offset: -2px;
-        }
+      /* todo: maybe remove? */
+      &:focus {
+        outline: 2px solid var(--link);
+        outline-offset: -2px;
       }
     }
   }
