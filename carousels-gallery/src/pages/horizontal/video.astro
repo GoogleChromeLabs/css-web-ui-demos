@@ -20,64 +20,61 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul
-      class="carousel --unsnapped-inert"
-      role="region"
-      aria-label="Video carousel demo"
-      aria-live="polite"
-    >
-      <li id="demo-slide-1" aria-label="Demo slide 1">
-        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-1">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/turtle.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>It's a turtle!</figcaption>
-        </figure>
-      </li>
+    <div role="region" aria-label="Video carousel demo">
+      <div class="carousel carousel--unsnapped-inert" aria-live="polite">
+        <div class="carousel__slide" data-label="Slide 1">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 1">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/turtle.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>It's a turtle!</figcaption>
+          </figure>
+        </div>
 
-      <li id="demo-slide-2" aria-label="Demo slide 2">
-        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-2">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/snow.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>Falling Snow</figcaption>
-        </figure>
-      </li>
+        <div class="carousel__slide" data-label="Slide 2">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 2">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/snow.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>Falling Snow</figcaption>
+          </figure>
+        </div>
 
-      <li id="demo-slide-3" aria-label="Demo slide 3">
-        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-3">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/wheel.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>Ferris Wheel</figcaption>
-        </figure>
-      </li>
+        <div class="carousel__slide" data-label="Slide 3">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 3">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/wheel.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>Ferris Wheel</figcaption>
+          </figure>
+        </div>
 
-      <li id="demo-slide-4" aria-label="Demo slide 4">
-        <figure class="parallax-item" role="tabpanel" aria-labelledby="demo-slide-4">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/chameleon.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>I See You</figcaption>
-        </figure>
-      </li>
-    </ul>
+        <div class="carousel__slide" data-label="Slide 4">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 4">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/chameleon.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>I See You</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
     <div class="fixed-logo">
       <img
         src="/carousel/googletv-logo.svg"
@@ -157,25 +154,6 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: min(80cqi, 1280px);
     }
 
-    > li {
-      scroll-snap-stop: always;
-
-      counter-increment: page;
-      animation: count-before linear forwards;
-      animation-timeline: view(x);
-      animation-range: entry 50% entry 50%;
-
-      padding: 0;
-      max-inline-size: initial;
-
-      flex-shrink: 0;
-      inline-size: 100cqi;
-      overflow: clip;
-
-      contain-intrinsic-inline-size: 100cqi;
-      content-visibility: auto;
-    }
-
     &::scroll-button(left) {
       content: "Previous";
       background-image: url(https://api.iconify.design/material-symbols:chevron-left.svg?color=%23ffffff);
@@ -247,6 +225,25 @@ import Layout from "../../layouts/Layout.astro";
 
       background: none; /* todo: get rid of this when scroll-button(*) stops matching */
     }
+  }
+
+  .carousel__slide {
+    scroll-snap-stop: always;
+
+    counter-increment: page;
+    animation: count-before linear forwards;
+    animation-timeline: view(x);
+    animation-range: entry 50% entry 50%;
+
+    padding: 0;
+    max-inline-size: initial;
+
+    flex-shrink: 0;
+    inline-size: 100cqi;
+    overflow: clip;
+
+    contain-intrinsic-inline-size: 100cqi;
+    content-visibility: auto;
   }
 
   .parallax-item {

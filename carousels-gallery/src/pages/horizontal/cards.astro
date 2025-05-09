@@ -17,134 +17,134 @@ import Layout from "../../layouts/Layout.astro";
       <p>Buttons and markers both anchored to the bottom</p>
     </header>
 
-    <ul
-      class="carousel --offscreen-inert scroll-markers scroll-buttons"
-      aria-live="polite"
-      role="region"
-      aria-label="Example carousel"
-    >
-      <li aria-label="Demo slide 1">
-        <article class="card snapped">
-          <figure>
-            <picture>
-              <img
-                src="https://assets.codepen.io/2585/Roboto.svg"
-                alt="a black and white line drawing of a futuristic person in a jacket pants and helmet striding forward"
-                height="500"
-                width="500"
-              />
-            </picture>
-            <figcaption>
-              <h5>Cyber Jumper</h5>
-              <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quae,
-                neque.
-              </p>
-              <a href="#">Check it out</a>
-            </figcaption>
-          </figure>
-        </article>
-      </li>
+    <div role="region" aria-label="Card carousel demo">
+      <div
+        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <article class="card snapped">
+            <figure>
+              <picture>
+                <img
+                  src="https://assets.codepen.io/2585/Roboto.svg"
+                  alt="a black and white line drawing of a futuristic person in a jacket pants and helmet striding forward"
+                  height="500"
+                  width="500"
+                />
+              </picture>
+              <figcaption>
+                <h5>Cyber Jumper</h5>
+                <p>
+                  Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+                  Quae, neque.
+                </p>
+                <a href="#">Check it out</a>
+              </figcaption>
+            </figure>
+          </article>
+        </div>
 
-      <li aria-label="Demo slide 2">
-        <article class="card">
-          <figure>
-            <picture>
-              <img
-                src="https://assets.codepen.io/2585/Entertainment.svg"
-                alt="a black and white drawing of a person with curly hair, wearing a jacket and pants and holding, what looks like a small media player"
-                height="500"
-                width="500"
-              />
-            </picture>
-            <figcaption>
-              <h5>Jam Strut</h5>
-              <p>
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                laboris nisi ut aliquip ex ea commodo consequat.
-              </p>
-              <a href="#">Check it out</a>
-            </figcaption>
-          </figure>
-        </article>
-      </li>
+        <div class="carousel__slide" data-label="Slide 2">
+          <article class="card">
+            <figure>
+              <picture>
+                <img
+                  src="https://assets.codepen.io/2585/Entertainment.svg"
+                  alt="a black and white drawing of a person with curly hair, wearing a jacket and pants and holding, what looks like a small media player"
+                  height="500"
+                  width="500"
+                />
+              </picture>
+              <figcaption>
+                <h5>Jam Strut</h5>
+                <p>
+                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                  laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+                <a href="#">Check it out</a>
+              </figcaption>
+            </figure>
+          </article>
+        </div>
 
-      <li aria-label="Demo slide 3">
-        <article class="card scroll-start">
-          <figure>
-            <picture>
-              <img
-                src="https://assets.codepen.io/2585/Mechanical+Love.svg"
-                alt="a black and white drawing of two people standing side by side with their arms around each other and wearing backpacks"
-                height="500"
-                width="500"
-              />
-            </picture>
-            <figcaption>
-              <h5>Mechanical Love</h5>
-              <p>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse
-                cillum dolore eu fugiat nulla pariatur.
-              </p>
-              <a href="#">Check it out</a>
-            </figcaption>
-          </figure>
-        </article>
-      </li>
+        <div class="carousel__slide" data-label="Slide 3">
+          <article class="card scroll-start">
+            <figure>
+              <picture>
+                <img
+                  src="https://assets.codepen.io/2585/Mechanical+Love.svg"
+                  alt="a black and white drawing of two people standing side by side with their arms around each other and wearing backpacks"
+                  height="500"
+                  width="500"
+                />
+              </picture>
+              <figcaption>
+                <h5>Mechanical Love</h5>
+                <p>
+                  Duis aute irure dolor in reprehenderit in voluptate velit esse
+                  cillum dolore eu fugiat nulla pariatur.
+                </p>
+                <a href="#">Check it out</a>
+              </figcaption>
+            </figure>
+          </article>
+        </div>
 
-      <li aria-label="Demo slide 4">
-        <article class="card">
-          <figure>
-            <picture>
-              <img
-                src="https://assets.codepen.io/2585/Waiting.svg"
-                alt="a black and white drawing of a person sitting cross-legged"
-                height="500"
-                width="500"
-              />
-            </picture>
-            <figcaption>
-              <h5>Waiting Patiently</h5>
-              <p>
-                Excepteur sint occaecat cupidatat non proident, sunt in culpa
-                qui officia deserunt mollit anim id est laborum.
-              </p>
-              <a href="#">Check it out</a>
-            </figcaption>
-          </figure>
-        </article>
-      </li>
+        <div class="carousel__slide" data-label="Slide 4">
+          <article class="card">
+            <figure>
+              <picture>
+                <img
+                  src="https://assets.codepen.io/2585/Waiting.svg"
+                  alt="a black and white drawing of a person sitting cross-legged"
+                  height="500"
+                  width="500"
+                />
+              </picture>
+              <figcaption>
+                <h5>Waiting Patiently</h5>
+                <p>
+                  Excepteur sint occaecat cupidatat non proident, sunt in culpa
+                  qui officia deserunt mollit anim id est laborum.
+                </p>
+                <a href="#">Check it out</a>
+              </figcaption>
+            </figure>
+          </article>
+        </div>
 
-      <li aria-label="Demo slide 5">
-        <article class="card">
-          <figure>
-            <picture>
-              <img
-                src="https://assets.codepen.io/2585/New+Beginnings.svg"
-                alt="a black and white drawing of a person sitting in an armchair reading a book, the chair has wires that are connected to the person."
-                height="500"
-                width="500"
-              />
-            </picture>
-            <figcaption>
-              <h5>New Beginnings Are Beautiful</h5>
-              <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-              </p>
-              <a href="#">Check it out</a>
-            </figcaption>
-          </figure>
-        </article>
-      </li>
-    </ul>
+        <div class="carousel__slide" data-label="Slide 5">
+          <article class="card">
+            <figure>
+              <picture>
+                <img
+                  src="https://assets.codepen.io/2585/New+Beginnings.svg"
+                  alt="a black and white drawing of a person sitting in an armchair reading a book, the chair has wires that are connected to the person."
+                  height="500"
+                  width="500"
+                />
+              </picture>
+              <figcaption>
+                <h5>New Beginnings Are Beautiful</h5>
+                <p>
+                  Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+                  accusantium doloremque laudantium, totam rem aperiam, eaque
+                  ipsa quae ab illo inventore veritatis et quasi architecto
+                  beatae vitae dicta sunt explicabo.
+                </p>
+                <a href="#">Check it out</a>
+              </figcaption>
+            </figure>
+          </article>
+        </div>
+      </div>
+    </div>
   </section>
 </Layout>
 
 <style>
-  ul {
+  .carousel {
     inline-size: 100cqi;
     list-style-type: none;
     padding: var(--size-3);
@@ -166,12 +166,6 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: 50cqi;
     }
 
-    > * {
-      container-type: scroll-state;
-      scroll-snap-align: center;
-      scroll-snap-stop: always;
-    }
-
     @media (prefers-reduced-motion: no-preference) {
       & {
         scroll-behavior: smooth;
@@ -188,6 +182,12 @@ import Layout from "../../layouts/Layout.astro";
     &::scroll-button(left) {
       position-area: var(--_inner-under);
     }
+  }
+
+  .carousel__slide {
+    container-type: scroll-state;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
   }
 
   .card {

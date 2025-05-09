@@ -1,74 +1,69 @@
-.carousel {
-  scrollbar-width: none;
-  anchor-name: --carousel;
+/* `.carousel` elements
+ * -------------------------------------------------------------------------*/
 
-  /* size and scroll state container */
-  container-type: inline-size scroll-state;
+
+.carousel {
+  anchor-name: --carousel;
+  container-type: inline-size;
 
   /* scroll styles */
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
+  scrollbar-width: none;
 
   &:focus-visible {
     scrollbar-color: var(--link) transparent;
     outline: none;
   }
 
-  &:where(.--vertical) {
-    /* scroll styles */
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    scroll-snap-type: y mandatory;
-  }
-
-  &:where(.--bidi) {
-    /* scroll styles */
-    overflow: auto;
-    overscroll-behavior: contain;
-    scroll-snap-type: both mandatory;
-  }
-
-  ul& {
-    padding-inline-start: 0;
-    list-style-type: none;
-  }
-
-  /* &:focus-within {
-    outline-offset: 5px;
-    outline: 1px solid var(--link);
-  } */
-
   @media (prefers-reduced-motion: no-preference) {
     scroll-behavior: smooth;
   }
+}
 
-  > * {
-    scroll-snap-align: start;
+.carousel__slide {
+  scroll-snap-align: start;
+
+  :where(.carousel--offscreen-inert) & {
+    animation: offscreen-inert linear both;
+    animation-timeline: view(x);
   }
 
-  &:where([aria-live]):where(.--offscreen-inert) {
-    > * {
-      animation: offscreen-inert linear both;
-      animation-timeline: view(x);
-    }
+  :where(.carousel--unsnapped-inert) & {
+    animation: offscreen-inert linear both;
+    animation-timeline: view(x);
   }
 
-  &:where([aria-live]):where(.--unsnapped-inert) {
-    > * {
-      container-type: scroll-state;
+  :where(.carousel--unsnapped-inert) & {
+    container-type: scroll-state;
 
-      [role="tabpanel"] {
-        @container not scroll-state(snapped) {
-          interactivity: inert;
-          opacity: 0.25;
-        }
+    & > * {
+      @container not scroll-state(snapped) {
+        interactivity: inert;
       }
     }
   }
 }
 
-.scroll-markers {
+/* `.carousel` states
+ * -------------------------------------------------------------------------*/
+
+.carousel--vertical {
+  /* scroll styles */
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+}
+
+.carousel--bidi {
+  /* scroll styles */
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: both mandatory;
+}
+
+.carousel--scroll-markers {
   scroll-marker-group: before;
 
   &::scroll-marker-group {
@@ -87,11 +82,7 @@
     scroll-behavior: smooth;
   }
 
-  /* &::scroll-marker-group:focus-within {
-    background: light-dark(white, var(--surface-1));
-  } */
-
-  &:where(:not(.--vertical), .--bidi)::scroll-marker-group {
+  &:where(:not(.carousel--vertical), .carousel--bidi)::scroll-marker-group {
     inline-size: 100%;
     max-inline-size: min(90cqi, 210px);
     overflow-x: auto;
@@ -110,46 +101,31 @@
     grid-auto-columns: var(--size-3);
     grid-auto-flow: column;
     justify-self: center;
-
-    /* todo: put scroll buttons on the pagination if it has overflow */
-    /* &::scroll-button(right),
-    &::scroll-button(left) {
-      width: var(--size-3);
-      height: var(--size-3);
-    } */
   }
 
-  &.--vertical {
-    &::scroll-marker-group {
-      position-area: left center;
+  &:where(.carousel--vertical)::scroll-marker-group {
+    position-area: left center;
 
-      margin-inline: var(--size-3);
-      overflow-y: auto;
-      scroll-snap-type: y mandatory;
+    margin-inline: var(--size-3);
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
 
-      inline-size: var(--size-5);
-      block-size: 80cqb;
-      max-block-size: min(50cqb, 210px);
+    inline-size: var(--size-5);
+    block-size: 80cqb;
+    max-block-size: min(50cqb, 210px);
 
-      grid-auto-rows: var(--size-3);
-      grid-auto-flow: row;
+    grid-auto-rows: var(--size-3);
+    grid-auto-flow: row;
 
-      padding-block: 10px; /* space for mask */
-      padding-inline: 0;
-      scroll-padding-block: 10px;
-      mask: linear-gradient(to bottom, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
-    }
-
-    & > * {
-      &::scroll-marker {
-        animation-timeline: view(y);
-      }
-    }
+    padding-block: 10px; /* space for mask */
+    padding-inline: 0;
+    scroll-padding-block: 10px;
+    mask: linear-gradient(to bottom, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
   }
 
-  > * {
+  .carousel__slide {
     &::scroll-marker {
-      content: "" / attr(aria-label);
+      content: "" / attr(data-label);
       scroll-snap-align: center;
       aspect-ratio: 1;
       border: 1px solid light-dark(var(--gray-6), var(--surface-4));
@@ -190,13 +166,17 @@
       outline: 2px solid var(--link);
       outline-offset: 2px;
     }
+
+    :where(.carousel--vertical) &::scroll-marker {
+      animation-timeline: view(y);
+    }
   }
 }
 
 /* TODO:
   up, down
   use scroll-state(scrollable) to auto generate buttons */
-.scroll-buttons {
+.carousel--scroll-buttons {
   &::scroll-button(*) {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -236,7 +216,7 @@
     }
   }
 
-  &:where(:not(.--vertical), .--bidi) {
+  &:where(:not(.carousel--vertical), .carousel--bidi) {
     &::scroll-button(right) {
       --_inner: center span-inline-start;
       --_inner-under: block-end span-inline-start;
@@ -270,7 +250,7 @@
     }
   }
 
-  &:where(.--vertical, .--bidi) {
+  &:where(.carousel--vertical, .carousel--bidi) {
     &::scroll-button(down) {
       --_inner: center span-block-start;
       --_inner-under: block-end span-inline-end;
@@ -335,6 +315,9 @@
   }
 }
 
+/* `.carousel` animations
+ * -------------------------------------------------------------------------*/
+
 @keyframes scale-in-and-out {
 	entry 0%  {
 		transform: scale(.25);
@@ -351,14 +334,11 @@
 	}
 }
 
-/* A scroll-driven animation to set items to inert when offscreen. */
 @keyframes offscreen-inert {
   entry 0%, exit 100% {
     interactivity: inert;
-    opacity: 0.25;
   }
   entry 100%, exit 0% {
     interactivity: auto;
-    opacity: 1;
   }
 }

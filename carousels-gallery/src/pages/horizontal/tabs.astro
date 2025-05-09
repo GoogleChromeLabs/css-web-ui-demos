@@ -22,19 +22,10 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul
-      class="carousel --unsnapped-inert tabs"
-      role="region"
-      aria-label="Tab carousel demo"
-      aria-live="polite"
-    >
-      <li
-        id="main-section"
-        class="carousel--snap"
-        aria-label="Main Section"
-      >
-        <div class="carousel--scroller">
-          <section role="tabpanel" aria-labelledby="main-section">
+    <div role="region" aria-label="Tab carousel demo">
+      <div class="carousel carousel--unsnapped-inert" aria-live="polite">
+        <div class="carousel__slide" data-label="Main Section">
+          <section role="tabpanel" aria-label="Main Section">
             <p>
               Proin sodales condimentum felis, mattis tristique sem porttitor
               vitae. Suspendisse id condimentum orci. Interdum et malesuada
@@ -59,14 +50,8 @@ import Layout from "../../layouts/Layout.astro";
             </p>
           </section>
         </div>
-      </li>
-      <li
-        id="details-section"
-        class="carousel--snap"
-        aria-label="Details Section"
-      >
-        <div class="carousel--scroller">
-          <section role="tabpanel" aria-labelledby="details-section">
+        <div class="carousel__slide" data-label="Details Section">
+          <section role="tabpanel" aria-label="Details Section">
             <p>
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem
               id cupiditate distinctio hic eum blanditiis in, temporibus itaque
@@ -87,14 +72,8 @@ import Layout from "../../layouts/Layout.astro";
             </p>
           </section>
         </div>
-      </li>
-      <li
-        id="follow-up-section"
-        class="carousel--snap"
-        aria-label="Follow Up Section"
-      >
-        <div class="carousel--scroller">
-          <section role="tabpanel" aria-labelledby="follow-up-section">
+        <div class="carousel__slide" data-label="Follow-up Section">
+          <section role="tabpanel" aria-label="Follow-up Section">
             <p>
               Nam ex leo, auctor vitae lectus ac, imperdiet viverra nisi.
               Maecenas augue arcu, vulputate nec posuere ac, iaculis dignissim
@@ -114,56 +93,69 @@ import Layout from "../../layouts/Layout.astro";
             </p>
           </section>
         </div>
-      </li>
-    </ul>
+      </div>
 
-    <style>
-      .tabs {
-        overflow-y: hidden;
-        scroll-marker-group: before;
-        scroll-behavior: auto;
+      <style>
+        .carousel {
+          overflow-y: hidden;
+          scroll-marker-group: before;
+          scroll-behavior: auto;
 
-        inline-size: 50ch;
-        block-size: 10lh;
-        max-inline-size: 100cqi;
-        margin-block-start: 3lh; /* size of marker group */
-
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 100%;
-        gap: var(--size-5);
-
-        border: 1px solid var(--surface-2);
-        border-top-right-radius: var(--radius-2);
-
-        &::scroll-marker-group {
-          overflow-x: auto;
-          overscroll-behavior-x: contain;
-          scrollbar-width: none;
-          inline-size: 100%;
+          inline-size: 50ch;
+          block-size: 10lh;
           max-inline-size: 100cqi;
-          block-size: 2lh;
+          margin-block-start: 3lh; /* size of marker group */
 
-          position: absolute;
-          position-anchor: --carousel;
-          bottom: anchor(top);
-          left: anchor(left);
-          right: anchor(right);
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: 100%;
+          gap: var(--size-5);
 
-          display: flex;
-          column-gap: var(--size-1);
-          align-items: end;
-          justify-content: start;
+          border: 1px solid var(--surface-2);
+          border-top-right-radius: var(--radius-2);
+
+          &::scroll-marker-group {
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+            inline-size: 100%;
+            max-inline-size: 100cqi;
+            block-size: 2lh;
+
+            position: absolute;
+            position-anchor: --carousel;
+            bottom: anchor(top);
+            left: anchor(left);
+            right: anchor(right);
+
+            display: flex;
+            column-gap: var(--size-1);
+            align-items: end;
+            justify-content: start;
+          }
         }
 
-        .carousel--snap {
+        .carousel__slide {
           scroll-snap-align: start;
           container-type: scroll-state;
           max-inline-size: initial;
           padding: 0;
+          overflow-y: auto;
+          max-block-size: 10lh;
+
+          &:focus-visible {
+            outline-offset: -5px;
+          }
+
+          > section {
+            display: grid;
+            gap: var(--size-3);
+            padding: var(--size-3);
+            background: light-dark(white, var(--surface-1));
+          }
 
           &::scroll-marker {
-            content: attr(aria-label);
+            content: attr(data-label);
             text-decoration: none;
             -webkit-tap-highlight-color: transparent;
             white-space: nowrap;
@@ -191,35 +183,14 @@ import Layout from "../../layouts/Layout.astro";
           }
         }
 
-        .carousel--scroller {
-          overflow-y: auto;
-          max-block-size: 10lh;
-
-          @container not scroll-state(snapped) {
-            opacity: 0.5;
-          }
-
-          &:focus-visible {
-            outline-offset: -5px;
-          }
-
-          > section {
-            display: grid;
-            gap: var(--size-3);
-            padding: var(--size-3);
-            transition: opacity 0.3s var(--ease-3);
-            background: light-dark(white, var(--surface-1));
-          }
+        :global(main) > section {
+          display: grid;
+          place-content: center;
+          place-items: center;
+          gap: 5vmin;
+          padding-block: 5vmin;
         }
-      }
-
-      :global(main) > section {
-        display: grid;
-        place-content: center;
-        place-items: center;
-        gap: 5vmin;
-        padding-block: 5vmin;
-      }
-    </style>
+      </style>
+    </div>
   </section>
 </Layout>

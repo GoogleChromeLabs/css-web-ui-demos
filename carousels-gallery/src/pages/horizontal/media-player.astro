@@ -25,19 +25,21 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div class="media-player">
-      <ul class="carousel scroll-buttons">
-        <li aria-label="Jenny Was a Friend of Mine"></li>
-        <li aria-label="Mr. Brightside"></li>
-        <li aria-label="Smile Like You Mean It"></li>
-        <li aria-label="Somebody Told Me"></li>
-        <li aria-label="All These Things That I've Done"></li>
-        <li aria-label="Andy, You're a Star"></li>
-        <li aria-label="On Top"></li>
-        <li aria-label="Change Your Mind"></li>
-        <li aria-label="Believe Me Natalie"></li>
-        <li aria-label="Midnight Show"></li>
-        <li aria-label="Everything Will Be Alright"></li>
-      </ul>
+      <div role="region" aria-label="Media player carousel demo">
+        <div class="carousel carousel--scroll-buttons carousel--unsnapped-inert">
+          <div class="carousel__slide" role="tabpanel" aria-label="Jenny Was a Friend of Mine"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Mr. Brightside"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Smile Like You Mean It"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Somebody Told Me"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="All These Things That I've Done"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Andy, You're a Star"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="On Top"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Change Your Mind"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Believe Me Natalie"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Midnight Show"></div>
+          <div class="carousel__slide" role="tabpanel" aria-label="Everything Will Be Alright"></div>
+        </div>
+      </div>
       <footer>
         <p title="Artist name">The Killers</p>
       </footer>
@@ -73,7 +75,11 @@ import Layout from "../../layouts/Layout.astro";
 
     --album-size: min(var(--size-content-2), 80vw);
 
-    > footer {
+    [role="region"] {
+      display: contents;
+    }
+
+    footer {
       display: grid;
       place-items: center;
 
@@ -85,7 +91,7 @@ import Layout from "../../layouts/Layout.astro";
       }
     }
 
-    > progress {
+    progress {
       appearance: none;
       block-size: 5px;
       border: none;
@@ -110,7 +116,7 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   .carousel {
-    scroll-marker-group: before;
+    scroll-marker-group: after;
     container-type: inline-size;
 
     /* Reset list styles */
@@ -183,7 +189,7 @@ import Layout from "../../layouts/Layout.astro";
       block-size: 1lh;
     }
 
-    & > li {
+    .carousel__slide {
       animation: offscreen-inert linear both;
       animation-timeline: view(x);
 

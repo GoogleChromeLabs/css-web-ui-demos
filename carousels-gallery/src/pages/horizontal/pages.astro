@@ -20,62 +20,61 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul
-      class="carousel scroll-markers scroll-buttons"
-      role="region"
-      aria-roledescription="carousel"
-      aria-label="Paged carousel demo"
-      aria-live="polite"
-    >
-      <li>
-        <p aria-label="Slide 1 of 16" aria-roledescription="slide">1</p>
-      </li>
-      <li>
-        <p aria-label="Slide 2 of 16" aria-roledescription="slide">2</p>
-      </li>
-      <li>
-        <p aria-label="Slide 3 of 16" aria-roledescription="slide">3</p>
-      </li>
-      <li>
-        <p aria-label="Slide 4 of 16" aria-roledescription="slide">4</p>
-      </li>
-      <li>
-        <p aria-label="Slide 5 of 16" aria-roledescription="slide">5</p>
-      </li>
-      <li>
-        <p aria-label="Slide 6 of 16" aria-roledescription="slide">6</p>
-      </li>
-      <li>
-        <p aria-label="Slide 7 of 16" aria-roledescription="slide">7</p>
-      </li>
-      <li>
-        <p aria-label="Slide 8 of 16" aria-roledescription="slide">8</p>
-      </li>
-      <li>
-        <p aria-label="Slide 9 of 16" aria-roledescription="slide">9</p>
-      </li>
-      <li>
-        <p aria-label="Slide 10 of 16" aria-roledescription="slide">10</p>
-      </li>
-      <li>
-        <p aria-label="Slide 11 of 16" aria-roledescription="slide">11</p>
-      </li>
-      <li>
-        <p aria-label="Slide 12 of 16" aria-roledescription="slide">12</p>
-      </li>
-      <li>
-        <p aria-label="Slide 13 of 16" aria-roledescription="slide">13</p>
-      </li>
-      <li>
-        <p aria-label="Slide 14 of 16" aria-roledescription="slide">14</p>
-      </li>
-      <li>
-        <p aria-label="Slide 15 of 16" aria-roledescription="slide">15</p>
-      </li>
-      <li>
-        <p aria-label="Slide 16 of 16" aria-roledescription="slide">16</p>
-      </li>
-    </ul>
+    <div role="region" aria-label="Paged carousel demo">
+      <div
+        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide">
+          <p aria-label="Slide 1">1</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 2">2</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 3">3</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 4">4</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 5">5</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 6">6</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 7">7</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 8">8</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 9">9</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 10">10</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 11">11</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 12">12</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 13">13</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 14">14</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 15">15</p>
+        </div>
+        <div class="carousel__slide">
+          <p aria-label="Slide 16">16</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <style>
@@ -100,8 +99,7 @@ import Layout from "../../layouts/Layout.astro";
       }
 
       &::column::scroll-marker {
-        /* make the marker meaningful for screen readers */
-        content: "" / "Carousel item marker";
+        content: "";
         aspect-ratio: 1;
         border-radius: var(--radius-round);
         animation: scale-in-and-out linear both;
@@ -122,43 +120,43 @@ import Layout from "../../layouts/Layout.astro";
         outline-offset: 2px;
         outline: 2px solid var(--link);
       }
+    }
 
-      & > li {
-        scroll-snap-align: none;
-        background: light-dark(white, var(--surface-2));
-        padding: 0;
+    .carousel__slide {
+      scroll-snap-align: none;
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
 
-        display: inline-flex;
-        place-items: center;
-        place-content: center;
+      display: inline-flex;
+      place-items: center;
+      place-content: center;
 
-        block-size: 100cqb;
-        aspect-ratio: var(--ratio-portrait);
+      block-size: 100cqb;
+      aspect-ratio: var(--ratio-portrait);
 
-        border: 1px solid var(--surface-3);
-        box-shadow: var(--shadow-2);
-        border-radius: var(--radius-2);
+      border: 1px solid var(--surface-3);
+      box-shadow: var(--shadow-2);
+      border-radius: var(--radius-2);
 
-        &::scroll-marker {
-          content: unset;
-        }
+      &::scroll-marker {
+        content: unset;
+      }
 
+      > p {
+        font-family: var(--font-antique);
+        font-size: var(--font-size-5);
+      }
+
+      @container scroll-state(snapped: inline) {
         > p {
-          font-family: var(--font-antique);
-          font-size: var(--font-size-5);
+          color: var(--link);
+          font-size: var(--font-size-7);
         }
+      }
 
-        @container scroll-state(snapped: inline) {
-          > p {
-            color: var(--link);
-            font-size: var(--font-size-7);
-          }
-        }
-
-        &:focus {
-          outline: 2px solid var(--link);
-          outline-offset: -2px;
-        }
+      &:focus {
+        outline: 2px solid var(--link);
+        outline-offset: -2px;
       }
     }
   </style>

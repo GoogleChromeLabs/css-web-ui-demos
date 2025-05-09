@@ -14,111 +14,137 @@ import Layout from "../../layouts/Layout.astro";
       </div>
     </header>
 
-    <ul
-      class="carousel --unsnapped-inert scroll-buttons scroll-markers"
-      role="region"
-      aria-label="Image gallery carousel demo"
-      aria-live="polite"
-    >
-      <li id="demo-slide-1" aria-label="Demo slide 1">
-        <picture role="tabpanel" aria-labelledby="demo-slide-1">
-          <img
-            src="/carousel/neon-wolf.jpg"
-            alt="A portrait of an armored wolf with red glowing lines and ornaments"
-            width="500"
-            height="500"
-          />
-        </picture>
-      </li>
-      <li id="demo-slide-2" aria-label="Demo slide 2">
-        <picture role="tabpanel" aria-labelledby="demo-slide-2">
-          <img
-            src="/carousel/neon-raptor.jpg"
-            alt="A portrait of a raptor with glowing eyes, pink hair and neon armor."
-            width="500"
-            height="500"
-            loading="lazy"
-          />
-        </picture>
-      </li>
-      <li id="demo-slide-3" aria-label="Demo slide 3">
-        <picture role="tabpanel" aria-labelledby="demo-slide-3">
-          <img
-            src="/carousel/flying-cars.jpg"
-            alt="A cityscape with flying cars and neon lights"
-            width="500"
-            height="500"
-            loading="lazy"
-          />
-        </picture>
-      </li>
-      <li id="demo-slide-4" aria-label="Demo slide 4">
-        <picture role="tabpanel" aria-labelledby="demo-slide-4">
-          <img
-            src="/carousel/neon-trex.jpg"
-            alt="A portrait of a T-Rex with glowing eyes and armor, surrounded by neon streaks of light."
-            width="500"
-            height="500"
-            loading="lazy"
-          />
-        </picture>
-      </li>
-      <li id="demo-slide-5" aria-label="Demo slide 5">
-        <picture role="tabpanel" aria-labelledby="demo-slide-5">
-          <img
-            src="/carousel/flying-cars-2.jpg"
-            alt="An airborn cityscape with flying cars and neon lights"
-            width="500"
-            height="500"
-            loading="lazy"
-          />
-        </picture>
-      </li>
-      <li id="demo-slide-6" aria-label="Demo slide 6">
-        <picture role="tabpanel" aria-labelledby="demo-slide-6">
-          <img
-            src="/carousel/flying-cars-3.jpg"
-            alt="A cityscape with flying cars and neon lights flying towards a tower"
-            width="500"
-            height="500"
-            loading="lazy"
-          />
-        </picture>
-      </li>
-      <li id="demo-slide-7" aria-label="Demo slide 7">
-        <picture role="tabpanel" aria-labelledby="demo-slide-7">
-          <img
-            src="/carousel/neon-city.jpg"
-            alt="A futuristic city scene with flying vehicles and bright neon lights"
-            width="500"
-            height="500"
-            loading="lazy"
-          />
-        </picture>
-      </li>
-    </ul>
-  </section>
+    <div role="region" aria-label="Image gallery carousel demo">
+      <div
+        class="carousel carousel--scroll-buttons carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <picture role="tabpanel" aria-label="Slide 1">
+            <img
+              src="/carousel/neon-wolf.jpg"
+              alt="A portrait of an armored wolf with red glowing lines and ornaments"
+              width="500"
+              height="500"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 2">
+          <picture role="tabpanel" aria-label="Slide 2">
+            <img
+              src="/carousel/neon-raptor.jpg"
+              alt="A portrait of a raptor with glowing eyes, pink hair and neon armor."
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 3">
+          <picture role="tabpanel" aria-label="Slide 3">
+            <img
+              src="/carousel/flying-cars.jpg"
+              alt="A cityscape with flying cars and neon lights"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 4">
+          <picture role="tabpanel" aria-label="Slide 4">
+            <img
+              src="/carousel/neon-trex.jpg"
+              alt="A portrait of a T-Rex with glowing eyes and armor, surrounded by neon streaks of light."
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 5">
+          <picture role="tabpanel" aria-label="Slide 5">
+            <img
+              src="/carousel/flying-cars-2.jpg"
+              alt="An airborn cityscape with flying cars and neon lights"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 6">
+          <picture role="tabpanel" aria-label="Slide 6">
+            <img
+              src="/carousel/flying-cars-3.jpg"
+              alt="A cityscape with flying cars and neon lights flying towards a tower"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 7">
+          <picture role="tabpanel" aria-label="Slide 7">
+            <img
+              src="/carousel/neon-city.jpg"
+              alt="A futuristic city scene with flying vehicles and bright neon lights"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+      </div>
+    </div>
 
-  <style>
-    .carousel {
-      display: grid;
-      grid-auto-columns: 100%;
-      grid-auto-flow: column;
-      place-items: center;
-      gap: var(--size-5);
+    <style>
+      .carousel {
+        display: grid;
+        grid-auto-columns: 100%;
+        grid-auto-flow: column;
+        place-items: center;
+        gap: var(--size-5);
 
-      block-size: max(500px, 50cqb);
-      inline-size: 100cqi;
-      background: black;
+        block-size: max(500px, 50cqb);
+        inline-size: 100cqi;
+        background: black;
 
-      &::before,
-      &::after {
-        content: "";
-        display: block;
-        inline-size: 50cqi;
+        &::before,
+        &::after {
+          content: "";
+          display: block;
+          inline-size: 50cqi;
+        }
+
+        &::scroll-marker-group {
+          block-size: 1.5lh;
+          max-inline-size: 190px;
+          position-area: none;
+          bottom: anchor(bottom);
+          justify-self: center;
+          margin-block-end: var(--size-2);
+          padding-inline: var(--size-3);
+
+          border-radius: var(--radius-round);
+          border: 1px solid var(--surface-3);
+          background-color: light-dark(#fff3, #fff2);
+          overflow: clip;
+          mask: none; /* todo: remove this once scroll-state() used for group overflow */
+        }
+
+        &::scroll-button(left),
+        &::scroll-button(right) {
+          position-area: var(--_inner);
+        }
+
+        &::scroll-button(left):not(:hover, :focus-visible),
+        &::scroll-button(right):not(:hover, :focus-visible) {
+          color: white;
+        }
       }
 
-      > li {
+      .carousel__slide {
         scroll-snap-align: center;
 
         > picture {
@@ -129,32 +155,6 @@ import Layout from "../../layouts/Layout.astro";
           }
         }
       }
-
-      &::scroll-marker-group {
-        block-size: 1.5lh;
-        max-inline-size: 190px;
-        position-area: none;
-        bottom: anchor(bottom);
-        justify-self: center;
-        margin-block-end: var(--size-2);
-        padding-inline: var(--size-3);
-
-        border-radius: var(--radius-round);
-        border: 1px solid var(--surface-3);
-        background-color: light-dark(#fff3, #fff2);
-        overflow: clip;
-        mask: none; /* todo: remove this once scroll-state() used for group overflow */
-      }
-
-      &::scroll-button(left),
-      &::scroll-button(right) {
-        position-area: var(--_inner);
-      }
-
-      &::scroll-button(left):not(:hover, :focus-visible),
-      &::scroll-button(right):not(:hover, :focus-visible) {
-        color: white;
-      }
-    }
-  </style>
+    </style>
+  </section>
 </Layout>

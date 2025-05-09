@@ -18,218 +18,220 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel scroll-buttons">
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/1.jpg"
-            alt="A stylized illustration of a pink and blue origami-like figure on a peach-colored background with subtle shadows"
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/2.avif"
-            alt="A stylized illustration of a couple walking in the rain, holding an umbrella, against a city backdrop with warm tones and rain."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/3.avif"
-            alt="A minimalist cartoonish rendering of a light green turtle on a peach-colored background."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/4.avif"
-            alt="A detailed close-up of large, blue and white flowers with visible textures and soft lighting."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/5.avif"
-            alt="A cartoonish illustration of a bright purple cup with orange handle and rim on a peach background."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/6.avif"
-            alt="A stylized illustration of a beach scene at sunset, with people on the shore, palm trees, and a warm sky gradient."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/7.avif"
-            alt="A stylized illustration of two people sitting on swings suspended from a tree at a beach during sunset."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/8.avif"
-            alt="A cartoonish figure of a security guard in uniform, wearing dark glasses, standing with a small suitcase on a turquoise background."
-          />
-        </figure>
-      </li>
-      <li class="item">
-        <figure>
-          <img
-            src="https://assets.codepen.io/2585/9.avif"
-            alt="A minimalist depiction of a white abstract object, possibly a bowl, on a red background with soft lighting."
-          />
-        </figure>
-      </li>
-    </ul>
-  </section>
+    <div role="region" aria-label="App Switcher carousel demo">
+      <div class="carousel carousel--scroll-buttons">
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/1.jpg"
+              alt="A stylized illustration of a pink and blue origami-like figure on a peach-colored background with subtle shadows"
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/2.avif"
+              alt="A stylized illustration of a couple walking in the rain, holding an umbrella, against a city backdrop with warm tones and rain."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/3.avif"
+              alt="A minimalist cartoonish rendering of a light green turtle on a peach-colored background."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/4.avif"
+              alt="A detailed close-up of large, blue and white flowers with visible textures and soft lighting."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/5.avif"
+              alt="A cartoonish illustration of a bright purple cup with orange handle and rim on a peach background."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/6.avif"
+              alt="A stylized illustration of a beach scene at sunset, with people on the shore, palm trees, and a warm sky gradient."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/7.avif"
+              alt="A stylized illustration of two people sitting on swings suspended from a tree at a beach during sunset."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/8.avif"
+              alt="A cartoonish figure of a security guard in uniform, wearing dark glasses, standing with a small suitcase on a turquoise background."
+            />
+          </figure>
+        </div>
+        <div class="carousel--slide item">
+          <figure>
+            <img
+              src="https://assets.codepen.io/2585/9.avif"
+              alt="A minimalist depiction of a white abstract object, possibly a bowl, on a red background with soft lighting."
+            />
+          </figure>
+        </div>
+      </div>
+    </div>
 
-  <style>
-    @import "https://open-props/shadows.min.css" layer(design.system);
+    <style>
+      @import "https://open-props/shadows.min.css" layer(design.system);
 
-    @keyframes slide-in {
-      from {
-        transform: translateX(-100cqi) scale(0.75);
-      }
-    }
-
-    .carousel {
-      /* Reset list styles */
-      list-style-type: none;
-
-      container-type: size;
-      inline-size: 100cqi;
-      block-size: min(60svh, 720px);
-
-      display: grid;
-      grid-auto-flow: column;
-
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      overscroll-behavior-x: contain;
-
-      gap: 1rem;
-      padding-inline: 1rem;
-      scroll-padding-inline: 1rem;
-      padding-block: 30px 60px;
-      margin-block-end: var(--size-7);
-
-      /* the before and afters have unsnappable elements that create bouncy edges to the scroll */
-      &::before,
-      &::after {
-        content: "";
-        display: block;
+      @keyframes slide-in {
+        from {
+          transform: translateX(-100cqi) scale(0.75);
+        }
       }
 
-      &::before {
-        order: 0;
-        inline-size: 25cqi;
-      }
+      .carousel {
+        /* Reset list styles */
+        list-style-type: none;
 
-      &::after {
-        order: 11;
-        inline-size: 90cqi;
-      }
+        container-type: size;
+        inline-size: 100cqi;
+        block-size: min(60svh, 720px);
 
-      &::scroll-button(*) {
-        z-index: 20;
-        background: oklch(from var(--surface-1) l c h / 50%);
-        backdrop-filter: blur(10px);
-      }
+        display: grid;
+        grid-auto-flow: column;
 
-      /* 
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+
+        gap: 1rem;
+        padding-inline: 1rem;
+        scroll-padding-inline: 1rem;
+        padding-block: 30px 60px;
+        margin-block-end: var(--size-7);
+
+        /* the before and afters have unsnappable elements that create bouncy edges to the scroll */
+        &::before,
+        &::after {
+          content: "";
+          display: block;
+        }
+
+        &::before {
+          order: 0;
+          inline-size: 25cqi;
+        }
+
+        &::after {
+          order: 11;
+          inline-size: 90cqi;
+        }
+
+        &::scroll-button(*) {
+          z-index: 20;
+          background: oklch(from var(--surface-1) l c h / 50%);
+          backdrop-filter: blur(10px);
+        }
+
+        /*
         snap on the item, which is untransformed
         also order is changed so last item is on top
-      */
-      > .item {
-        scroll-snap-align: start;
+        */
+        > .item {
+          scroll-snap-align: start;
 
-        &:nth-child(1) {
-          order: 10;
-          z-index: 1;
-        }
-        &:nth-child(2) {
-          order: 9;
-          z-index: 2;
-        }
-        &:nth-child(3) {
-          order: 8;
-          z-index: 3;
-        }
-        &:nth-child(4) {
-          order: 7;
-          z-index: 4;
-        }
-        &:nth-child(5) {
-          order: 6;
-          z-index: 5;
-        }
-        &:nth-child(6) {
-          order: 5;
-          z-index: 6;
-        }
-        &:nth-child(7) {
-          order: 4;
-          z-index: 7;
-        }
-        &:nth-child(8) {
-          order: 3;
-          z-index: 8;
-        }
-        &:nth-child(9) {
-          order: 2;
-          z-index: 9;
-        }
-      }
-
-      /* 
-        magic is here, a child of the snapped item 
-        animates items as they cross the viewport view()
-        range is set to create the effect
-      */
-      figure {
-        @supports (animation-timeline: view()) {
-          @media (prefers-reduced-motion: no-preference) {
-            animation: slide-in linear both;
-            animation-timeline: view(x);
-            animation-range: cover -75cqi contain 20cqi;
+          &:nth-child(1) {
+            order: 10;
+            z-index: 1;
+          }
+          &:nth-child(2) {
+            order: 9;
+            z-index: 2;
+          }
+          &:nth-child(3) {
+            order: 8;
+            z-index: 3;
+          }
+          &:nth-child(4) {
+            order: 7;
+            z-index: 4;
+          }
+          &:nth-child(5) {
+            order: 6;
+            z-index: 5;
+          }
+          &:nth-child(6) {
+            order: 5;
+            z-index: 6;
+          }
+          &:nth-child(7) {
+            order: 4;
+            z-index: 7;
+          }
+          &:nth-child(8) {
+            order: 3;
+            z-index: 8;
+          }
+          &:nth-child(9) {
+            order: 2;
+            z-index: 9;
           }
         }
 
-        flex-shrink: 0;
-        block-size: 100cqb;
-        aspect-ratio: 9/16;
-        background: light-dark(#ccc, #444);
-        box-shadow: var(--shadow-5);
-        border-radius: 20px;
-        overflow: clip;
+        /*
+        magic is here, a child of the snapped item
+        animates items as they cross the viewport view()
+        range is set to create the effect
+        */
+        figure {
+          @supports (animation-timeline: view()) {
+            @media (prefers-reduced-motion: no-preference) {
+              animation: slide-in linear both;
+              animation-timeline: view(x);
+              animation-range: cover -75cqi contain 20cqi;
+            }
+          }
 
-        display: flex;
+          flex-shrink: 0;
+          block-size: 100cqb;
+          aspect-ratio: 9/16;
+          background: light-dark(#ccc, #444);
+          box-shadow: var(--shadow-5);
+          border-radius: 20px;
+          overflow: clip;
 
-        @container (width < 480px) {
-          block-size: 50cqb;
-        }
+          display: flex;
 
-        > img {
-          inline-size: 100%;
-          block-size: 100%;
-          object-fit: cover;
+          @container (width < 480px) {
+            block-size: 50cqb;
+          }
+
+          > img {
+            inline-size: 100%;
+            block-size: 100%;
+            object-fit: cover;
+          }
         }
       }
-    }
 
-    section {
-      place-items: center;
-    }
-  </style>
+      section {
+        place-items: center;
+      }
+    </style>
+  </section>
 </Layout>
