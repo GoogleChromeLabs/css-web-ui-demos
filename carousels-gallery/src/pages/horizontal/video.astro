@@ -154,6 +154,25 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: min(80cqi, 1280px);
     }
 
+    .carousel__slide {
+      scroll-snap-stop: always;
+
+      counter-increment: page;
+      animation: count-before linear forwards;
+      animation-timeline: view(x);
+      animation-range: entry 50% entry 50%;
+
+      padding: 0;
+      max-inline-size: initial;
+
+      flex-shrink: 0;
+      inline-size: 100cqi;
+      overflow: clip;
+
+      contain-intrinsic-inline-size: 100cqi;
+      content-visibility: auto;
+    }
+
     &::scroll-button(left) {
       content: "Previous";
       background-image: url(https://api.iconify.design/material-symbols:chevron-left.svg?color=%23ffffff);
@@ -225,25 +244,6 @@ import Layout from "../../layouts/Layout.astro";
 
       background: none; /* todo: get rid of this when scroll-button(*) stops matching */
     }
-  }
-
-  .carousel__slide {
-    scroll-snap-stop: always;
-
-    counter-increment: page;
-    animation: count-before linear forwards;
-    animation-timeline: view(x);
-    animation-range: entry 50% entry 50%;
-
-    padding: 0;
-    max-inline-size: initial;
-
-    flex-shrink: 0;
-    inline-size: 100cqi;
-    overflow: clip;
-
-    contain-intrinsic-inline-size: 100cqi;
-    content-visibility: auto;
   }
 
   .parallax-item {

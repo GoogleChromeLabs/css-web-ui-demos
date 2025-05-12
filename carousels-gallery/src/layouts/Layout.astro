@@ -65,18 +65,6 @@ const { title } = Astro.props;
       <Sidebar />
       <slot />
     </main>
-    <script type="module">
-      addEventListener("load", () => {
-        setTimeout(() => {
-          console.log(
-            [...document.querySelectorAll("*")].filter(
-              (e) => e.computedStyleMap().get("interactivity").value === "inert"
-            )
-          );
-
-        }, 200);
-      });
-    </script>
   </body>
 </html>
 

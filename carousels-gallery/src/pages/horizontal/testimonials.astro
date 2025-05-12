@@ -22,6 +22,7 @@ import Layout from "../../layouts/Layout.astro";
     <div role="region" aria-label="Testimonials carousel demo">
       <div
         class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--unsnapped-inert"
+        aria-live="polite"
       >
         <div class="carousel__slide" data-label="Slide 1">
           <figure class="testimonial" role="tabpanel" aria-label="Slide 1">
@@ -64,72 +65,72 @@ import Layout from "../../layouts/Layout.astro";
         </div>
       </div>
     </div>
-
-    <style>
-      .carousel {
-        counter-reset: item;
-        margin-block-end: var(--size-7);
-        padding-inline: 0;
-
-        inline-size: min(var(--size-content-3), 100cqi);
-
-        display: grid;
-        grid-auto-flow: column;
-        justify-items: center;
-        grid-auto-columns: 100cqi;
-
-        mask: linear-gradient(to right, #0000, #000 20%, #000 80%, #0000);
-
-        @media (hover) {
-          &:not(:hover, :focus-within)::scroll-button(*) {
-            opacity: 0;
-          }
-        }
-
-        &::scroll-button(left),
-        &::scroll-button(right) {
-          position-area: var(--_inner);
-        }
-      }
-
-      .carousel__slide {
-        container-type: scroll-state;
-        scroll-snap-align: center;
-        padding: 0;
-      }
-
-      .testimonial {
-        transition: opacity 0.5s ease;
-
-        @container not scroll-state(snapped: inline) {
-          opacity: 0.25;
-        }
-
-        > blockquote,
-        cite {
-          border-inline-start: none;
-        }
-
-        p {
-          font-size: var(--font-size-5);
-          font-weight: var(--font-weight-2);
-          line-height: var(--font-lineheight-0);
-          text-align: center;
-        }
-      }
-
-      section {
-        place-items: center;
-        text-align: center;
-
-        header {
-          place-items: center;
-        }
-
-        .tags {
-          place-items: center;
-        }
-      }
-    </style>
   </section>
+
+  <style>
+    .carousel {
+      counter-reset: item;
+      margin-block-end: var(--size-7);
+      padding-inline: 0;
+
+      inline-size: min(var(--size-content-3), 100cqi);
+
+      display: grid;
+      grid-auto-flow: column;
+      justify-items: center;
+      grid-auto-columns: 100cqi;
+
+      mask: linear-gradient(to right, #0000, #000 20%, #000 80%, #0000);
+
+      @media (hover) {
+        &:not(:hover, :focus-within)::scroll-button(*) {
+          opacity: 0;
+        }
+      }
+
+      &::scroll-button(left),
+      &::scroll-button(right) {
+        position-area: var(--_inner);
+      }
+    }
+
+    .carousel__slide {
+      container-type: scroll-state;
+      scroll-snap-align: center;
+      padding: 0;
+    }
+
+    .testimonial {
+      transition: opacity 0.5s ease;
+
+      @container not scroll-state(snapped: inline) {
+        opacity: 0.25;
+      }
+
+      > blockquote,
+      cite {
+        border-inline-start: none;
+      }
+
+      p {
+        font-size: var(--font-size-5);
+        font-weight: var(--font-weight-2);
+        line-height: var(--font-lineheight-0);
+        text-align: center;
+      }
+    }
+
+    section {
+      place-items: center;
+      text-align: center;
+
+      header {
+        place-items: center;
+      }
+
+      .tags {
+        place-items: center;
+      }
+    }
+  </style>
 </Layout>

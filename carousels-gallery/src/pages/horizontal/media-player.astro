@@ -26,7 +26,7 @@ import Layout from "../../layouts/Layout.astro";
 
     <div class="media-player">
       <div role="region" aria-label="Media player carousel demo">
-        <div class="carousel carousel--scroll-buttons carousel--unsnapped-inert">
+        <div class="carousel carousel--scroll-buttons carousel--unsnapped-inert" aria-live="polite">
           <div class="carousel__slide" role="tabpanel" aria-label="Jenny Was a Friend of Mine"></div>
           <div class="carousel__slide" role="tabpanel" aria-label="Mr. Brightside"></div>
           <div class="carousel__slide" role="tabpanel" aria-label="Smile Like You Mean It"></div>
@@ -119,11 +119,6 @@ import Layout from "../../layouts/Layout.astro";
     scroll-marker-group: after;
     container-type: inline-size;
 
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     inline-size: var(--album-size);
 
     display: grid;

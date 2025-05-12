@@ -16,34 +16,66 @@ import Layout from "../../layouts/Layout.astro";
       <p>A classic vertical wheel of choices carousel.</p>
     </header>
 
-    <ul class="carousel carousel--vertical scroll-markers">
-      <li><h3>Super Mario Bros.</h3></li>
-      <li><h3>The Legend of Zelda</h3></li>
-      <li><h3>Metroid</h3></li>
-      <li><h3>Castlevania</h3></li>
-      <li><h3>Mega Man 2</h3></li>
-      <li><h3>Final Fantasy</h3></li>
-      <li><h3>Contra</h3></li>
-      <li><h3>Ninja Gaiden</h3></li>
-      <li><h3>Tecmo Bowl</h3></li>
-      <li><h3>Punch-Out</h3></li>
-      <li><h3>Excitebike</h3></li>
-      <li><h3>Kid Icarus</h3></li>
-      <li><h3>Double Dragon</h3></li>
-      <li><h3>Bubble Bobble</h3></li>
-      <li><h3>Kirby's Adventure</h3></li>
-      <li><h3>Tetris</h3></li>
-    </ul>
+    <div role="region" aria-label="Wheel carousel demo">
+      <div
+        class="carousel carousel--vertical carousel--scroll-markers carousel--offscreen-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Super Mario Bros">
+          <h3>Super Mario Bros.</h3>
+        </div>
+        <div class="carousel__slide" data-label="The Legend of Zelda">
+          <h3>The Legend of Zelda</h3>
+        </div>
+        <div class="carousel__slide" data-label="Metroid">
+          <h3>Metroid</h3>
+        </div>
+        <div class="carousel__slide" data-label="Castlevania">
+          <h3>Castlevania</h3>
+        </div>
+        <div class="carousel__slide" data-label="Mega Man 2">
+          <h3>Mega Man 2</h3>
+        </div>
+        <div class="carousel__slide" data-label="Final Fantasy">
+          <h3>Final Fantasy</h3>
+        </div>
+        <div class="carousel__slide" data-label="Contra">
+          <h3>Contra</h3>
+        </div>
+        <div class="carousel__slide" data-label="Ninja Gaiden">
+          <h3>Ninja Gaiden</h3>
+        </div>
+        <div class="carousel__slide" data-label="Tecmo Bowl">
+          <h3>Tecmo Bowl</h3>
+        </div>
+        <div class="carousel__slide" data-label="Punch-Out">
+          <h3>Punch-Out</h3>
+        </div>
+        <div class="carousel__slide" data-label="Excitebike">
+          <h3>Excitebike</h3>
+        </div>
+        <div class="carousel__slide" data-label="Kid Icarus">
+          <h3>Kid Icarus</h3>
+        </div>
+        <div class="carousel__slide" data-label="Double Dragon">
+          <h3>Double Dragon</h3>
+        </div>
+        <div class="carousel__slide" data-label="Bubble Bobble">
+          <h3>Bubble Bobble</h3>
+        </div>
+        <div class="carousel__slide" data-label="Kirby's Adventure">
+          <h3>Kirby's Adventure</h3>
+        </div>
+        <div class="carousel__slide" data-label="Tetris">
+          <h3>Tetris</h3>
+        </div>
+      </div>
+    </div>
   </section>
 </Layout>
 
 <style>
   .carousel {
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     block-size: 100svh;
     inline-size: 100cqi;
     overflow-x: hidden;
@@ -67,11 +99,12 @@ import Layout from "../../layouts/Layout.astro";
       block-size: 85cqb;
     }
 
-    & > li {
+    .carousel__slide {
       padding: 0;
       scroll-snap-align: center;
       text-align: end;
       block-size: 10svb;
+      container-type: scroll-state;
 
       &:nth-of-type(9) {
         scroll-initial-target: nearest;

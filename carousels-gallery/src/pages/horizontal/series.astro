@@ -22,7 +22,7 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="TV Series carousel demo">
-      <div class="carousel">
+      <div class="carousel carousel--offscreen-inert" aria-live="polite">
         <div class="carousel__slide season-start" data-season-content="1">
           <figure class="episode seen">
             <img
@@ -391,11 +391,6 @@ import Layout from "../../layouts/Layout.astro";
 
 <style>
   .carousel {
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     inline-size: 100cqi;
     padding-block-start: var(--size-3); /* focus needs the space */
     padding-inline: 5vmin;
@@ -427,46 +422,50 @@ import Layout from "../../layouts/Layout.astro";
       display: block;
       inline-size: 85cqi;
     }
-  }
 
-  .carousel__slide {
-    padding: 0;
-    position: relative;
-    container-type: scroll-state;
+    .carousel__slide {
+      padding: 0;
+      position: relative;
+      container-type: scroll-state;
 
-    /* scroll to the first unseen item */
-    &:nth-child(1 of :has(figure:not(.seen))) {
-      scroll-initial-target: nearest;
-    }
-
-    &.season-start::scroll-marker {
-      content: "Season " attr(data-season-content);
-      white-space: nowrap;
-      font-size: var(--font-size-3);
-      font-variation-settings: "wght" 300;
-      color: var(--text-2);
-      text-decoration: underline 2px #0000;
-      text-underline-offset: 5px;
-      cursor: pointer;
-
-      @media (prefers-reduced-motion: no-preference) {
-        transition:
-          text-decoration 0.8s ease,
-          font-variation-settings 0.3s ease;
+      /* scroll to the first unseen item */
+      &:nth-child(1 of :has(figure:not(.seen))) {
+        scroll-initial-target: nearest;
       }
-    }
 
-    &.season-start::scroll-marker:is(:hover, :focus-visible, :target-current) {
-      color: var(--text-1);
-    }
+      &.season-start::scroll-marker {
+        content: "Season " attr(data-season-content);
+        white-space: nowrap;
+        font-size: var(--font-size-3);
+        font-variation-settings: "wght" 300;
+        color: var(--text-2);
+        text-decoration: underline 2px #0000;
+        text-underline-offset: 5px;
+        cursor: pointer;
 
-    &.season-start::scroll-marker:target-current {
-      text-decoration-color: var(--link);
-      font-variation-settings: "wght" 800;
-    }
+        @media (prefers-reduced-motion: no-preference) {
+          transition:
+            text-decoration 0.8s ease,
+            font-variation-settings 0.3s ease;
+        }
+      }
 
-    &.season-start::scroll-marker:focus-visible {
-      outline-offset: 10px;
+      &.season-start::scroll-marker:is(
+          :hover,
+          :focus-visible,
+          :target-current
+        ) {
+        color: var(--text-1);
+      }
+
+      &.season-start::scroll-marker:target-current {
+        text-decoration-color: var(--link);
+        font-variation-settings: "wght" 800;
+      }
+
+      &.season-start::scroll-marker:focus-visible {
+        outline-offset: 10px;
+      }
     }
   }
 
@@ -502,7 +501,7 @@ import Layout from "../../layouts/Layout.astro";
     > img {
       background-color: var(--surface-3);
       border-radius: var(--radius-2);
-      transition: filter .3s var(--ease-3);
+      transition: filter 0.3s var(--ease-3);
 
       @container not scroll-state(snapped: inline) {
         filter: grayscale(1);

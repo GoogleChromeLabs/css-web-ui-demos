@@ -18,9 +18,12 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Weather carousel demo">
-      <div class="carousel carousel--scroll-markers carousel--unsnapped-inert">
+      <div
+        class="carousel carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
         <div class="carousel__slide" data-label="Slide 1">
-          <div class="weather-card" role="tabpanel">
+          <div class="weather-card" role="tabpanel" aria-label="Slide 1">
             <h3>Today 81° / 58°</h3>
             <p>
               <svg
@@ -60,7 +63,7 @@ import Layout from "../../layouts/Layout.astro";
           </div>
         </div>
         <div class="carousel__slide" data-label="Slide 2">
-          <div class="weather-card" role="tabpanel">
+          <div class="weather-card" role="tabpanel" aria-label="Slide 2">
             <h3>Tomorrow 91° / 78°</h3>
             <p>
               <svg
@@ -120,35 +123,35 @@ import Layout from "../../layouts/Layout.astro";
         content: "";
         display: block;
       }
-    }
 
-    .carousel__slide {
-      scroll-snap-align: center;
+      .carousel__slide {
+        scroll-snap-align: center;
 
-      inline-size: inherit;
-      padding: 0;
-      display: grid;
-      gap: var(--size-2);
+        inline-size: inherit;
+        padding: 0;
+        display: grid;
+        gap: var(--size-2);
 
-      h3 {
-        font-size: var(--font-size-4);
-        font-weight: 200;
-      }
+        h3 {
+          font-size: var(--font-size-4);
+          font-weight: 200;
+        }
 
-      p {
-        display: flex;
-        gap: 1ch;
-        place-items: center;
-        color: var(--text-2);
-      }
+        p {
+          display: flex;
+          gap: 1ch;
+          place-items: center;
+          color: var(--text-2);
+        }
 
-      &::scroll-marker {
-        background: var(--surface-4);
-      }
+        &::scroll-marker {
+          background: var(--surface-4);
+        }
 
-      &::scroll-marker:target-current {
-        background: var(--text-1);
-        border-color: var(--text-1);
+        &::scroll-marker:target-current {
+          background: var(--text-1);
+          border-color: var(--text-1);
+        }
       }
     }
 

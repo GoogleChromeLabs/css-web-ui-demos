@@ -166,6 +166,12 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: 50cqi;
     }
 
+    .carousel__slide {
+      container-type: scroll-state;
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+    }
+
     @media (prefers-reduced-motion: no-preference) {
       & {
         scroll-behavior: smooth;
@@ -182,12 +188,6 @@ import Layout from "../../layouts/Layout.astro";
     &::scroll-button(left) {
       position-area: var(--_inner-under);
     }
-  }
-
-  .carousel__slide {
-    container-type: scroll-state;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
   }
 
   .card {

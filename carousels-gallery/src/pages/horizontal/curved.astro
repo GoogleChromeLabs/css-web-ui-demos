@@ -15,7 +15,10 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Curved carousel demo">
-      <div class="carousel carousel--scroll-buttons carousel--offscreen-inert">
+      <div
+        class="carousel carousel--scroll-buttons carousel--offscreen-inert"
+        aria-live="polite"
+      >
         {
           Array.from({ length: 30 }).map((_, i) => (
             <div class="carousel__slide" data-label={`Slide ${i}`}>
@@ -41,9 +44,6 @@ import Layout from "../../layouts/Layout.astro";
     /* dramatic overlap */
     margin-block-start: -15vh;
 
-    counter-reset: item;
-
-    /* Styles and layout */
     inline-size: 100cqi;
 
     display: grid;
@@ -85,21 +85,21 @@ import Layout from "../../layouts/Layout.astro";
       bottom: anchor(bottom);
       left: anchor(center);
     }
-  }
 
-  .carousel__slide {
-    inline-size: 30vh;
-    scroll-snap-align: center;
+    .carousel__slide {
+      inline-size: 30vh;
+      scroll-snap-align: center;
 
-    background: light-dark(white, var(--surface-2));
-    padding: 0;
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
 
-    img {
-      width: 100%;
-    }
+      img {
+        width: 100%;
+      }
 
-    &:nth-child(15) {
-      scroll-initial-target: nearest;
+      &:nth-child(15) {
+        scroll-initial-target: nearest;
+      }
     }
   }
 

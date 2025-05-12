@@ -14,9 +14,12 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Slider carousel demo">
-      <div class="carousel carousel--scroll-buttons carousel--unsnapped-inert">
+      <div
+        class="carousel carousel--scroll-buttons carousel--unsnapped-inert"
+        aria-live="polite"
+      >
         <div class="carousel__slide" data-label="Slide 1">
-          <section role="tabpanel" aria-label="Slide 1">
+          <section aria-label="Slide 1">
             <img
               src="/carousel/flora-1.jpg"
               alt="A wall of greenery"
@@ -35,7 +38,7 @@ import Layout from "../../layouts/Layout.astro";
           </section>
         </div>
         <div class="carousel__slide" data-label="Slide 2">
-          <section role="tabpanel" aria-label="Slide 2">
+          <section aria-label="Slide 2">
             <img
               src="/carousel/flora-2.jpg"
               alt="Up close monstera leaves"
@@ -54,7 +57,7 @@ import Layout from "../../layouts/Layout.astro";
           </section>
         </div>
         <div class="carousel__slide" data-label="Slide 3">
-          <section role="tabpanel" aria-label="Slide 3">
+          <section aria-label="Slide 3">
             <img
               src="/carousel/flora-3.jpg"
               alt="A bed of plant leaves"
@@ -74,7 +77,7 @@ import Layout from "../../layouts/Layout.astro";
           </section>
         </div>
         <div class="carousel__slide" data-label="Slide 4">
-          <section role="tabpanel" aria-label="Slide 4">
+          <section aria-label="Slide 4">
             <img
               src="/carousel/flora-4.jpg"
               alt="A jungle picture of ferns and other green plantlife"

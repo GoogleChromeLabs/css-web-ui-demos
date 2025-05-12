@@ -97,51 +97,25 @@ import Layout from "../../layouts/Layout.astro";
         </div>
       </div>
     </div>
+  </section>
 
-    <style>
-      .carousel {
-        display: grid;
-        grid-auto-columns: 100%;
-        grid-auto-flow: column;
-        place-items: center;
-        gap: var(--size-5);
+  <style>
+    .carousel {
+      display: grid;
+      grid-auto-columns: 100%;
+      grid-auto-flow: column;
+      place-items: center;
+      gap: var(--size-5);
 
-        block-size: max(500px, 50cqb);
-        inline-size: 100cqi;
-        background: black;
+      block-size: max(500px, 50cqb);
+      inline-size: 100cqi;
+      background: black;
 
-        &::before,
-        &::after {
-          content: "";
-          display: block;
-          inline-size: 50cqi;
-        }
-
-        &::scroll-marker-group {
-          block-size: 1.5lh;
-          max-inline-size: 190px;
-          position-area: none;
-          bottom: anchor(bottom);
-          justify-self: center;
-          margin-block-end: var(--size-2);
-          padding-inline: var(--size-3);
-
-          border-radius: var(--radius-round);
-          border: 1px solid var(--surface-3);
-          background-color: light-dark(#fff3, #fff2);
-          overflow: clip;
-          mask: none; /* todo: remove this once scroll-state() used for group overflow */
-        }
-
-        &::scroll-button(left),
-        &::scroll-button(right) {
-          position-area: var(--_inner);
-        }
-
-        &::scroll-button(left):not(:hover, :focus-visible),
-        &::scroll-button(right):not(:hover, :focus-visible) {
-          color: white;
-        }
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        inline-size: 50cqi;
       }
 
       .carousel__slide {
@@ -155,6 +129,32 @@ import Layout from "../../layouts/Layout.astro";
           }
         }
       }
-    </style>
-  </section>
+
+      &::scroll-marker-group {
+        block-size: 1.5lh;
+        max-inline-size: 190px;
+        position-area: none;
+        bottom: anchor(bottom);
+        justify-self: center;
+        margin-block-end: var(--size-2);
+        padding-inline: var(--size-3);
+
+        border-radius: var(--radius-round);
+        border: 1px solid var(--surface-3);
+        background-color: light-dark(#fff3, #fff2);
+        overflow: clip;
+        mask: none; /* todo: remove this once scroll-state() used for group overflow */
+      }
+
+      &::scroll-button(left),
+      &::scroll-button(right) {
+        position-area: var(--_inner);
+      }
+
+      &::scroll-button(left):not(:hover, :focus-visible),
+      &::scroll-button(right):not(:hover, :focus-visible) {
+        color: white;
+      }
+    }
+  </style>
 </Layout>

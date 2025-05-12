@@ -25,7 +25,10 @@ import Layout from "../../layouts/Layout.astro";
       role="region"
       aria-label="Product carousel demo"
     >
-      <div class="carousel carousel--scroll-markers carousel--unsnapped-inert">
+      <div
+        class="carousel carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
         <div
           class="carousel__slide"
           style="--img: url(/carousel/fold-1.png)"

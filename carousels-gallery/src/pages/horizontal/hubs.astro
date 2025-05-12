@@ -66,6 +66,22 @@ import Layout from "../../layouts/Layout.astro";
       grid-auto-flow: column;
       inline-size: 100cqi;
 
+      .carousel__slide {
+        display: grid;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+        container-type: scroll-state;
+
+        &::scroll-marker {
+          aspect-ratio: var(--ratio-ultrawide);
+          border-radius: 0;
+
+          &:not(:checked) {
+            background: var(--surface-4);
+          }
+        }
+      }
+
       &::scroll-marker-group {
         margin-block-start: var(--size-8);
       }
@@ -73,22 +89,6 @@ import Layout from "../../layouts/Layout.astro";
       &::scroll-button(right),
       &::scroll-button(left) {
         position-area: var(--_inner);
-      }
-    }
-
-    .carousel__slide {
-      display: grid;
-      scroll-snap-align: center;
-      scroll-snap-stop: always;
-      container-type: scroll-state;
-
-      &::scroll-marker {
-        aspect-ratio: var(--ratio-ultrawide);
-        border-radius: 0;
-
-        &:not(:checked) {
-          background: var(--surface-4);
-        }
       }
     }
 

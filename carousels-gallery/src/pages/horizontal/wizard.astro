@@ -26,7 +26,10 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Wizard carousel demo">
-      <div class="carousel carousel--scroll-markers carousel--unsnapped-inert">
+      <div
+        class="carousel carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
         <div class="carousel__slide" id="step-1" data-label="Step 1">
           <form role="tabpanel" aria-label="Step 1">
             <header>

@@ -88,8 +88,7 @@ import Layout from "../../layouts/Layout.astro";
       list-style-type: none;
       counter-reset: item;
 
-      /* Styles and layout */
-      container-type: size scroll-state;
+        container-type: size scroll-state;
       inline-size: 1024px;
       max-inline-size: 100cqi;
       block-size: var(--size-content-1);
@@ -120,43 +119,43 @@ import Layout from "../../layouts/Layout.astro";
         outline-offset: 2px;
         outline: 2px solid var(--link);
       }
-    }
 
-    .carousel__slide {
-      scroll-snap-align: none;
-      background: light-dark(white, var(--surface-2));
-      padding: 0;
+      .carousel__slide {
+        scroll-snap-align: none;
+        background: light-dark(white, var(--surface-2));
+        padding: 0;
 
-      display: inline-flex;
-      place-items: center;
-      place-content: center;
+        display: inline-flex;
+        place-items: center;
+        place-content: center;
 
-      block-size: 100cqb;
-      aspect-ratio: var(--ratio-portrait);
+        block-size: 100cqb;
+        aspect-ratio: var(--ratio-portrait);
 
-      border: 1px solid var(--surface-3);
-      box-shadow: var(--shadow-2);
-      border-radius: var(--radius-2);
+        border: 1px solid var(--surface-3);
+        box-shadow: var(--shadow-2);
+        border-radius: var(--radius-2);
 
-      &::scroll-marker {
-        content: unset;
-      }
-
-      > p {
-        font-family: var(--font-antique);
-        font-size: var(--font-size-5);
-      }
-
-      @container scroll-state(snapped: inline) {
-        > p {
-          color: var(--link);
-          font-size: var(--font-size-7);
+        &::scroll-marker {
+          content: unset;
         }
-      }
 
-      &:focus {
-        outline: 2px solid var(--link);
-        outline-offset: -2px;
+        > p {
+          font-family: var(--font-antique);
+          font-size: var(--font-size-5);
+        }
+
+        @container scroll-state(snapped: inline) {
+          > p {
+            color: var(--link);
+            font-size: var(--font-size-7);
+          }
+        }
+
+        &:focus {
+          outline: 2px solid var(--link);
+          outline-offset: -2px;
+        }
       }
     }
   </style>

@@ -17,23 +17,33 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel carousel--vertical scroll-markers">
-      <li><p>My Slides</p></li>
-      <li><p>Slide 1</p></li>
-      <li><p>Slide 2</p></li>
-      <li><p>Slide 3</p></li>
-      <li><p>The End</p></li>
-    </ul>
+    <div role="region" aria-label="Slides carousel demo">
+      <div
+        class="carousel carousel--vertical carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <p role="tabpanel" aria-label="Slide 1">My Slides</p>
+        </div>
+        <div class="carousel__slide" data-label="Slide 2">
+          <p role="tabpanel" aria-label="Slide 2">Slide 1</p>
+        </div>
+        <div class="carousel__slide" data-label="Slide 3">
+          <p role="tabpanel" aria-label="Slide 3">Slide 2</p>
+        </div>
+        <div class="carousel__slide" data-label="Slide 4">
+          <p role="tabpanel" aria-label="Slide 4">Slide 3</p>
+        </div>
+        <div class="carousel__slide" data-label="Slide 5">
+          <p role="tabpanel" aria-label="Slide 5">The End</p>
+        </div>
+      </div>
+    </div>
   </section>
 </Layout>
 
 <style>
   .carousel {
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     aspect-ratio: var(--ratio-landscape);
     inline-size: 100%;
 
@@ -47,10 +57,11 @@ import Layout from "../../layouts/Layout.astro";
       overflow: unset;
     }
 
-    & > li {
+    .carousel__slide {
       max-inline-size: 100%;
       background: light-dark(white, var(--surface-2));
       padding: 0;
+      container-type: scroll-state;
 
       display: inline-flex;
       place-items: center;
@@ -63,7 +74,7 @@ import Layout from "../../layouts/Layout.astro";
       > p {
         font-family: var(--font-antique);
         font-size: var(--font-size-5);
-        transition: font-size 1s var(--ease-spring-4) .5s;
+        transition: font-size 1s var(--ease-spring-4) 0.5s;
       }
 
       @container scroll-state(snapped: block) {

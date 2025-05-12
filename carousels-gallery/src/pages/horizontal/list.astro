@@ -87,11 +87,6 @@ import Layout from "../../layouts/Layout.astro";
 
 <style>
   .carousel {
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     inline-size: 100cqi;
 
     display: grid;
@@ -113,34 +108,34 @@ import Layout from "../../layouts/Layout.astro";
     &::scroll-button(right) {
       position-area: var(--_inner);
     }
-  }
 
-  .carousel__slide {
-    container-type: scroll-state;
+    .carousel__slide {
+      container-type: scroll-state;
 
-    background: light-dark(white, var(--surface-2));
-    padding: 0;
+      background: light-dark(white, var(--surface-2));
+      padding: 0;
 
-    display: inline-flex;
-    place-items: center;
-    place-content: center;
+      display: inline-flex;
+      place-items: center;
+      place-content: center;
 
-    aspect-ratio: var(--ratio-portrait);
+      aspect-ratio: var(--ratio-portrait);
 
-    border: 1px solid var(--surface-3);
-    box-shadow: var(--shadow-2);
-    border-radius: var(--radius-2);
+      border: 1px solid var(--surface-3);
+      box-shadow: var(--shadow-2);
+      border-radius: var(--radius-2);
 
-    > p {
-      font-family: var(--font-antique);
-      font-size: var(--font-size-5);
-      transition: font-size 1s var(--ease-spring-4);
-    }
-
-    @container scroll-state(snapped: inline) {
       > p {
-        color: var(--link);
-        font-size: var(--font-size-7);
+        font-family: var(--font-antique);
+        font-size: var(--font-size-5);
+        transition: font-size 1s var(--ease-spring-4);
+      }
+
+      @container scroll-state(snapped: inline) {
+        > p {
+          color: var(--link);
+          font-size: var(--font-size-7);
+        }
       }
     }
   }
