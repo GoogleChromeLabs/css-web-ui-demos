@@ -13,59 +13,62 @@ import Layout from "../../layouts/Layout.astro";
         <span>Anchor</span>
       </div>
       <p>
-        <b>Conditional scroll buttons</b> featured in this demo. Hidden, unless
-        the visiting user has a hover enabled device and is actively hovering the
-        carousel or keyboard focus is active within the carousel.
+        <b>Conditional scroll buttons</b> featured in this demo. Hidden, unless the
+        visiting user has a hover enabled device and is actively hovering the carousel
+        or keyboard focus is active within the carousel.
       </p>
     </header>
 
-    <ul class="carousel scroll-markers scroll-buttons">
-      <li>
-        <figure class="testimonial">
-          <blockquote cite="https://www.huxley.net/bnw/four.html">
-            <p>
-              Words can be like X-rays, if you use them properly—they’ll go
-              through anything. You read and you’re pierced.
-            </p>
-          </blockquote>
-          <figcaption>
-            —Aldous Huxley, <cite>Brave New World</cite>
-          </figcaption>
-        </figure>
-      </li>
-      <li>
-        <figure class="testimonial">
-          <blockquote cite="https://www.huxley.net/bnw/four.html">
-            <p>
-              Words can be like X-rays, if you use them properly—they’ll go
-              through anything. You read and you’re pierced.
-            </p>
-          </blockquote>
-          <figcaption>
-            —Aldous Huxley, <cite>Brave New World</cite>
-          </figcaption>
-        </figure>
-      </li>
-      <li>
-        <figure class="testimonial">
-          <blockquote cite="https://www.huxley.net/bnw/four.html">
-            <p>
-              Words can be like X-rays, if you use them properly—they’ll go
-              through anything. You read and you’re pierced.
-            </p>
-          </blockquote>
-          <figcaption>
-            —Aldous Huxley, <cite>Brave New World</cite>
-          </figcaption>
-        </figure>
-      </li>
-    </ul>
+    <div role="region" aria-label="Testimonials carousel demo">
+      <div
+        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <figure class="testimonial" role="tabpanel" aria-label="Slide 1">
+            <blockquote cite="https://www.huxley.net/bnw/four.html">
+              <p>
+                Words can be like X-rays, if you use them properly—they’ll go
+                through anything. You read and you’re pierced.
+              </p>
+            </blockquote>
+            <figcaption>
+              —Aldous Huxley, <cite>Brave New World</cite>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="carousel__slide" data-label="Slide 2">
+          <figure class="testimonial" role="tabpanel" aria-label="Slide 2">
+            <blockquote cite="https://www.huxley.net/bnw/four.html">
+              <p>
+                Words can be like X-rays, if you use them properly—they’ll go
+                through anything. You read and you’re pierced.
+              </p>
+            </blockquote>
+            <figcaption>
+              —Aldous Huxley, <cite>Brave New World</cite>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="carousel__slide" data-label="Slide 3">
+          <figure class="testimonial" role="tabpanel" aria-label="Slide 3">
+            <blockquote cite="https://www.huxley.net/bnw/four.html">
+              <p>
+                Words can be like X-rays, if you use them properly—they’ll go
+                through anything. You read and you’re pierced.
+              </p>
+            </blockquote>
+            <figcaption>
+              —Aldous Huxley, <cite>Brave New World</cite>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
   </section>
 
   <style>
-    ul {
-      /* Reset list styles */
-      list-style-type: none;
+    .carousel {
       counter-reset: item;
       margin-block-end: var(--size-7);
       padding-inline: 0;
@@ -89,11 +92,12 @@ import Layout from "../../layouts/Layout.astro";
       &::scroll-button(right) {
         position-area: var(--_inner);
       }
+    }
 
-      & > li {
-        scroll-snap-align: center;
-        padding: 0;
-      }
+    .carousel__slide {
+      container-type: scroll-state;
+      scroll-snap-align: center;
+      padding: 0;
     }
 
     .testimonial {

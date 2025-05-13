@@ -25,50 +25,53 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel scroll-markers">
-      <li id="step-1">
-        <form>
-          <header>
-            <h2>Onboarding Guide</h2>
-            <p>Let's get started with your name</p>
-          </header>
+    <div role="region" aria-label="Wizard carousel demo">
+      <div
+        class="carousel carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" id="step-1" data-label="Step 1">
+          <form role="tabpanel" aria-label="Step 1">
+            <header>
+              <h2>Onboarding Guide</h2>
+              <p>Let's get started with your name</p>
+            </header>
 
-          <input required type="text" placeholder="Name" />
-          <a class="btn" href="#step-2">Next Step</a>
-        </form>
-      </li>
-      <li id="step-2">
-        <form>
-          <header>
-            <h2>Onboarding Guide</h2>
-            <p>What is your email address?</p>
-          </header>
+            <input required type="text" placeholder="Name" />
+            <a class="btn" href="#step-2">Next Step</a>
+          </form>
+        </div>
+        <div class="carousel__slide" id="step-2" data-label="Step 2">
+          <form role="tabpanel" aria-label="Step 2">
+            <header>
+              <h2>Onboarding Guide</h2>
+              <p>What is your email address?</p>
+            </header>
 
-          <input required type="email" placeholder="Email" />
-          <a class="btn" href="#step-3">Next Step</a>
-        </form>
-      </li>
-      <li id="step-3">
-        <form>
-          <header>
-            <h2>Almost Done!</h2>
-            <p>Review our <a href="#">terms and conditions</a></p>
-          </header>
+            <input required type="email" placeholder="Email" />
+            <a class="btn" href="#step-3">Next Step</a>
+          </form>
+        </div>
+        <div class="carousel__slide" id="step-3" data-label="Step 3">
+          <form role="tabpanel" aria-label="Step 3">
+            <header>
+              <h2>Almost Done!</h2>
+              <p>Review our <a href="#">terms and conditions</a></p>
+            </header>
 
-          <label>
-            <input required type="checkbox" />
-            I agree to the terms and conditions
-          </label>
-          <button type="submit">Finish</button>
-        </form>
-      </li>
-    </ul>
+            <label>
+              <input required type="checkbox" />
+              I agree to the terms and conditions
+            </label>
+            <button type="submit">Finish</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </section>
 
   <style>
-    ul {
-      /* Reset list styles */
-      list-style-type: none;
+    .carousel {
       counter-reset: item;
       margin-block-end: var(--size-7);
       padding-inline: 0;
@@ -108,7 +111,7 @@ import Layout from "../../layouts/Layout.astro";
         animation-timeline: --carousel-timeline;
       }
 
-      & > li {
+      .carousel__slide {
         scroll-snap-align: center;
         padding: 0;
         counter-increment: carousel-item;
@@ -118,7 +121,7 @@ import Layout from "../../layouts/Layout.astro";
           place-content: center;
           place-items: center;
           background: var(--surface-1);
-          content: counter(carousel-item);
+          content: counter(carousel-item) / attr(data-label);
           font-size: var(--font-size-0);
 
           transition:

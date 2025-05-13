@@ -15,36 +15,47 @@ import Layout from "../../layouts/Layout.astro";
       </div>
       <p>
         These are established pages in the markup. See <a
-          href="/horizonta/pages">Pages</a
+          href="/horizontal/pages/">Pages</a
         > for an automatic paging example.
       </p>
     </header>
 
-    <div class="carousel scroll-buttons scroll-markers">
-      <section class="hub bento-lg">
-        <div style="--sibling-index: 1"></div>
-        <div style="--sibling-index: 2"></div>
-        <div style="--sibling-index: 3"></div>
-        <div style="--sibling-index: 4"></div>
-        <div style="--sibling-index: 5"></div>
-      </section>
-      <section class="hub bento-md">
-        <div style="--sibling-index: 1"></div>
-        <div style="--sibling-index: 2"></div>
-        <div style="--sibling-index: 3"></div>
-      </section>
-      <section class="hub grid">
-        <div style="--sibling-index: 1"></div>
-        <div style="--sibling-index: 2"></div>
-        <div style="--sibling-index: 3"></div>
-        <div style="--sibling-index: 4"></div>
-        <div style="--sibling-index: 5"></div>
-        <div style="--sibling-index: 6"></div>
-        <div style="--sibling-index: 7"></div>
-        <div style="--sibling-index: 8"></div>
-        <div style="--sibling-index: 9"></div>
-        <div style="--sibling-index: 10"></div>
-      </section>
+    <div role="region" aria-label="Hubs carousel demo">
+      <div
+        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <section class="hub bento-lg" role="tabpanel" aria-label="Slide 1">
+            <div style="--sibling-index: 1"></div>
+            <div style="--sibling-index: 2"></div>
+            <div style="--sibling-index: 3"></div>
+            <div style="--sibling-index: 4"></div>
+            <div style="--sibling-index: 5"></div>
+          </section>
+        </div>
+        <div class="carousel__slide" data-label="Slide 2">
+          <section class="hub bento-md" role="tabpanel" aria-label="Slide 2">
+            <div style="--sibling-index: 1"></div>
+            <div style="--sibling-index: 2"></div>
+            <div style="--sibling-index: 3"></div>
+          </section>
+        </div>
+        <div class="carousel__slide" data-label="Slide 3">
+          <section class="hub grid" role="tabpanel" aria-label="Slide 3">
+            <div style="--sibling-index: 1"></div>
+            <div style="--sibling-index: 2"></div>
+            <div style="--sibling-index: 3"></div>
+            <div style="--sibling-index: 4"></div>
+            <div style="--sibling-index: 5"></div>
+            <div style="--sibling-index: 6"></div>
+            <div style="--sibling-index: 7"></div>
+            <div style="--sibling-index: 8"></div>
+            <div style="--sibling-index: 9"></div>
+            <div style="--sibling-index: 10"></div>
+          </section>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -55,9 +66,11 @@ import Layout from "../../layouts/Layout.astro";
       grid-auto-flow: column;
       inline-size: 100cqi;
 
-      > * {
+      .carousel__slide {
+        display: grid;
         scroll-snap-align: center;
         scroll-snap-stop: always;
+        container-type: scroll-state;
 
         &::scroll-marker {
           aspect-ratio: var(--ratio-ultrawide);
@@ -81,8 +94,8 @@ import Layout from "../../layouts/Layout.astro";
 
     .hub {
       display: grid;
-      gap: var(--size-5);
       margin-inline: auto;
+      gap: var(--size-5);
 
       &.bento-lg {
         grid-template-columns: repeat(4, 15cqi);

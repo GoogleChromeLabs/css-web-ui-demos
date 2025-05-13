@@ -20,59 +20,61 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel">
-      <li>
-        <figure class="parallax-item">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/turtle.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>It's a turtle!</figcaption>
-        </figure>
-      </li>
+    <div role="region" aria-label="Video carousel demo">
+      <div class="carousel carousel--unsnapped-inert" aria-live="polite">
+        <div class="carousel__slide" data-label="Slide 1">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 1">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/turtle.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>It's a turtle!</figcaption>
+          </figure>
+        </div>
 
-      <li>
-        <figure class="parallax-item">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/snow.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>Falling Snow</figcaption>
-        </figure>
-      </li>
+        <div class="carousel__slide" data-label="Slide 2">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 2">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/snow.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>Falling Snow</figcaption>
+          </figure>
+        </div>
 
-      <li>
-        <figure class="parallax-item">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/wheel.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>Ferris Wheel</figcaption>
-        </figure>
-      </li>
+        <div class="carousel__slide" data-label="Slide 3">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 3">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/wheel.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>Ferris Wheel</figcaption>
+          </figure>
+        </div>
 
-      <li>
-        <figure class="parallax-item">
-          <video
-            width="1280"
-            height="720"
-            src="/carousel/chameleon.mp4"
-            autoplay
-            muted
-            loop></video>
-          <figcaption>I See You</figcaption>
-        </figure>
-      </li>
-    </ul>
+        <div class="carousel__slide" data-label="Slide 4">
+          <figure class="parallax-item" role="tabpanel" aria-label="Slide 4">
+            <video
+              width="1280"
+              height="720"
+              src="/carousel/chameleon.mp4"
+              autoplay
+              muted
+              loop></video>
+            <figcaption>I See You</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
     <div class="fixed-logo">
       <img
         src="/carousel/googletv-logo.svg"
@@ -152,7 +154,7 @@ import Layout from "../../layouts/Layout.astro";
       inline-size: min(80cqi, 1280px);
     }
 
-    > li {
+    .carousel__slide {
       scroll-snap-stop: always;
 
       counter-increment: page;

@@ -13,73 +13,88 @@ import Layout from "../../layouts/Layout.astro";
       </div>
     </header>
 
-    <div class="carousel scroll-buttons">
-      <div class="slide">
-        <img
-          src="/carousel/flora-1.jpg"
-          alt="A wall of greenery"
-          width="2400"
-          height="1600"
-          loading="lazy"
-        />
-        <div>
-          <h3>We know clients.</h3>
-          <p>
-            Tired of software that's more glitch than glitter? We craft elegant,
-            powerful solutions that not only function flawlessly but also
-            deliver an amazing user experience.
-          </p>
+    <div role="region" aria-label="Slider carousel demo">
+      <div
+        class="carousel carousel--scroll-buttons carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <section aria-label="Slide 1">
+            <img
+              src="/carousel/flora-1.jpg"
+              alt="A wall of greenery"
+              width="2400"
+              height="1600"
+              loading="lazy"
+            />
+            <div>
+              <h3>We know clients.</h3>
+              <p>
+                Tired of software that's more glitch than glitter? We craft
+                elegant, powerful solutions that not only function flawlessly
+                but also deliver an amazing user experience.
+              </p>
+            </div>
+          </section>
         </div>
-      </div>
-      <div class="slide">
-        <img
-          src="/carousel/flora-2.jpg"
-          alt="Up close monstera leaves"
-          width="2400"
-          height="1602"
-          loading="lazy"
-        />
-        <div>
-          <h3>Innovate. Automate. Elevate.</h3>
-          <p>
-            Don't just keep up – surge ahead. We help you harness the power of
-            innovation and automation to streamline your operations, boost
-            efficiency, and elevate your business to new heights.
-          </p>
+        <div class="carousel__slide" data-label="Slide 2">
+          <section aria-label="Slide 2">
+            <img
+              src="/carousel/flora-2.jpg"
+              alt="Up close monstera leaves"
+              width="2400"
+              height="1602"
+              loading="lazy"
+            />
+            <div>
+              <h3>Innovate. Automate. Elevate.</h3>
+              <p>
+                Don't just keep up – surge ahead. We help you harness the power
+                of innovation and automation to streamline your operations,
+                boost efficiency, and elevate your business to new heights.
+              </p>
+            </div>
+          </section>
         </div>
-      </div>
-      <div class="slide">
-        <img
-          src="/carousel/flora-3.jpg"
-          alt="A bed of plant leaves"
-          width="2400"
-          height="1800"
-          loading="lazy"
-        />
-        <div>
-          <h3>Your Vision, Our Code, Limitless Possibilities.</h3>
-          <p>
-            Every great idea starts with a vision. We transform your vision into
-            reality with cutting-edge software solutions tailored to your unique
-            needs. Let's unlock limitless possibilities together.
-          </p>
+        <div class="carousel__slide" data-label="Slide 3">
+          <section aria-label="Slide 3">
+            <img
+              src="/carousel/flora-3.jpg"
+              alt="A bed of plant leaves"
+              width="2400"
+              height="1800"
+              loading="lazy"
+            />
+            <div>
+              <h3>Your Vision, Our Code, Limitless Possibilities.</h3>
+              <p>
+                Every great idea starts with a vision. We transform your vision
+                into reality with cutting-edge software solutions tailored to
+                your unique needs. Let's unlock limitless possibilities
+                together.
+              </p>
+            </div>
+          </section>
         </div>
-      </div>
-      <div class="slide">
-        <img
-          src="/carousel/flora-4.jpg"
-          alt="A jungle picture of ferns and other green plantlife"
-          width="2400"
-          height="1598"
-          loading="lazy"
-        />
-        <div>
-          <h3>Software Solutions,<br />Simplified.</h3>
-          <p>
-            Say goodbye to complex, clunky software. We believe in simplicity
-            without compromise. Our intuitive solutions are designed to make
-            your life easier, so you can focus on what matters most.
-          </p>
+        <div class="carousel__slide" data-label="Slide 4">
+          <section aria-label="Slide 4">
+            <img
+              src="/carousel/flora-4.jpg"
+              alt="A jungle picture of ferns and other green plantlife"
+              width="2400"
+              height="1598"
+              loading="lazy"
+            />
+            <div>
+              <h3>Software Solutions,<br />Simplified.</h3>
+              <p>
+                Say goodbye to complex, clunky software. We believe in
+                simplicity without compromise. Our intuitive solutions are
+                designed to make your life easier, so you can focus on what
+                matters most.
+              </p>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -103,65 +118,70 @@ import Layout from "../../layouts/Layout.astro";
         inline-size: 50cqi;
       }
 
-      > * {
-        scroll-snap-align: center;
-        background: black;
+      .carousel__slide {
         display: grid;
+        scroll-snap-align: center;
+        container-type: scroll-state;
 
         > * {
-          grid-area: 1 / 1;
-        }
-
-        > img {
-          opacity: 0.3;
-          inline-size: 100%;
-          block-size: 100%;
-          max-block-size: 100svh;
-          object-fit: cover;
-
-          transition: opacity 0.3s var(--ease-3);
-
-          @container not scroll-state(snapped: inline) {
-            opacity: 0;
-          }
-        }
-
-        > div {
-          z-index: 1;
+          background: black;
           display: grid;
-          gap: var(--size-5);
-          color: white;
-          place-self: center start;
-          margin-inline-start: 15cqi;
 
-          > h3 {
-            font-family: var(--font-transitional);
-            font-size: var(--font-size-7);
+          > * {
+            grid-area: 1 / 1;
+          }
 
-            transition:
-              transform 1.1s var(--ease-out-5) 0.3s,
-              opacity 1.1s var(--ease-out-5) 0.3s;
+          > img {
+            opacity: 0.3;
+            inline-size: 100%;
+            block-size: 100%;
+            max-block-size: 100svh;
+            object-fit: cover;
+
+            transition: opacity 0.3s var(--ease-3);
 
             @container not scroll-state(snapped: inline) {
               opacity: 0;
-              transform: translateY(30px);
             }
           }
 
-          > p {
-            color: var(--gray-4);
-            max-inline-size: var(--size-content-2);
-            font-size: var(--font-size-4);
-            font-weight: 200;
-            line-height: 1.75;
+          > div {
+            z-index: 1;
+            display: grid;
+            gap: var(--size-5);
+            color: white;
+            place-self: center start;
+            margin-inline-start: 15cqi;
 
-            transition:
-              transform 1.1s var(--ease-out-5) 0.35s,
-              opacity 1.1s var(--ease-out-5) 0.35s;
+            > h3 {
+              font-family: var(--font-transitional);
+              font-size: var(--font-size-7);
 
-            @container not scroll-state(snapped: inline) {
-              opacity: 0;
-              transform: translateY(30px);
+              transition:
+                transform 1.1s var(--ease-out-5) 0.3s,
+                opacity 1.1s var(--ease-out-5) 0.3s;
+
+              @container not scroll-state(snapped: inline) {
+                opacity: 0;
+                transform: translateY(30px);
+              }
+            }
+
+            > p {
+              color: var(--gray-4);
+              max-inline-size: var(--size-content-2);
+              font-size: var(--font-size-4);
+              font-weight: 200;
+              line-height: 1.75;
+
+              transition:
+                transform 1.1s var(--ease-out-5) 0.35s,
+                opacity 1.1s var(--ease-out-5) 0.35s;
+
+              @container not scroll-state(snapped: inline) {
+                opacity: 0;
+                transform: translateY(30px);
+              }
             }
           }
         }

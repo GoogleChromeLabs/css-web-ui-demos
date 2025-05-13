@@ -14,23 +14,28 @@ import Layout from "../../layouts/Layout.astro";
       <p>Just a neat mask illusion.</p>
     </header>
 
-    <ul class="carousel scroll-buttons">
-      {
-        Array.from({ length: 30 }).map((_, i) => (
-          <li>
-            <figure>
-              <img
-                src={`https://picsum.photos/seed/${i + 1}/300/600`}
-                width="300"
-                height="600"
-                alt={`Image ${i}`}
-                loading="lazy"
-              />
-            </figure>
-          </li>
-        ))
-      }
-    </ul>
+    <div role="region" aria-label="Curved carousel demo">
+      <div
+        class="carousel carousel--scroll-buttons carousel--offscreen-inert"
+        aria-live="polite"
+      >
+        {
+          Array.from({ length: 30 }).map((_, i) => (
+            <div class="carousel__slide" data-label={`Slide ${i}`}>
+              <figure>
+                <img
+                  src={`https://picsum.photos/seed/${i + 1}/300/600`}
+                  width="300"
+                  height="600"
+                  alt={`Image ${i}`}
+                  loading="lazy"
+                />
+              </figure>
+            </div>
+          ))
+        }
+      </div>
+    </div>
   </section>
 </Layout>
 
@@ -39,11 +44,6 @@ import Layout from "../../layouts/Layout.astro";
     /* dramatic overlap */
     margin-block-start: -15vh;
 
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     inline-size: 100cqi;
 
     display: grid;
@@ -86,7 +86,7 @@ import Layout from "../../layouts/Layout.astro";
       left: anchor(center);
     }
 
-    & > li {
+    .carousel__slide {
       inline-size: 30vh;
       scroll-snap-align: center;
 

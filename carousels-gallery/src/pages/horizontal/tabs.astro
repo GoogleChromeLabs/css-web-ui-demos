@@ -17,15 +17,15 @@ import Layout from "../../layouts/Layout.astro";
         text inside.
       </p>
       <p>
-        See also <a href="/carousel/horizontal/scrollspy/">Scrollspy</a>
+        See also <a href="/carousel/vertical/scroll-spy/">Scrollspy</a>
         and <a href="/carousel/horizontal/series/">TV Series</a>.
       </p>
     </header>
 
-    <div class="carousel tabs">
-      <div aria-label="Main Section" class="carousel--snap">
-        <div class="carousel--scroller">
-          <section>
+    <div role="region" aria-label="Tab carousel demo">
+      <div class="carousel carousel--unsnapped-inert" aria-live="polite">
+        <div class="carousel__slide" data-label="Main Section">
+          <section role="tabpanel" aria-label="Main Section">
             <p>
               Proin sodales condimentum felis, mattis tristique sem porttitor
               vitae. Suspendisse id condimentum orci. Interdum et malesuada
@@ -50,11 +50,8 @@ import Layout from "../../layouts/Layout.astro";
             </p>
           </section>
         </div>
-      </div>
-
-      <div aria-label="Details Section" class="carousel--snap">
-        <div class="carousel--scroller">
-          <section>
+        <div class="carousel__slide" data-label="Details Section">
+          <section role="tabpanel" aria-label="Details Section">
             <p>
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem
               id cupiditate distinctio hic eum blanditiis in, temporibus itaque
@@ -75,11 +72,8 @@ import Layout from "../../layouts/Layout.astro";
             </p>
           </section>
         </div>
-      </div>
-
-      <div aria-label="Follow Up Section" class="carousel--snap">
-        <div class="carousel--scroller">
-          <section>
+        <div class="carousel__slide" data-label="Follow-up Section">
+          <section role="tabpanel" aria-label="Follow-up Section">
             <p>
               Nam ex leo, auctor vitae lectus ac, imperdiet viverra nisi.
               Maecenas augue arcu, vulputate nec posuere ac, iaculis dignissim
@@ -103,7 +97,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <style>
-      .tabs {
+      .carousel {
         overflow-y: hidden;
         scroll-marker-group: before;
         scroll-behavior: auto;
@@ -140,60 +134,53 @@ import Layout from "../../layouts/Layout.astro";
           align-items: end;
           justify-content: start;
         }
+      }
 
-        .carousel--snap {
-          scroll-snap-align: start;
-          container-type: scroll-state;
+      .carousel__slide {
+        scroll-snap-align: start;
+        container-type: scroll-state;
+        max-inline-size: initial;
+        padding: 0;
+        overflow-y: auto;
+        max-block-size: 10lh;
 
-          &::scroll-marker {
-            content: attr(aria-label);
-            text-decoration: none;
-            -webkit-tap-highlight-color: transparent;
-            white-space: nowrap;
-            background: light-dark(white, var(--surface-2));
-            border: 1px solid var(--surface-2);
-            border-bottom: none;
-            padding-inline: var(--size-4);
-            padding-block: var(--size-2);
-            border-top-left-radius: var(--radius-2);
-            border-top-right-radius: var(--radius-2);
-          }
-
-          &::scroll-marker:not(:target-current, :focus-visible) {
-            color: var(--text-2);
-          }
-
-          &::scroll-marker:target-current {
-            color: var(--text-1);
-            border-bottom: 2px solid var(--link);
-          }
-
-          &::scroll-marker:focus-visible {
-            outline-offset: 2px;
-            outline: 2px solid var(--link);
-          }
+        &:focus-visible {
+          outline-offset: -5px;
         }
 
-        .carousel--scroller {
-          overflow-y: auto;
-          max-block-size: 10lh;
+        > section {
+          display: grid;
+          gap: var(--size-3);
+          padding: var(--size-3);
+          background: light-dark(white, var(--surface-1));
+        }
 
-          @container not scroll-state(snapped) {
-            interactivity: inert;
-            opacity: 0.5;
-          }
+        &::scroll-marker {
+          content: attr(data-label);
+          text-decoration: none;
+          -webkit-tap-highlight-color: transparent;
+          white-space: nowrap;
+          background: light-dark(white, var(--surface-2));
+          border: 1px solid var(--surface-2);
+          border-bottom: none;
+          padding-inline: var(--size-4);
+          padding-block: var(--size-2);
+          border-top-left-radius: var(--radius-2);
+          border-top-right-radius: var(--radius-2);
+        }
 
-          &:focus-visible {
-            outline-offset: -5px;
-          }
+        &::scroll-marker:not(:target-current, :focus-visible) {
+          color: var(--text-2);
+        }
 
-          > section {
-            display: grid;
-            gap: var(--size-3);
-            padding: var(--size-3);
-            transition: opacity 0.3s var(--ease-3);
-            background: light-dark(white, var(--surface-1));
-          }
+        &::scroll-marker:target-current {
+          color: var(--text-1);
+          border-bottom: 2px solid var(--link);
+        }
+
+        &::scroll-marker:focus-visible {
+          outline-offset: 2px;
+          outline: 2px solid var(--link);
         }
       }
 

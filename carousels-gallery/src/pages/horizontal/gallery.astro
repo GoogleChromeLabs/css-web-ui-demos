@@ -14,70 +14,88 @@ import Layout from "../../layouts/Layout.astro";
       </div>
     </header>
 
-    <div class="carousel scroll-buttons scroll-markers">
-      <picture>
-        <img
-          src="/carousel/neon-wolf.jpg"
-          alt="A portrait of an armored wolf with red glowing lines and ornaments"
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
-      <picture>
-        <img
-          src="/carousel/neon-raptor.jpg"
-          alt="A portrait of a raptor with glowing eyes, pink hair and neon armor."
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
-      <picture>
-        <img
-          src="/carousel/flying-cars.jpg"
-          alt="A cityscape with flying cars and neon lights"
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
-      <picture>
-        <img
-          src="/carousel/neon-trex.jpg"
-          alt="A portrait of a T-Rex with glowing eyes and armor, surrounded by neon streaks of light."
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
-      <picture>
-        <img
-          src="/carousel/flying-cars-2.jpg"
-          alt="An airborn cityscape with flying cars and neon lights"
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
-      <picture>
-        <img
-          src="/carousel/flying-cars-3.jpg"
-          alt="A cityscape with flying cars and neon lights flying towards a tower"
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
-      <picture>
-        <img
-          src="/carousel/neon-city.jpg"
-          alt="A futuristic city scene with flying vehicles and bright neon lights"
-          width="500"
-          height="500"
-          loading="lazy"
-        />
-      </picture>
+    <div role="region" aria-label="Image gallery carousel demo">
+      <div
+        class="carousel carousel--scroll-buttons carousel--scroll-markers carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" data-label="Slide 1">
+          <picture role="tabpanel" aria-label="Slide 1">
+            <img
+              src="/carousel/neon-wolf.jpg"
+              alt="A portrait of an armored wolf with red glowing lines and ornaments"
+              width="500"
+              height="500"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 2">
+          <picture role="tabpanel" aria-label="Slide 2">
+            <img
+              src="/carousel/neon-raptor.jpg"
+              alt="A portrait of a raptor with glowing eyes, pink hair and neon armor."
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 3">
+          <picture role="tabpanel" aria-label="Slide 3">
+            <img
+              src="/carousel/flying-cars.jpg"
+              alt="A cityscape with flying cars and neon lights"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 4">
+          <picture role="tabpanel" aria-label="Slide 4">
+            <img
+              src="/carousel/neon-trex.jpg"
+              alt="A portrait of a T-Rex with glowing eyes and armor, surrounded by neon streaks of light."
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 5">
+          <picture role="tabpanel" aria-label="Slide 5">
+            <img
+              src="/carousel/flying-cars-2.jpg"
+              alt="An airborn cityscape with flying cars and neon lights"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 6">
+          <picture role="tabpanel" aria-label="Slide 6">
+            <img
+              src="/carousel/flying-cars-3.jpg"
+              alt="A cityscape with flying cars and neon lights flying towards a tower"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+        <div class="carousel__slide" data-label="Slide 7">
+          <picture role="tabpanel" aria-label="Slide 7">
+            <img
+              src="/carousel/neon-city.jpg"
+              alt="A futuristic city scene with flying vehicles and bright neon lights"
+              width="500"
+              height="500"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -100,10 +118,10 @@ import Layout from "../../layouts/Layout.astro";
         inline-size: 50cqi;
       }
 
-      > * {
+      .carousel__slide {
         scroll-snap-align: center;
 
-        > img {
+        > picture {
           transition: filter 0.3s var(--ease-3);
 
           @container not scroll-state(snapped: inline) {

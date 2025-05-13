@@ -16,34 +16,66 @@ import Layout from "../../layouts/Layout.astro";
       <p>A basic vertical carousel example with scroll buttons and markers.</p>
     </header>
 
-    <ul class="carousel --vertical scroll-markers scroll-buttons">
-      <li><p>1</p></li>
-      <li><p>2</p></li>
-      <li><p>3</p></li>
-      <li><p>4</p></li>
-      <li><p>5</p></li>
-      <li><p>6</p></li>
-      <li><p>7</p></li>
-      <li><p>8</p></li>
-      <li><p>9</p></li>
-      <li><p>10</p></li>
-      <li><p>11</p></li>
-      <li><p>12</p></li>
-      <li><p>13</p></li>
-      <li><p>14</p></li>
-      <li><p>15</p></li>
-      <li><p>16</p></li>
-    </ul>
+    <div role="region" aria-label="List carousel demo">
+      <div
+        class="carousel carousel--vertical carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide" tabindex="0" data-label="Slide 1">
+          <p>1</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 2">
+          <p>2</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 3">
+          <p>3</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 4">
+          <p>4</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 5">
+          <p>5</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 6">
+          <p>6</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 7">
+          <p>7</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 8">
+          <p>8</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 9">
+          <p>9</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 10">
+          <p>10</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 11">
+          <p>11</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 12">
+          <p>12</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 13">
+          <p>13</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 14">
+          <p>14</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 15">
+          <p>15</p>
+        </div>
+        <div class="carousel__slide" tabindex="0" data-label="Slide 16">
+          <p>16</p>
+        </div>
+      </div>
+    </div>
   </section>
 </Layout>
 
 <style>
   .carousel {
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     block-size: 50svh;
     max-inline-size: var(--size-content-2);
 
@@ -63,9 +95,10 @@ import Layout from "../../layouts/Layout.astro";
       block-size: 85cqi;
     }
 
-    & > li {
+    .carousel__slide {
       background: light-dark(white, var(--surface-2));
       padding: 0;
+      container-type: scroll-state;
 
       display: inline-flex;
       place-items: center;

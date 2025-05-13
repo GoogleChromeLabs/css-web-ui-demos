@@ -19,60 +19,60 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </header>
 
-    <ul class="carousel --vertical scroll-buttons">
-      <li>
-        <div class="card">
-          <p>CNN</p>
-          <h2>Lorem ipsum dolor sit amet consectetur adipisicing</h2>
-          <time>2 minutes ago</time>
+    <div role="region" aria-label="Stack carousel demo">
+      <div
+        class="carousel carousel--vertical carousel--scroll-buttons carousel--unsnapped-inert"
+        aria-live="polite"
+      >
+        <div class="carousel__slide">
+          <div class="card">
+            <p>CNN</p>
+            <h2>Lorem ipsum dolor sit amet consectetur adipisicing</h2>
+            <time>2 minutes ago</time>
+          </div>
         </div>
-      </li>
-      <li>
-        <div class="card">
-          <p>BBC News</p>
-          <h2>Lorem ipsum dolor sit</h2>
-          <time>3 hours ago</time>
+        <div class="carousel__slide">
+          <div class="card">
+            <p>BBC News</p>
+            <h2>Lorem ipsum dolor sit</h2>
+            <time>3 hours ago</time>
+          </div>
         </div>
-      </li>
-      <li>
-        <div class="card">
-          <p>The New York Times</p>
-          <h2>Sit amet consectetur adipisicing elit</h2>
-          <time>5 hours ago</time>
+        <div class="carousel__slide">
+          <div class="card">
+            <p>The New York Times</p>
+            <h2>Sit amet consectetur adipisicing elit</h2>
+            <time>5 hours ago</time>
+          </div>
         </div>
-      </li>
-      <li>
-        <div class="card">
-          <p>Reuters</p>
-          <h2>Ipsum dolor sit amet consectetur adipisicing elit</h2>
-          <time>1 day ago</time>
+        <div class="carousel__slide">
+          <div class="card">
+            <p>Reuters</p>
+            <h2>Ipsum dolor sit amet consectetur adipisicing elit</h2>
+            <time>1 day ago</time>
+          </div>
         </div>
-      </li>
-      <li>
-        <div class="card">
-          <p>Associated Press</p>
-          <h2>Ipsum dolor sit amet elit</h2>
-          <time>2 days ago</time>
+        <div class="carousel__slide">
+          <div class="card">
+            <p>Associated Press</p>
+            <h2>Ipsum dolor sit amet elit</h2>
+            <time>2 days ago</time>
+          </div>
         </div>
-      </li>
-      <li>
-        <div class="card">
-          <p>The Guardian</p>
-          <h2>Amet consectetur adipisicing elit dolor</h2>
-          <time>5 days ago</time>
+        <div class="carousel__slide">
+          <div class="card">
+            <p>The Guardian</p>
+            <h2>Amet consectetur adipisicing elit dolor</h2>
+            <time>5 days ago</time>
+          </div>
         </div>
-      </li>
-    </ul>
+      </div>
+    </div>
   </section>
 </Layout>
 
 <style>
   .carousel {
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-
-    /* Styles and layout */
     aspect-ratio: var(--ratio-portrait);
     inline-size: 50%;
     justify-self: center;
@@ -102,10 +102,11 @@ import Layout from "../../layouts/Layout.astro";
       translate: 0 55%;
     }
 
-    & > li {
+    .carousel__slide {
       scroll-snap-align: none;
       position: sticky;
       top: 0px;
+      container-type: scroll-state;
 
       max-inline-size: 100%;
       display: grid;
@@ -131,7 +132,8 @@ import Layout from "../../layouts/Layout.astro";
     box-shadow: var(--shadow-2);
     border-radius: var(--radius-2);
 
-    > p, > h2 {
+    > p,
+    > h2 {
       text-box: trim-both cap alphabetic;
     }
 
