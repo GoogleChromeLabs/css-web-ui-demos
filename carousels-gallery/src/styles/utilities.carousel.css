@@ -1,6 +1,7 @@
 /* `.carousel` elements
  * -------------------------------------------------------------------------*/
 
+
 .carousel {
   anchor-name: --carousel;
   container-type: inline-size;
@@ -10,8 +11,6 @@
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-
-  font-size: var(--font-size-2);
 
   &:focus-visible {
     scrollbar-color: var(--link) transparent;
@@ -27,6 +26,11 @@
   scroll-snap-align: start;
 
   :where(.carousel--offscreen-inert) & {
+    animation: offscreen-inert linear both;
+    animation-timeline: view(x);
+  }
+
+  :where(.carousel--unsnapped-inert) & {
     animation: offscreen-inert linear both;
     animation-timeline: view(x);
   }
@@ -50,10 +54,6 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
-
-  &:where(.carousel--offscreen-inert) .carousel__slide {
-    animation-timeline: view(y);
-  }
 }
 
 .carousel--bidi {
@@ -319,19 +319,19 @@
  * -------------------------------------------------------------------------*/
 
 @keyframes scale-in-and-out {
-  entry 0%  {
-    transform: scale(.25);
-  }
-  entry 100%  {
-    transform: scale(1);
-  }
+	entry 0%  {
+		transform: scale(.25);
+	}
+	entry 100%  {
+		transform: scale(1);
+	}
 
-  exit 0% {
-    transform: scale(1);
-  }
-  exit 100% {
-    transform: scale(.25);
-  }
+	exit 0% {
+		transform: scale(1);
+	}
+	exit 100% {
+		transform: scale(.25);
+	}
 }
 
 @keyframes offscreen-inert {
