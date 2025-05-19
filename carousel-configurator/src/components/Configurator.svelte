@@ -8,87 +8,88 @@
 </script>
 
 <section>
-  <pre><code>{`<ul class="carousel">
-  <li>…</li>
-  <li>…</li>
+  <pre><code>{`<div class="carousel">
+  <div class="carousel__slide" data-label="Slide 1">…</div>
+  <div class="carousel__slide" data-label="Slide 2">…</div>
+  <div class="carousel__slide" data-label="Slide 3">…</div>
   …
-<ul>`}</section>
+<div>`}</section>
 
 <div class="settings">
   <Switch bind:value={buttons} label="Scroll Buttons" design="multi" options={['No', 'Yes']}/>
-  <Switch bind:value={dots} label="Dot Navigation" design="multi" options={['No', 'Yes']}/>
+  <Switch bind:value={dots} label="Dot Navigation (markers)" design="multi" options={['No', 'Yes']}/>
   <Switch bind:value={paged} label="Auto Pages" design="multi" options={['No', 'Yes']}/>
   <Switch bind:value={inerted} label="Inert" design="multi" options={['No', 'Yes']}/>
 </div>
 
-<ul 
+<div
   class="carousel"
-  class:with-buttons={buttons === 'Yes'}
-  class:with-dots={dots === 'Yes'}
-  class:with-pages={paged === 'Yes'}
-  class:with-inert={inerted === 'Yes'}
+  class:carousel--buttons={buttons === 'Yes'}
+  class:carousel--markers={dots === 'Yes'}
+  class:carousel--paged={paged === 'Yes'}
+  class:carousel--inert={inerted === 'Yes'}
 >
-  <li>
+  <div class="carousel__slide" data-label="Slide 1">
     <div class="card" tabindex=0>1</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 2">
     <div class="card" tabindex=0>2</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 3">
     <div class="card" tabindex=0>3</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 4">
     <div class="card" tabindex=0>4</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 5">
     <div class="card" tabindex=0>5</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 6">
     <div class="card" tabindex=0>6</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 7">
     <div class="card" tabindex=0>7</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 8">
     <div class="card" tabindex=0>8</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 9">
     <div class="card" tabindex=0>9</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 10">
     <div class="card" tabindex=0>10</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 11">
     <div class="card" tabindex=0>11</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 12">
     <div class="card" tabindex=0>12</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 13">
     <div class="card" tabindex=0>13</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 14">
     <div class="card" tabindex=0>14</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 15">
     <div class="card" tabindex=0>15</div>
-  </li>
-  <li>
+  </div>
+  <div class="carousel__slide" data-label="Slide 16">
     <div class="card" tabindex=0>16</div>
-  </li>
-</ul>
+  </div>
+</div>
 
 <div class="example-code">
   <section>
     <div>
-      <p>Snap Scroller</p>
+      <p>Base Carousel styles</p>
       {#if paged === 'No'}<pre><code>{`.carousel {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   anchor-name: --carousel;
 
-  > li {
+  > .carousel__slide {
     scroll-snap-align: center;
   }
 }
@@ -98,7 +99,7 @@
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   anchor-name: --carousel;
-  
+
   columns: 1;
   block-size: 10lh;
   text-align: center;
@@ -108,10 +109,10 @@
   }
 }`}</code></pre>{/if}
     </div></section>
-    
+
     {#if buttons === 'Yes'}<section><div>
-      <p>Scroll Buttons</p>
-      <pre><code>{`.carousel {
+      <p>Scroll Button styles</p>
+      <pre><code>{`.carousel--scroll-buttons {
   &::scroll-button(*) {
     position: fixed;
     position-anchor: --carousel;
@@ -122,7 +123,7 @@
     position-area: inline-end center;
     content: 'arrow_forward' / 'Next';
   }
-  
+
   &::scroll-button(left) {
     position-area: inline-start center;
     content: 'arrow_back' / 'Previous';
@@ -131,8 +132,8 @@
 `}</code></pre></div></section>{/if}
 
   {#if dots === 'Yes'}<section><div>
-      <p>Scroll Markers</p>
-      <pre><code>{`.carousel {
+      <p>Scroll Marker styles</p>
+      <pre><code>{`.carousel--scroll-markers {
   scroll-marker-group: after;
 
   &::scroll-marker-group {
@@ -147,11 +148,14 @@
     gap: 20px;
   }
 
-  `}{#if paged === 'No'}{`& > li::scroll-marker {
-    content: ' ';
-  }
-  & > li::scroll-marker:target-current {
-    background: var(--accent);
+  `}{#if paged === 'No'}{`> .carousel__slide {
+    &::scroll-marker {
+      content: '' / attr(data-label);
+    }
+
+    &::scroll-marker:target-current {
+      background: var(--accent);
+    }
   }
 }`}{/if}{#if paged === 'Yes'}{`&::column::scroll-marker {
     content: ' ';
@@ -164,13 +168,13 @@
 
 {#if inerted === 'Yes'}
   <section><div>
-      <p>Inert Interactivity</p>
-      {#if paged === 'No'}<pre><code>{`.carousel {
-  > li {
+      <p>Inert Interactivity styles</p>
+      {#if paged === 'No'}<pre><code>{`.carousel--inert {
+  > .carousel__slide {
     container-type: scroll-state;
 
     > .card {
-      @container not scroll-state(snapped: x) {
+      @container not scroll-state(snapped) {
         interactivity: inert;
         opacity: .25;
       }
@@ -186,13 +190,11 @@
 }
 
 @keyframes offscreen-inert {
-  entry 0%, entry 19%, exit 100% {
+  entry 0%, exit 100% {
     interactivity: inert;
-    opacity: .25;
   }
-  entry 20%, exit 99% {
+  entry 100%, exit 0% {
     interactivity: auto;
-    opacity: 1;
   }
 }`}</code></pre>{/if}
     </div></section>
@@ -200,28 +202,26 @@
 </div>
 
 {@html `<style>${`
-  .with-inert .card {
+  .carousel--inert .card {
     transition: opacity .5s ease;
 
-    @container not scroll-state(snapped: x) {
+    @container not scroll-state(snapped) {
       interactivity: inert;
       opacity: .25;
     }
   }
 
-  .with-inert.with-pages .card {
+  .carousel--inert.carousel--paged .card {
     animation: offscreen-inert linear both;
     animation-timeline: view(x);
   }
 
   @keyframes offscreen-inert {
-    entry 0%, entry 19%, exit 100% {
+    entry 0%, exit 100% {
       interactivity: inert;
-      opacity: .25;
     }
-    entry 20%, exit 99% {
+    entry 100%, exit 0% {
       interactivity: auto;
-      opacity: 1;
     }
   }
 }`}</style>`}
@@ -235,27 +235,23 @@
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
 
-    /* Reset list styles */
-    list-style-type: none;
-    counter-reset: item;
-    
     /* Styles and layout */
     padding: var(--size-3);
     scroll-padding: var(--size-3);
-    
+
     container-type: inline-size scroll-state;
     inline-size: 1024px;
     max-inline-size: 100vw;
 
     anchor-name: --carousel;
 
-    &.with-pages {
+    &.carousel--paged {
       columns: 1;
       block-size: 13lh;
       resize: both;
       text-align: center;
 
-      & > li {
+      & > .carousel__slide {
         block-size: 100%;
         margin: var(--size-2);
       }
@@ -266,19 +262,19 @@
       }
     }
 
-    &:not(.with-pages) {
+    &:not(.carousel--paged) {
       display: grid;
       grid-auto-flow: column;
       grid-auto-columns: var(--size-content-1);
       gap: var(--size-4);
 
-      & > li {
+      & > .carousel__slide {
         scroll-snap-align: center;
         container-type: scroll-state;
       }
     }
 
-    & li {
+    & .carousel__slide {
       container-type: scroll-state;
       padding: 0;
       display: inline-grid;
@@ -299,14 +295,14 @@
 
       font-family: var(--font-antique);
       font-size: var(--font-size-5);
-      
+
       &:focus {
         outline: 2px solid var(--link);
       }
     }
 
     /* Scroll marker pages */
-    &.with-dots {
+    &.carousel--markers {
       scroll-marker-group: after;
 
       &::scroll-marker-group {
@@ -325,26 +321,26 @@
     }
 
     /* Scroll markers */
-    &.with-pages::column::scroll-marker {
+    &.carousel--paged::column::scroll-marker {
       content: ' ';
       aspect-ratio: 1;
       border-radius: var(--radius-round);
       border: 1px solid var(--surface-4);
     }
 
-    &.with-pages::column::scroll-marker:target-current {
+    &.carousel--paged::column::scroll-marker:target-current {
       background: var(--link);
       border-color: var(--link);
     }
 
-    &.with-pages::column::scroll-marker:focus-visible {
+    &.carousel--paged::column::scroll-marker:focus-visible {
       outline-offset: 2px;
       outline: 2px solid var(--link);
     }
 
-    &:not(.with-pages) > li {
+    &:not(.carousel--paged) > .carousel__slide {
       &::scroll-marker {
-        content: ' ';
+        content: '' / attr(data-label);
         cursor: pointer;
         aspect-ratio: 1;
         border-radius: var(--radius-round);
@@ -361,9 +357,9 @@
         outline: 2px solid var(--link);
       }
     }
-    
+
     /* Scroll icon buttons */
-    &.with-buttons {
+    &.carousel--buttons {
       &::scroll-button(right), &::scroll-button(left) {
         cursor: pointer;
 
