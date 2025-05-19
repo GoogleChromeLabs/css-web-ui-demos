@@ -149,17 +149,15 @@
 
   `}{#if paged === 'No'}{`& > li::scroll-marker {
     content: ' ';
-
-    &:target-current {
-      background: var(--accent);
-    }
+  }
+  & > li::scroll-marker:target-current {
+    background: var(--accent);
   }
 }`}{/if}{#if paged === 'Yes'}{`&::column::scroll-marker {
     content: ' ';
-
-    &:target-current {
-      background: var(--accent);
-    }
+  }
+  &::column::scroll-marker:target-current {
+    background: var(--accent);
   }
 }`}{/if}
 </code></pre></div></section>{/if}
