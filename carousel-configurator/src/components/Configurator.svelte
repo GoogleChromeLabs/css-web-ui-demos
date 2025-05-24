@@ -5,6 +5,7 @@
   let dots = 'No';
   let paged = 'No';
   let inerted = 'No';
+  let forcestop = 'No';
 </script>
 
 <section>
@@ -20,6 +21,7 @@
   <Switch bind:value={dots} label="Dot Navigation (markers)" design="multi" options={['No', 'Yes']}/>
   <Switch bind:value={paged} label="Auto Pages" design="multi" options={['No', 'Yes']}/>
   <Switch bind:value={inerted} label="Inert" design="multi" options={['No', 'Yes']}/>
+  <Switch bind:value={forcestop} label="Force stop" design="multi" options={['No', 'Yes']}/>
 </div>
 
 <div
@@ -28,6 +30,7 @@
   class:carousel--markers={dots === 'Yes'}
   class:carousel--paged={paged === 'Yes'}
   class:carousel--inert={inerted === 'Yes'}
+  class:carousel--forcestop={forcestop === 'Yes'}
   tabindex=0
 >
   <div class="carousel__slide" data-label="Slide 1">
@@ -91,7 +94,8 @@
   anchor-name: --carousel;
 
   > .carousel__slide {
-    scroll-snap-align: center;
+    scroll-snap-align: center;`}{#if forcestop === 'Yes'}
+    scroll-snap-stop: always;{/if}{`
   }
 }
 `}</code></pre>{/if}
@@ -106,7 +110,8 @@
   text-align: center;
 
   &::column {
-    scroll-snap-align: center;
+    scroll-snap-align: center;`}{#if forcestop === 'Yes'}
+    scroll-snap-stop: always;{/if}{`
   }
 }`}</code></pre>{/if}
     </div></section>
@@ -265,6 +270,10 @@
         scroll-snap-align: center;
         container-type: scroll-state;
       }
+
+      &.carousel--forcestop::column {
+        scroll-snap-stop: always;
+      }
     }
 
     &:not(.carousel--paged) {
@@ -276,6 +285,10 @@
       & > .carousel__slide {
         scroll-snap-align: center;
         container-type: scroll-state;
+      }
+
+      &.carousel--forcestop > .carousel__slide {
+        scroll-snap-stop: always;
       }
     }
 
