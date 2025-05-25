@@ -184,7 +184,7 @@
 }
 `}</code></pre>{/if}
       {#if paged === 'Yes'}<pre><code>{`.carousel--inert {
-  [tabindex] {
+  > .carousel__slide {
     animation: offscreen-inert linear both;
     animation-timeline: view(x);
   }
