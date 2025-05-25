@@ -202,9 +202,11 @@
 </div>
 
 {@html `<style>${`
-  .carousel--inert .card {
+  .carousel--inert {
     transition: opacity .5s ease;
+  }
 
+  .carousel--inert:not(.carousel--paged) .card {
     @container not scroll-state(snapped) {
       interactivity: inert;
       opacity: .25;
@@ -219,9 +221,11 @@
   @keyframes offscreen-inert {
     entry 0%, exit 100% {
       interactivity: inert;
+      opacity: .25;
     }
     entry 100%, exit 0% {
       interactivity: auto;
+      opacity: 1;
     }
   }
 }`}</style>`}
