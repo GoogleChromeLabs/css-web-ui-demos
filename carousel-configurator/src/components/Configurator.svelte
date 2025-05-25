@@ -182,7 +182,7 @@
   }
 }
 `}</code></pre>{/if}
-      {#if paged === 'Yes'}<pre><code>{`.carousel {
+      {#if paged === 'Yes'}<pre><code>{`.carousel--inert {
   [tabindex] {
     animation: offscreen-inert linear both;
     animation-timeline: view(x);
