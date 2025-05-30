@@ -28,54 +28,55 @@
   class:carousel--markers={dots === 'Yes'}
   class:carousel--paged={paged === 'Yes'}
   class:carousel--inert={inerted === 'Yes'}
+  tabindex=0
 >
   <div class="carousel__slide" data-label="Slide 1">
-    <div class="card" tabindex=0>1</div>
+    <div class="card">1</div>
   </div>
   <div class="carousel__slide" data-label="Slide 2">
-    <div class="card" tabindex=0>2</div>
+    <div class="card">2</div>
   </div>
   <div class="carousel__slide" data-label="Slide 3">
-    <div class="card" tabindex=0>3</div>
+    <div class="card">3</div>
   </div>
   <div class="carousel__slide" data-label="Slide 4">
-    <div class="card" tabindex=0>4</div>
+    <div class="card">4</div>
   </div>
   <div class="carousel__slide" data-label="Slide 5">
-    <div class="card" tabindex=0>5</div>
+    <div class="card">5</div>
   </div>
   <div class="carousel__slide" data-label="Slide 6">
-    <div class="card" tabindex=0>6</div>
+    <div class="card">6</div>
   </div>
   <div class="carousel__slide" data-label="Slide 7">
-    <div class="card" tabindex=0>7</div>
+    <div class="card">7</div>
   </div>
   <div class="carousel__slide" data-label="Slide 8">
-    <div class="card" tabindex=0>8</div>
+    <div class="card">8</div>
   </div>
   <div class="carousel__slide" data-label="Slide 9">
-    <div class="card" tabindex=0>9</div>
+    <div class="card">9</div>
   </div>
   <div class="carousel__slide" data-label="Slide 10">
-    <div class="card" tabindex=0>10</div>
+    <div class="card">10</div>
   </div>
   <div class="carousel__slide" data-label="Slide 11">
-    <div class="card" tabindex=0>11</div>
+    <div class="card">11</div>
   </div>
   <div class="carousel__slide" data-label="Slide 12">
-    <div class="card" tabindex=0>12</div>
+    <div class="card">12</div>
   </div>
   <div class="carousel__slide" data-label="Slide 13">
-    <div class="card" tabindex=0>13</div>
+    <div class="card">13</div>
   </div>
   <div class="carousel__slide" data-label="Slide 14">
-    <div class="card" tabindex=0>14</div>
+    <div class="card">14</div>
   </div>
   <div class="carousel__slide" data-label="Slide 15">
-    <div class="card" tabindex=0>15</div>
+    <div class="card">15</div>
   </div>
   <div class="carousel__slide" data-label="Slide 16">
-    <div class="card" tabindex=0>16</div>
+    <div class="card">16</div>
   </div>
 </div>
 
@@ -183,7 +184,7 @@
 }
 `}</code></pre>{/if}
       {#if paged === 'Yes'}<pre><code>{`.carousel--inert {
-  [tabindex] {
+  > .carousel__slide {
     animation: offscreen-inert linear both;
     animation-timeline: view(x);
   }
