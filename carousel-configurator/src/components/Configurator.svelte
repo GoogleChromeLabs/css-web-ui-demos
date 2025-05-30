@@ -450,13 +450,14 @@
   }
 
   .settings {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    justify-items: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: max(var(--size-7), 5vmin);
     padding-inline: var(--size-5);
     text-align: center;
+    width: 100%;
   }
 
   .example-code {
