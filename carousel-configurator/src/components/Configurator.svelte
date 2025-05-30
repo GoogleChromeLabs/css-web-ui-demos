@@ -8,7 +8,7 @@
 </script>
 
 <section>
-  <pre><code>{`<div class="carousel">
+  <pre><code>{`<div class="carousel`}{#if buttons === 'Yes'} carousel--scroll-buttons{/if}{#if dots === 'Yes'} carousel--scroll-markers{/if}{#if inerted === 'Yes'} carousel--inert{/if}{`">
   <div class="carousel__slide" data-label="Slide 1">…</div>
   <div class="carousel__slide" data-label="Slide 2">…</div>
   <div class="carousel__slide" data-label="Slide 3">…</div>
