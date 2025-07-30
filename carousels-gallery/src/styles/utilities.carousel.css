@@ -31,11 +31,6 @@
   }
 
   :where(.carousel--unsnapped-inert) & {
-    animation: offscreen-inert linear both;
-    animation-timeline: view(x);
-  }
-
-  :where(.carousel--unsnapped-inert) & {
     container-type: scroll-state;
 
     & > * {
