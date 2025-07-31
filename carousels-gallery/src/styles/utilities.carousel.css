@@ -12,11 +12,6 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 
-  &:focus-visible {
-    scrollbar-color: var(--link) transparent;
-    outline: none;
-  }
-
   @media (prefers-reduced-motion: no-preference) {
     scroll-behavior: smooth;
   }
