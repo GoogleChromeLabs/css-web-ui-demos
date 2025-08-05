@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title="Carousel Gallery">
@@ -23,7 +23,6 @@ import Layout from "../../layouts/Layout.astro";
     <div role="region" aria-label="Paged carousel demo">
       <div
         class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
-        aria-live="polite"
       >
         <div class="carousel__slide">
           <p aria-label="Slide 1">1</p>
@@ -88,7 +87,7 @@ import Layout from "../../layouts/Layout.astro";
       list-style-type: none;
       counter-reset: item;
 
-        container-type: size scroll-state;
+      container-type: size scroll-state;
       inline-size: 1024px;
       max-inline-size: 100cqi;
       block-size: var(--size-content-1);
@@ -98,7 +97,7 @@ import Layout from "../../layouts/Layout.astro";
       }
 
       &::column::scroll-marker {
-        content: "";
+        content: '';
         aspect-ratio: 1;
         border-radius: var(--radius-round);
         animation: scale-in-and-out linear both;

@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title="Carousel Gallery">
@@ -18,10 +18,7 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Card carousel demo">
-      <div
-        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
-        aria-live="polite"
-      >
+      <div class="carousel carousel--scroll-markers carousel--scroll-buttons">
         <div class="carousel__slide" data-label="Slide 1">
           <article class="card snapped">
             <figure>
@@ -161,7 +158,7 @@ import Layout from "../../layouts/Layout.astro";
 
     &::before,
     &::after {
-      content: "";
+      content: '';
       display: block;
       inline-size: 50cqi;
     }
