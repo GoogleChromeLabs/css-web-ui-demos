@@ -31,7 +31,6 @@
   class:carousel--paged={paged === 'Yes'}
   class:carousel--inert={inerted === 'Yes'}
   class:carousel--forcestop={forcestop === 'Yes'}
-  tabindex=0
 >
   <div class="carousel__slide" data-label="Slide 1">
     <div class="card">1</div>
