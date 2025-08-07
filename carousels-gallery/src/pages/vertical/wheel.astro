@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title="Carousel Gallery">
@@ -17,10 +17,7 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Wheel carousel demo">
-      <div
-        class="carousel carousel--vertical carousel--scroll-markers carousel--offscreen-inert"
-        aria-live="polite"
-      >
+      <div class="carousel carousel--vertical carousel--scroll-markers">
         <div class="carousel__slide" data-label="Super Mario Bros">
           <h3>Super Mario Bros.</h3>
         </div>
@@ -94,7 +91,7 @@ import Layout from "../../layouts/Layout.astro";
 
     &::before,
     &::after {
-      content: "";
+      content: '';
       display: block;
       block-size: 85cqb;
     }

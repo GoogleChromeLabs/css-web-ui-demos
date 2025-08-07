@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title="Carousel Gallery">
@@ -28,10 +28,7 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="List carousel demo">
-      <div
-        class="carousel carousel--scroll-markers carousel--scroll-buttons carousel--offscreen-inert"
-        aria-live="polite"
-      >
+      <div class="carousel carousel--scroll-markers carousel--scroll-buttons">
         <div class="carousel__slide" tabindex="0" data-label="Slide 1">
           <p>1</p>
         </div>
@@ -99,7 +96,7 @@ import Layout from "../../layouts/Layout.astro";
 
     &::before,
     &::after {
-      content: "";
+      content: '';
       display: block;
       inline-size: 85cqi;
     }

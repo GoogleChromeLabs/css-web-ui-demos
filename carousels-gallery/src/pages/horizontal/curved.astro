@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title="Carousel Gallery">
@@ -15,12 +15,9 @@ import Layout from "../../layouts/Layout.astro";
     </header>
 
     <div role="region" aria-label="Curved carousel demo">
-      <div
-        class="carousel carousel--scroll-buttons carousel--offscreen-inert"
-        aria-live="polite"
-      >
+      <div class="carousel carousel--scroll-buttons">
         {
-          Array.from({ length: 30 }).map((_, i) => (
+          Array.from({length: 30}).map((_, i) => (
             <div class="carousel__slide" data-label={`Slide ${i}`}>
               <figure>
                 <img
@@ -65,7 +62,7 @@ import Layout from "../../layouts/Layout.astro";
 
     &::before,
     &::after {
-      content: "";
+      content: '';
       display: block;
       inline-size: 85cqi;
     }
