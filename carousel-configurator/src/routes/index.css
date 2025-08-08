@@ -37,6 +37,9 @@ pre {
   padding-block: var(--size-3);
   padding-inline: var(--size-5);
   border-radius: var(--radius-3);
+  max-width: 90vw;
+  margin: 0 auto;
+  overflow-x: auto;
 }
 
 code {
