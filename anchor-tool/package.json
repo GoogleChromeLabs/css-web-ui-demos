@@ -9,12 +9,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/una/anchor-tool.git"
+    "url": "git://github.com/GoogleChromeLabs/css-web-ui-demos.git"
   },
   "author": "Una Kravets",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/una/anchor-tool/issues"
+    "url": "https://github.com/GoogleChromeLabs/css-web-ui-demos/issues"
   },
-  "homepage": "https://github.com/una/anchor-tool#readme"
+  "homepage": "https://chrome.dev/anchor-tool/"
 }
