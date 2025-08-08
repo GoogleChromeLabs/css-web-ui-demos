@@ -1,0 +1,20 @@
+{
+  "name": "anchor-tool",
+  "version": "1.0.0",
+  "description": "Learn CSS anchor positioning",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "gsutil -m rsync -rd public gs://chrome-dev-demos/public/anchor-tool"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/GoogleChromeLabs/css-web-ui-demos.git"
+  },
+  "author": "Una Kravets",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/GoogleChromeLabs/css-web-ui-demos/issues"
+  },
+  "homepage": "https://chrome.dev/anchor-tool/"
+}

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anchor position tool</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CSVZK38J21"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-CSVZK38J21');
+  </script>
+</head>
+<body>
+  <div class="note">
+    Your browser does not support the CSS anchor positioning API. This tool is for demonstration purposes only.
+  </div>
+  
+  <div class="key-and-demo">
+    <ul class="anchor-positions">
+      <li class="red">
+        <button id="top">
+          <figure>
+            <img src="./img/anchor-position-01.svg" alt="">
+            <figcaption class="sr-only">Top</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="red">
+        <button id="top-center">
+          <figure>
+            <img src="./img/anchor-position-02.svg" alt="">
+            <figcaption class="sr-only">Top Center</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="red">
+        <button id="center-top">
+          <figure>
+            <img src="./img/anchor-position-03.svg" alt="">
+            <figcaption class="sr-only">Center Top</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="red">
+        <button id="top-full">
+          <figure>
+            <img src="./img/anchor-position-04.svg" alt="">
+            <figcaption class="sr-only">Top Full</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="orange">
+        <button id="left">
+          <figure>
+            <img src="./img/anchor-position-05.svg" alt="">
+            <figcaption class="sr-only">left</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="orange">
+        <button id="left-center">
+          <figure>
+            <img src="./img/anchor-position-06.svg" alt="">
+            <figcaption class="sr-only">left Center</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="orange">
+        <button id="center-left">
+          <figure>
+            <img src="./img/anchor-position-07.svg" alt="">
+            <figcaption class="sr-only">Center left</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="orange">
+        <button id="left-full">
+          <figure>
+            <img src="./img/anchor-position-08.svg" alt="">
+            <figcaption class="sr-only">left Full</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="green">
+        <button id="bottom">
+          <figure>
+            <img src="./img/anchor-position-09.svg" alt="">
+            <figcaption class="sr-only">bottom</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="green">
+        <button id="bottom-center">
+          <figure>
+            <img src="./img/anchor-position-10.svg" alt="">
+            <figcaption class="sr-only">bottom Center</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="green">
+        <button id="center-bottom">
+          <figure>
+            <img src="./img/anchor-position-11.svg" alt="">
+            <figcaption class="sr-only">Center bottom</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="green">
+        <button id="bottom-full">
+          <figure>
+            <img src="./img/anchor-position-12.svg" alt="">
+            <figcaption class="sr-only">Top Full</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="blue">
+        <button id="right">
+          <figure>
+            <img src="./img/anchor-position-13.svg" alt="">
+            <figcaption class="sr-only">right</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="blue">
+        <button id="right-center">
+          <figure>
+            <img src="./img/anchor-position-14.svg" alt="">
+            <figcaption class="sr-only">right Center</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="blue">
+        <button id="center-right">
+          <figure>
+            <img src="./img/anchor-position-15.svg" alt="">
+            <figcaption class="sr-only">Center right</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="blue">
+        <button id="right-full">
+          <figure>
+            <img src="./img/anchor-position-16.svg" alt="">
+            <figcaption class="sr-only">right Full</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="violet">
+        <button id="top-left">
+          <figure>
+            <img src="./img/anchor-position-17.svg" alt="">
+            <figcaption class="sr-only">top left</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="violet">
+        <button id="top-right">
+          <figure>
+            <img src="./img/anchor-position-20.svg" alt="">
+            <figcaption class="sr-only">top right</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="violet">
+        <button id="bottom-left">
+          <figure>
+            <img src="./img/anchor-position-18.svg" alt="">
+            <figcaption class="sr-only">bottom left</figcaption>
+          </figure>
+        </button>
+      </li>
+      <li class="violet">
+        <button id="bottom-right">
+          <figure>
+            <img src="./img/anchor-position-19.svg" alt="">
+            <figcaption class="sr-only">bottom right</figcaption>
+          </figure>
+        </button>
+      </li>
+    </ul>
+  
+    <div class="demo-and-code">
+      <div class="containing-block">
+        <button id="anchor-btn">
+          <p aria-hidden="true">?</p>
+          <p class="sr-only">Open Tooltip</p>
+        </button>
+        <div class="tooltip top" id="my-tooltip" contenteditable style="position-area: top;">Hello, I am the positioned element!</div>
+        <div id="imcb-visualizer" class="checkered-bg" style="position-area: top;"></div>
+      </div>
+      <div class="code-area">
+        <code class="code-block">
+          position-area: top;
+        </code>
+        <button class="copy-button"><p class="sr-only">copy</p><div class="vis"></div></button>
+      </div>
+    </div>
+    <div class="options">
+      <input id="logical" type="checkbox">
+      <label for="logical">Logical properties</label>
+      <input id="imcb-vis" type="checkbox">
+      <label for="imcb-vis" style="anchor-name: --imcb-label"><span class="checkered-bg preview-block"></span>Show IMCB</label>
+      <button class="imcb-question-mark" popovertarget="imcb-tooltip" interesttarget="imcb-tooltip">?</button>
+      <div class="imcb-tooltip" id="imcb-tooltip" popover>Inset-modified containing block</div>
+    </div>
+    
+  </div>
+  
+  <script>
+    const tooltip = document.getElementById('my-tooltip');
+    const anchorPositions = document.querySelectorAll('.anchor-positions button');
+    const codeblock = document.querySelector('.code-block')
+    let activeButton = anchorPositions[3];
+    const logicalCheckbox = document.getElementById('logical');
+    const imcbCheckbox = document.getElementById('imcb-vis');
+    const imcbVis = document.getElementById('imcb-visualizer');
+    let logical = logicalCheckbox.checked;
+
+    const cssStyles = {
+      'top': {
+        positionArea: 'top center' 
+      },
+      'top-center': {
+        positionArea: 'top span-left' 
+      },
+      'center-top': { 
+        positionArea: 'top span-right' 
+      },
+      'top-full': { 
+        positionArea: 'top' 
+      },
+      'left': { 
+        positionArea: 'left center' 
+      },
+      'left-center': { 
+        positionArea: 'left span-top' 
+      },
+      'center-left': { 
+        positionArea: 'left span-bottom' 
+      },
+      'left-full': { 
+        positionArea: 'left' 
+      },
+      'right': { 
+        positionArea: 'right center' 
+      },
+      'right-center': { 
+        positionArea: 'right span-top' 
+      },
+      'center-right': { 
+        positionArea: 'right span-bottom' 
+      },
+      'right-full': { 
+        positionArea: 'right' 
+      },
+      'bottom': { 
+        positionArea: 'bottom center'
+      },
+      'bottom-center': { 
+        positionArea: 'bottom span-left' 
+      },
+      'center-bottom': { 
+        positionArea: 'bottom span-right' 
+      },
+      'bottom-full': { 
+        positionArea: 'bottom' 
+      },
+      'top-left': { 
+        positionArea: 'top left'
+      },
+      'top-right': { 
+        positionArea: 'top right' 
+      },
+      'bottom-left': { 
+        positionArea: 'bottom left' 
+      },
+      'bottom-right': { 
+        positionArea: 'bottom right' 
+      }
+    };
+
+    const logicalStyles = {
+      'top': {
+        positionArea: 'block-start center' 
+      },
+      'top-center': {
+        positionArea: 'block-start span-inline-start' 
+      },
+      'center-top': { 
+        positionArea: 'block-start span-inline-end' 
+      },
+      'top-full': { 
+        positionArea: 'block-start' 
+      },
+      'left': { 
+        positionArea: 'inline-start center' 
+      },
+      'left-center': { 
+        positionArea: 'inline-start span-block-start' 
+      },
+      'center-left': { 
+        positionArea: 'inline-start span-block-end' 
+      },
+      'left-full': { 
+        positionArea: 'inline-start' 
+      },
+      'right': { 
+        positionArea: 'inline-end center' 
+      },
+      'right-center': { 
+        positionArea: 'inline-end span-block-start' 
+      },
+      'center-right': { 
+        positionArea: 'inline-end span-block-end' 
+      },
+      'right-full': { 
+        positionArea: 'inline-end' 
+      },
+      'bottom': { 
+        positionArea: 'block-end center'
+      },
+      'bottom-center': { 
+        positionArea: 'block-end span-inline-start' 
+      },
+      'center-bottom': { 
+        positionArea: 'block-end span-inline-end' 
+      },
+      'bottom-full': { 
+        positionArea: 'block-end' 
+      },
+      'top-left': { 
+        positionArea: 'start'
+      },
+      'top-right': { 
+        positionArea: 'block-start inline-end'
+      },
+      'bottom-left': { 
+        positionArea: 'block-end inline-start' 
+      },
+      'bottom-right': { 
+        positionArea: 'end' 
+      }
+    };
+
+    let styleRef = cssStyles;
+
+    function updateText() {
+      // If anchor is supported, VT is supported, don't need a check
+      document.startViewTransition(() => {
+        // Apply inline styles to the tooltip
+        const styles = styleRef[activeButton.id];
+        if (styles) {
+          for (const prop in styles) {
+            tooltip.style[prop] = styles[prop];
+            imcbVis.style[prop] = styles[prop];
+          }
+          let codeText = '';
+          for (const prop in styles) {
+            codeText += `position-area: ${styles[prop]};`; 
+          }
+          codeblock.textContent = codeText;
+        } else {
+          // Clear inline styles in case no matching class is found
+          tooltip.style = '';
+          imcbVis.style = '';
+        }
+      });
+    }
+
+    logicalCheckbox.addEventListener('change', () => {
+      logical = logicalCheckbox.checked;
+      if (logical) {
+        styleRef = logicalStyles;
+      } else {
+        styleRef = cssStyles;
+      }
+
+      updateText();
+    });
+
+    imcbCheckbox.addEventListener('change', () => {
+      imcbVis.classList.toggle('on');
+      console.log('on')
+    });
+
+    anchorPositions.forEach(button => {
+      button.addEventListener('click', () => {
+        // Manage the "active" class on the buttons
+        if (activeButton) {
+          activeButton.classList.remove('active');  
+        }
+        button.classList.add('active');
+        activeButton = button; 
+        
+        updateText()
+      });
+    });
+
+    // Function to copy text from the codeblock
+    function copyCodeblock() {
+      const codeblock = document.querySelector('.code-block');
+      if (codeblock) {
+        const text = codeblock.textContent;
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            const vis = document.querySelector('.vis');
+            vis.classList.add('success');
+            setTimeout(() => {vis.classList.remove('success')}, 2500)
+          })
+          .catch(err => {
+            console.error('Error copying to clipboard: ', err);
+          });
+      }
+    }
+
+    const copyButton = document.querySelector('.copy-button');
+    copyButton.addEventListener('click', copyCodeblock);
+
+    // Set up on load
+    activeButton.classList.add('active');
+  </script>
+</body>
+</html>
