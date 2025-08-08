@@ -36,8 +36,10 @@ import Layout from "../../layouts/Layout.astro";
               <h2>Onboarding Guide</h2>
               <p>Let's get started with your name</p>
             </header>
-
-            <input required type="text" placeholder="Name" />
+            <div class="field">
+              <label for="name">Name:</label>
+              <input required type="text" id="name">
+            </div>
             <a class="btn" href="#step-2">Next Step</a>
           </form>
         </div>
@@ -47,8 +49,10 @@ import Layout from "../../layouts/Layout.astro";
               <h2>Onboarding Guide</h2>
               <p>What is your email address?</p>
             </header>
-
-            <input required type="email" placeholder="Email" />
+            <div class="field">
+              <label for="email">Email:</label>
+              <input required type="text" id="email">
+            </div>
             <a class="btn" href="#step-3">Next Step</a>
           </form>
         </div>
@@ -168,7 +172,19 @@ import Layout from "../../layouts/Layout.astro";
 
       header {
         text-align: center;
-        margin-block-end: var(--size-5);
+        margin-block-end: var(--size-2);
+      }
+
+      .field {
+        border: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+
+        > label {
+          font-weight: bold;
+          padding: 0.25em 0;
+        }
       }
 
       > label {
