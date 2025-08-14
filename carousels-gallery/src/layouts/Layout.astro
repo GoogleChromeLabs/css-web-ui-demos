@@ -28,7 +28,7 @@ const { title } = Astro.props;
       type="font/woff2"
       crossorigin="anonymous"
     />
-    <script type="speculationrules">
+    <script is:inline type="speculationrules">
       {
         "prerender": [
           {
@@ -59,6 +59,15 @@ const { title } = Astro.props;
       <Sidebar />
       <slot />
     </main>
+    <cookie-banner></cookie-banner>
+    <script is:inline type="module" src="https://chrome.dev/components/cookie-banner.js"></script>
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-754F24EHD8"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-754F24EHD8');
+    </script>
   </body>
 </html>
 
