@@ -121,6 +121,7 @@
   &::scroll-button(*) {
     position: fixed;
     position-anchor: --carousel;
+    position-visibility: always;
     font-family: "Material Symbols Outlined";
   }
 
@@ -145,6 +146,7 @@
     position: fixed;
     position-anchor: --carousel;
     position-area: block-end;
+    position-visibility: always;
     margin: 10px;
 
     display: grid;
@@ -326,6 +328,8 @@
         position: fixed;
         position-anchor: --carousel;
         position-area: block-end;
+        position-visibility: always;
+
         margin-block-start: var(--size-3);
 
         display: grid;
@@ -382,6 +386,7 @@
 
         position: fixed;
         position-anchor: --carousel;
+        position-visibility: always;
 
         font-size: var(--font-size-3);
         inline-size: 44px;
