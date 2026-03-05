@@ -19,7 +19,7 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"deploy": "cp package.json build/ && gsutil -m rsync -rd build gs://chrome-dev-demos/public/carousel-configurator"
+		"deploy": "cp package.json build/ && gcloud storage rsync --recursive --delete-unmatched-destination-objects build gs://chrome-dev-demos/public/carousel-configurator"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.3.1",
