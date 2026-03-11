@@ -27,5 +27,5 @@ This demo gets published to https://chrome.dev/. Publishing is only possible by 
 
 ```
 gcloud auth login
-gsutil -m rsync -rd src gs://chrome-dev-demos/public/has-ua-visual-transition
+gcloud storage rsync --recursive --delete-unmatched-destination-objects src gs://chrome-dev-demos/public/has-ua-visual-transition
 ```

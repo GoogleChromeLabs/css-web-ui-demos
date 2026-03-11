@@ -22,7 +22,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "deploy": "npm run add-gitignores && cp package.json dist/ && gsutil -m rsync -rd dist gs://chrome-dev-demos/public/carousel",
+    "deploy": "npm run add-gitignores && cp package.json dist/ && gcloud storage rsync --recursive --delete-unmatched-destination-objects dist gs://chrome-dev-demos/public/carousel",
     "add-gitignores": "find dist -type d -mindepth 1 -exec touch {}/.ignore \\;"
   },
   "dependencies": {
