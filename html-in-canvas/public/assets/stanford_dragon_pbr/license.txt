@@ -1,0 +1,11 @@
+Model Information:
+* title:	Stanford Dragon PBR
+* source:	https://sketchfab.com/3d-models/stanford-dragon-pbr-5d610f842a4542ccb21613d41bbd7ea1
+* author:	hackmans (https://sketchfab.com/hackmans)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Stanford Dragon PBR" (https://sketchfab.com/3d-models/stanford-dragon-pbr-5d610f842a4542ccb21613d41bbd7ea1) by hackmans (https://sketchfab.com/hackmans) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

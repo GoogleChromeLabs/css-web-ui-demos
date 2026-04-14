@@ -1,0 +1,527 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description"
+    content="The classic Stanford Dragon rendered with high-performance WebGL and overlaid with interactive HTML-in-Canvas labels (layoutsubtree).">
+<meta name="keywords" content="HTML in Canvas, layoutsubtree, Stanford Dragon, WebGL, Three.js, Interactive Labels">
+<title>Stanford Dragon (HTML-in-Canvas)</title>
+<link rel="stylesheet" href="../css/theme.css">
+<script type="module" src="../js/material-web-bundle.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: var(--md-sys-color-background);
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #ui-background {
+    width: 512px;
+    height: 512px;
+    background: var(--md-sys-color-surface-container-high);
+    border: 2px solid var(--md-sys-color-outline);
+    color: var(--md-sys-color-on-surface);
+    padding: 30px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: system-ui, sans-serif;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .ui-header {
+    font-size: 28px;
+    border-bottom: 2px solid var(--md-sys-color-outline-variant);
+    padding-bottom: 15px;
+    color: var(--md-sys-color-primary);
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+
+  .ui-row {
+    margin: 15px 0;
+  }
+</style>
+<canvas id="gl-canvas" layoutsubtree>
+  <form id="ui-background">
+    <label for="slider" class="ui-header">DRAGON SYSTEMS</label>
+    <div class="ui-row">
+      <div style="margin-bottom: 10px; color: var(--md-sys-color-on-surface-variant); font-size: 14px;">SCANNING...
+      </div>
+      <md-slider id="slider" min="0" max="100" value="50" style="width: 100%"></md-slider>
+    </div>
+    <div class="ui-row">
+      <md-outlined-text-field label="TARGET DATA" value="COORDS: 45.33, 92.11"
+        style="width: 100%"></md-outlined-text-field>
+    </div>
+    <div class="ui-row" style="color: var(--md-sys-color-secondary); font-weight: 500; font-size: 18px;">
+      STATUS: <span>OPERATIONAL</span>
+      <br>
+      SYSTEM INTEGRITY: <span>98%</span>
+    </div>
+  </form>
+</canvas>
+
+<!-- gl-matrix -->
+<script src="../js/gl-matrix.js"></script>
+
+<script>
+  onpaint = () => {
+    const canvas = document.querySelector('#gl-canvas');
+
+    const observer = new ResizeObserver(([entry]) => {
+      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+
+    });
+
+    observer.observe(canvas, { box: 'device-pixel-content-box' });
+  }
+
+  const canvas = document.getElementById('gl-canvas');
+  const gl = canvas.getContext('webgl2');
+
+  if (!gl) {
+    alert('WebGL2 not supported');
+    throw new Error('WebGL2 not supported');
+  }
+
+  // Shader Sources
+  // Shader Sources
+  const vsSource = `#version 300 es
+  layout(location = 0) in vec3 aPosition;
+  layout(location = 1) in vec3 aNormal;
+  layout(location = 2) in vec2 aTexCoord;
+
+  uniform mat4 uModelMatrix;
+  uniform mat4 uViewMatrix;
+  uniform mat4 uProjectionMatrix;
+
+  out vec2 vTexCoord;
+  out vec3 vNormal;
+  out vec3 vViewPosition;
+
+  void main() {
+    vec4 viewPos = uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+    gl_Position = uProjectionMatrix * viewPos;
+    vTexCoord = aTexCoord;
+    
+    // Normal in View Space
+    vNormal = mat3(uViewMatrix * uModelMatrix) * aNormal; 
+    vViewPosition = viewPos.xyz;
+  }
+  `;
+
+  const fsSource = `#version 300 es
+  precision highp float;
+
+  in vec2 vTexCoord;
+  in vec3 vNormal;
+  in vec3 vViewPosition;
+
+  uniform sampler2D uSampler;
+  uniform sampler2D uBackgroundTexture;
+  uniform vec2 uResolution;
+
+  out vec4 fragColor;
+
+  void main() {
+    vec3 normal = normalize(vNormal);
+    vec3 viewDir = normalize(-vViewPosition);
+
+    // Refraction (Screen Space Distortion)
+    vec2 screenUV = gl_FragCoord.xy / uResolution;
+    vec2 refractionOffset = normal.xy * 0.05; // Distortion strength
+    
+    // Clamp UV to avoid edge artifacts (optional) or just wrap
+    vec4 bgColor = texture(uBackgroundTexture, screenUV + refractionOffset);
+    
+    // Base Color (Texture)
+    vec4 texColor = texture(uSampler, vTexCoord);
+    
+    // Fresnel Effect
+    float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
+    
+    // Specular Highlight
+    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.7));
+    vec3 halfVector = normalize(lightDir + viewDir);
+    float NdotH = max(dot(normal, halfVector), 0.0);
+    float specular = pow(NdotH, 32.0);
+
+    // Combine: Background (Refracted) + Tint + Specular
+    vec3 glassColor = mix(bgColor.rgb, texColor.rgb, 0.3 * texColor.a); // Tint with texture
+    vec3 finalColor = glassColor + vec3(specular) + vec3(fresnel * 0.3);
+    
+    fragColor = vec4(finalColor, 0.9); // Slight transparency for standard blending if enabled
+  }
+  `;
+
+  // Unlit Shader for UI
+  const unlitVsSource = `#version 300 es
+  layout(location = 0) in vec3 aPosition;
+  layout(location = 1) in vec2 aTexCoord;
+
+  uniform mat4 uModelMatrix;
+  uniform mat4 uViewMatrix;
+  uniform mat4 uProjectionMatrix;
+
+  out vec2 vTexCoord;
+
+  void main() {
+    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+    vTexCoord = aTexCoord;
+  }
+  `;
+
+  const unlitFsSource = `#version 300 es
+  precision highp float;
+
+  in vec2 vTexCoord;
+  uniform sampler2D uSampler;
+
+  out vec4 fragColor;
+
+  void main() {
+    fragColor = texture(uSampler, vTexCoord);
+  }
+  `;
+
+  function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  const program = gl.createProgram();
+  const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+  }
+
+  const unlitProgram = gl.createProgram();
+  const unlitVs = createShader(gl, gl.VERTEX_SHADER, unlitVsSource);
+  const unlitFs = createShader(gl, gl.FRAGMENT_SHADER, unlitFsSource);
+  gl.attachShader(unlitProgram, unlitVs);
+  gl.attachShader(unlitProgram, unlitFs);
+  gl.linkProgram(unlitProgram);
+
+  if (!gl.getProgramParameter(unlitProgram, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(unlitProgram));
+  }
+
+  const unlitUniforms = {
+    uModelMatrix: gl.getUniformLocation(unlitProgram, 'uModelMatrix'),
+    uViewMatrix: gl.getUniformLocation(unlitProgram, 'uViewMatrix'),
+    uProjectionMatrix: gl.getUniformLocation(unlitProgram, 'uProjectionMatrix'),
+    uSampler: gl.getUniformLocation(unlitProgram, 'uSampler'),
+  };
+
+  const uModelMatrix = gl.getUniformLocation(program, 'uModelMatrix');
+  const uViewMatrix = gl.getUniformLocation(program, 'uViewMatrix');
+  const uProjectionMatrix = gl.getUniformLocation(program, 'uProjectionMatrix');
+  const uSampler = gl.getUniformLocation(program, 'uSampler');
+
+  // Hardcoded generic offsets from scene.gltf analysis
+  // View 0: Indices (SCALAR, 5125 UNSIGNED_INT) - count 57996
+  // View 1: TexCoords (VEC2, 5126 FLOAT) - count 11042
+  // View 2: Positions (VEC3, 5126 FLOAT) - count 11042
+  // View 3: Tangents (VEC4, 5126 FLOAT) - count 11042
+
+  // Accessor 0: POSITION - View 2, offset 0
+  // Accessor 1: NORMAL - View 2, offset 132504 (11042 * 12 bytes = 132504)
+  // Accessor 3: TEXCOORD_0 - View 1, offset 0
+  // Accessor 4: INDICES - View 0, offset 0
+
+  // BufferView 0 offset: 0, length: 231984
+  // BufferView 1 offset: 231984, length: 88336
+  // BufferView 2 offset: 320320, length: 265008
+  // BufferView 3 offset: 585328, length: 176672
+
+  async function loadDragon() {
+    const binResponse = await fetch('../assets/stanford_dragon_pbr/scene.bin');
+    const binBuffer = await binResponse.arrayBuffer();
+
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
+    // Indices
+    const indexBuffer = gl.createBuffer();
+    const indicesOffset = 0;
+    const indicesLength = 231984;
+    const indicesData = new Uint32Array(binBuffer, indicesOffset, indicesLength / 4);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
+
+    // Positions & Normals (Interleaved or same buffer?)
+    // BufferView 2 contains both.
+    // Positions at offset 0 of BufferView 2.
+    // Normals at offset 132504 of BufferView 2.
+    // We can just bind the whole BufferView 2 and use offsets in vertexAttribPointer.
+
+    const posNormBufferViewOffset = 320320;
+    const posNormBufferViewLength = 265008;
+    const posNormData = new Float32Array(binBuffer, posNormBufferViewOffset, posNormBufferViewLength / 4);
+
+    const posNormBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posNormBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, posNormData, gl.STATIC_DRAW);
+
+    // Position Attribute (Loc 0)
+    // Offset 0 in the buffer we just bound.
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+    // Normal Attribute (Loc 1)
+    // Offset 132504 bytes in the buffer we just bound.
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 132504);
+
+    // TexCoords
+    const uvBufferViewOffset = 231984;
+    const uvBufferViewLength = 88336;
+    const uvData = new Float32Array(binBuffer, uvBufferViewOffset, uvBufferViewLength / 4);
+
+    const uvBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
+
+    // TexCoord Attribute (Loc 2)
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+
+    // Load Texture
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    // Placeholder while loading
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 0, 255, 255]));
+
+    const image = new Image();
+    image.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      gl.generateMipmap(gl.TEXTURE_2D);
+    };
+    image.src = '../assets/stanford_dragon_pbr/textures/DefaultMaterial_baseColor.jpeg';
+
+    return { vao, count: 57996, texture };
+  }
+
+  loadDragon().then((dragon) => {
+    // UI Setup
+    const uiVao = gl.createVertexArray();
+    gl.bindVertexArray(uiVao);
+
+    // Quad Positions (centered 1x1)
+    const uiPositions = new Float32Array([
+      -0.5, 0.5, 0.0,
+      0.5, 0.5, 0.0,
+      -0.5, -0.5, 0.0,
+      0.5, -0.5, 0.0,
+    ]);
+    const uiPosBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uiPosBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uiPositions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+    // Quad UVs
+    const uiUvs = new Float32Array([
+      0.0, 0.0,
+      1.0, 0.0,
+      0.0, 1.0,
+      1.0, 1.0,
+    ]);
+    const uiUvBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uiUvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uiUvs, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+
+    // UI Texture
+    const uiTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const uiElement = document.getElementById('ui-background');
+
+    // Background Texture for Refraction
+    const bgTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const uResolutionLoc = gl.getUniformLocation(program, 'uResolution');
+    const uBgTextureLoc = gl.getUniformLocation(program, 'uBackgroundTexture');
+
+    let lastTime = 0;
+    let rotation = 0;
+
+    function render(time) {
+      const now = time * 0.001;
+      const deltaTime = now - lastTime;
+      lastTime = now;
+
+      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+
+      // --- Draw UI Background ---
+      gl.useProgram(unlitProgram);
+
+      // Update UI Texture
+      if (gl.texElementImage2D) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+      }
+
+      const projection = mat4.create();
+      mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 1000.0);
+
+      const view = mat4.create();
+      mat4.lookAt(view, [0, 50, 150], [0, 40, 0], [0, 1, 0]);
+
+      // UI Model Matrix (Positioned behind dragon)
+      const uiModel = mat4.create();
+      mat4.translate(uiModel, uiModel, [0, 50, -50]); // Behind dragon
+      mat4.scale(uiModel, uiModel, [200, 200, 1]); // Scale up
+
+      // Calculate Element Transform
+      const uiMVP = mat4.create();
+      mat4.multiply(uiMVP, projection, view);
+      mat4.multiply(uiMVP, uiMVP, uiModel);
+
+      // Adjust for 0..1 to -0.5..0.5 mapping (Texture Space to Quad Space)
+      const adjustment = mat4.create();
+      mat4.translate(adjustment, adjustment, [-0.5, 0.5, 0]);
+      mat4.scale(adjustment, adjustment, [1, -1, 1]);
+
+      const finalUiTransform = mat4.create();
+      mat4.multiply(finalUiTransform, uiMVP, adjustment);
+
+      if (canvas.getElementTransform) {
+        // 1. Convert the MVP matrix (gl-matrix Float32Array) to a DOMMatrix
+        const mvpDOM = new DOMMatrix(Array.from(uiMVP));
+
+        // 2. Element CSS pixels -> WebGL Model Space
+        //    Element is 512x512. Quad geometry is -0.5 to 0.5 (size 1).
+        //    Map: (0,0) -> (-0.5, 0.5) and (512,512) -> (0.5, -0.5)
+        const width = uiElement.offsetWidth;
+        const height = uiElement.offsetHeight;
+
+        const toGLModel = new DOMMatrix()
+          // Scale pixels to 1 unit, flip Y (CSS down, GL up)
+          .scale(1 / width, -1 / height, 1)
+          // Center the origin: (0,0) becomes (-width/2, -height/2) before scaling
+          .translate(-width / 2, -height / 2);
+
+        // 3. WebGL Clip Space -> Canvas CSS pixels (Viewport Transform)
+        //    Clip (-1..1) -> Canvas (0..w, 0..h)
+        const toCSSViewport = new DOMMatrix()
+          // Move center (0,0) to center of canvas
+          .translate(canvas.width / 2, canvas.height / 2)
+          // Scale normalized clip (-1..1) to viewport size
+          .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+        // 4. Combine: Viewport * MVP * Model
+        const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
+
+        const transform = canvas.getElementTransform(uiElement, finalTransform);
+        if (transform) {
+          uiElement.style.transform = transform.toString();
+        }
+      }
+
+      gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projection);
+      gl.uniformMatrix4fv(unlitUniforms.uViewMatrix, false, view);
+      gl.uniformMatrix4fv(unlitUniforms.uModelMatrix, false, uiModel);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+      gl.uniform1i(unlitUniforms.uSampler, 0);
+
+      gl.bindVertexArray(uiVao);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // --- Copy Framebuffer to Background Texture (Grab Pass) ---
+      gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+      gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, canvas.width, canvas.height, 0);
+
+      // --- Draw Dragon ---
+      gl.useProgram(program);
+
+      // Reuse projection and view matrices
+
+      rotation += deltaTime * 0.5; // Rotate 0.5 rad/s
+
+      const model = mat4.create();
+      mat4.rotateY(model, model, rotation);
+
+      gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
+      gl.uniformMatrix4fv(uViewMatrix, false, view);
+      gl.uniformMatrix4fv(uModelMatrix, false, model);
+      gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, dragon.texture);
+      gl.uniform1i(uSampler, 0);
+
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+      gl.uniform1i(uBgTextureLoc, 1);
+
+      gl.bindVertexArray(dragon.vao);
+
+      // Enable blending for glass effect
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+      gl.drawElements(gl.TRIANGLES, dragon.count, gl.UNSIGNED_INT, 0);
+
+      gl.disable(gl.BLEND);
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  });
+</script>

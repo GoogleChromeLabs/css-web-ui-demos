@@ -1,0 +1,233 @@
+/**
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+:root,
+:host {
+    --md-sys-color-background: #fbf8ff;
+    --md-sys-color-on-background: #1a1b22;
+    --md-sys-color-surface: #fbf8ff;
+    --md-sys-color-surface-dim: #dbd9e3;
+    --md-sys-color-surface-bright: #fbf8ff;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #f4f2fd;
+    --md-sys-color-surface-container: #efecf7;
+    --md-sys-color-surface-container-high: #e9e7f2;
+    --md-sys-color-surface-container-highest: #e3e1ec;
+    --md-sys-color-on-surface: #1a1b22;
+    --md-sys-color-surface-variant: #e2e1f2;
+    --md-sys-color-on-surface-variant: #454654;
+    --md-sys-color-inverse-surface: #2f3038;
+    --md-sys-color-inverse-on-surface: #f1effa;
+    --md-sys-color-outline: #757685;
+    --md-sys-color-outline-variant: #c5c5d6;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-surface-tint: #4051ca;
+    --md-sys-color-primary: #2f41bb;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #5869e2;
+    --md-sys-color-on-primary-container: #ffffff;
+    --md-sys-color-inverse-primary: #bcc2ff;
+    --md-sys-color-secondary: #555b8a;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #cbcfff;
+    --md-sys-color-on-secondary-container: #343a67;
+    --md-sys-color-tertiary: #852584;
+    --md-sys-color-on-tertiary: #ffffff;
+    --md-sys-color-tertiary-container: #b04dac;
+    --md-sys-color-on-tertiary-container: #ffffff;
+    --md-sys-color-error: #ba1a1a;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-error-container: #ffdad6;
+    --md-sys-color-on-error-container: #410002;
+}
+
+@media (prefers-color-scheme: dark) {
+    /* Dont want dark them for an example? just use light-only class */
+    :root:not(:has(.light-only)),
+    :host:not(:has(.light-only)) {
+        --md-sys-color-background: #12131a;
+        --md-sys-color-on-background: #e3e1ec;
+        --md-sys-color-surface: #12131a;
+        --md-sys-color-surface-dim: #12131a;
+        --md-sys-color-surface-bright: #383841;
+        --md-sys-color-surface-container-lowest: #0d0e15;
+        --md-sys-color-surface-container-low: #1a1b22;
+        --md-sys-color-surface-container: #1e1f27;
+        --md-sys-color-surface-container-high: #292931;
+        --md-sys-color-surface-container-highest: #34343c;
+        --md-sys-color-on-surface: #e3e1ec;
+        --md-sys-color-surface-variant: #454654;
+        --md-sys-color-on-surface-variant: #c5c5d6;
+        --md-sys-color-inverse-surface: #e3e1ec;
+        --md-sys-color-inverse-on-surface: #2f3038;
+        --md-sys-color-outline: #8f8f9f;
+        --md-sys-color-outline-variant: #454654;
+        --md-sys-color-shadow: #000000;
+        --md-sys-color-scrim: #000000;
+        --md-sys-color-surface-tint: #bcc2ff;
+        --md-sys-color-primary: #bcc2ff;
+        --md-sys-color-on-primary: #001998;
+        --md-sys-color-primary-container: #2336b2;
+        --md-sys-color-on-primary-container: #dcdeff;
+        --md-sys-color-inverse-primary: #4051ca;
+        --md-sys-color-secondary: #bdc3f9;
+        --md-sys-color-on-secondary: #272d59;
+        --md-sys-color-secondary-container: #333a66;
+        --md-sys-color-on-secondary-container: #c8cdff;
+        --md-sys-color-tertiary: #faabff;
+        --md-sys-color-on-tertiary: #570065;
+        --md-sys-color-tertiary-container: #761b85;
+        --md-sys-color-on-tertiary-container: #ffd3fe;
+        --md-sys-color-error: #ffb4ab;
+        --md-sys-color-on-error: #690005;
+        --md-sys-color-error-container: #93000a;
+        --md-sys-color-on-error-container: #ffdad6;
+    }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--md-sys-color-background);
+    font-family: "Roboto", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+    position: relative;
+    display: block;
+    max-inline-size: 1280px;
+    margin-inline: auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+div, 
+span {
+    color: light-dark(var(--md-sys-color-on-surface), var(--md-sys-color-on-surface-variant));
+}
+
+a{
+    color: light-dark(var(--md-sys-color-primary), var(--md-sys-color-primary-container));
+}
+
+#main-nav {
+    text-align: center;
+    padding: 2rem;
+    line-height: 1.5;
+    padding-block-end: 80px;
+
+    &>.container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: 1000px;
+        margin-inline: auto;
+        margin-block-start: 2rem;
+    }
+
+    .button-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .button-grid > * {
+        padding: 1rem;
+        height: 100%;
+    }
+}
+
+footer {
+    position: fixed;
+    inset-block-end: 0;
+    inset-inline: 0;
+    text-align: center;
+    padding: 1rem;
+    border-top: 1px solid var(--md-sys-color-outline);
+    background-color: var(--md-sys-color-surface);
+}
+
+
+#proofreader-demo {
+    text-align: center;
+    padding: 2rem;
+    line-height: 1.5;
+
+    & :is(md-filled-tonal-button, md-filled-button) {
+        padding-inline: 1rem;
+        margin-inline: 0.3rem;
+        margin-block-start: 1.5rem;
+    }
+
+    & :is(md-outlined-text-field) {
+        display: block;
+        margin-block-start: 1.5rem;
+    }
+}
+
+.sidenote {
+    margin-block-start: 1.5rem;
+    text-align: left;
+    margin-inline: auto;
+    max-inline-size: 100%;
+    margin-block-end: 1rem;
+    border-inline-start: 5px solid var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-secondary-container);
+    padding-inline-start: 1rem;
+    padding: 0.5rem 1rem;
+
+}
+
+#context-demo {
+    text-align: center;
+    padding: 2rem;
+    line-height: 1.5;
+
+    & :is(md-outlined-text-field) {
+        display: block;
+        margin-block-start: 1.5rem;
+    }
+
+    & :is(md-filled-tonal-button, md-filled-button) {
+        padding-inline: 1rem;
+        margin-inline: 0.3rem;
+        margin-block-start: 0.5rem;
+        margin-block-end: 1rem;
+    }
+
+}
+
+#generate-demo {
+    text-align: center;
+    padding: 2rem;
+    line-height: 1.5;
+
+    & :is(md-outlined-text-field) {
+        display: block;
+        margin-block-start: 1.5rem;
+    }
+
+    & :is(md-filled-button) {
+        padding-inline: 1rem;
+        margin-inline: 0.3rem;
+        margin-block-start: 1rem;
+    }
+}

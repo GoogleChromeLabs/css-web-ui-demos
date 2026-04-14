@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive 3D Book experience using HTML-in-Canvas and Three.js. Renders high-quality, readable DOM-based book pages in a 3D environment.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, 3D Book, Three.js, Interactive Demo, WebGL">
+    <title>Interactive 3D Book (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <script src="../js/gl-matrix.js"></script>
+    <script type="module" src="../js/font-select.mjs"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+        }
+
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--md-sys-color-surface-container-highest);
+            color: var(--md-sys-color-on-surface);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--md-sys-color-outline);
+            z-index: 1000;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        /* Book Page DOM Styles */
+        .book-page {
+            position: absolute;
+            width: 800px;
+            height: 1200px;
+            /* 1:1.5 Aspect Ratio to match WebGL 2.0x3.0 plane */
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            box-sizing: border-box;
+            padding: 80px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            ::selection {
+                color: black;
+                background-color: yellow;
+            }
+
+        }
+
+        .book-page.cover {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            align-items: center;
+            border: 20px solid var(--md-sys-color-on-primary);
+            padding: 40px;
+        }
+
+        .book-page h2 {
+            font-size: 60px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--md-sys-color-on-primary);
+        }
+
+        .book-page p {
+            font-size: 32px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: justify;
+            color: var(--md-sys-color-outline);
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            left: 0;
+            color: var(--md-sys-color-outline);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <h1>WebGL Book</h1>
+        Use Left/Right Arrow keys to turn pages. Try selecting the text!<br><br>
+        <div id="quick-fonts" style="margin-bottom: 12px; display: flex; gap: 12px; font-size: 14px; flex-wrap: wrap;">
+            <label><input type="radio" name="font" value="Georgia"> Georgia</label>
+            <label><input type="radio" name="font" value="Arial"> Arial</label>
+            <label><input type="radio" name="font" value="Courier New"> Courier</label>
+            <label><input type="radio" name="font" value="Times New Roman"> Times</label>
+        </div>
+        <font-select id="book-font"></font-select>
+    </div>
+    <canvas id="gl-canvas" layoutsubtree>
+        <!-- Page 0 (Front Cover) -->
+        <div id="page-0" class="book-page cover">
+            <h2>The Adventures of<br>Sherlock Holmes</h2>
+            <p style="text-align:center; color: var(--md-sys-color-on-primary);">By Arthur Conan Doyle</p>
+        </div>
+
+        <!-- Page 1 (Inside Front Cover / Blank) -->
+        <div id="page-1" class="book-page"></div>
+
+        <!-- Page 2 -->
+        <div id="page-2" class="book-page">
+            <h2 style="color: var(--md-sys-color-primary)">A Scandal in Bohemia</h2>
+            <p>To Sherlock Holmes she is always the woman. I have seldom heard him mention her under any other name. In
+                his eyes she eclipses and predominates the whole of her sex. It was not that he felt any emotion akin to
+                love for Irene Adler. All emotions, and that one particularly, were abhorrent to his cold, precise but
+                admirably balanced mind.</p>
+            <p>He was, I take it, the most perfect reasoning and observing machine that the world has seen, but as a
+                lover he would have placed himself in a false position.</p>
+            <div class="page-number">2</div>
+        </div>
+
+        <!-- Page 3 -->
+        <div id="page-3" class="book-page">
+            <p>He never spoke of the softer passions, save with a gibe and a sneer. They were admirable things for the
+                observer—excellent for drawing the veil from men’s motives and actions. But for the trained reasoner to
+                admit such intrusions into his own delicate and finely adjusted temperament was to introduce a
+                distracting factor which might throw a doubt upon all his mental results.</p>
+            <p>Grit in a sensitive instrument, or a crack in one of his own high-power lenses, would not be more
+                disturbing than a strong emotion in a nature such as his.</p>
+            <div class="page-number">3</div>
+        </div>
+
+        <!-- Page 4 -->
+        <div id="page-4" class="book-page">
+            <p>And yet there was but one woman to him, and that woman was the late Irene Adler, of dubious and
+                questionable memory.</p>
+            <p>I had seen little of Holmes lately. My marriage had drifted us away from each other. My own complete
+                happiness, and the home-centred interests which rise up around the man who first finds himself master of
+                his own establishment, were sufficient to absorb all my attention, while Holmes, who loathed every form
+                of society with his whole Bohemian soul, remained in our lodgings in Baker Street, buried among his old
+                books, and alternating from week to week between cocaine and ambition.</p>
+            <div class="page-number">4</div>
+        </div>
+
+        <!-- Page 5 (Back Cover) -->
+        <div id="page-5" class="book-page cover" style="background-color: var(--md-sys-color-primary-container);">
+            <h2 style="color: var(--md-sys-color-on-primary-container);">The End</h2>
+        </div>
+    </canvas>
+
+    <script type="module">
+        import { setupBookRendering } from './js/webgl-book.js';
+        const canvas = document.getElementById('gl-canvas');
+
+        setupBookRendering(canvas, 6);
+
+        const fontSelect = document.getElementById('book-font');
+        const radios = document.querySelectorAll('input[name="font"]');
+        const pages = document.querySelectorAll('.book-page');
+
+        fontSelect.addEventListener('change', (e) => {
+            const font = e.target.value;
+            pages.forEach(p => p.style.fontFamily = font);
+
+            let found = false;
+            radios.forEach(r => {
+                if (r.value.toLowerCase() === font.toLowerCase()) {
+                    r.checked = true;
+                    found = true;
+                }
+            });
+            if (!found) {
+                radios.forEach(r => r.checked = false);
+            }
+        });
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    const font = e.target.value;
+                    pages.forEach(p => p.style.fontFamily = font);
+                    fontSelect.value = font;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Advanced 3D Book Corner Curl effect using the HTML-in-Canvas API. Features realistic diagonal page deformation and interactive Sherlock Holmes content.">
+    <meta name="keywords" content="HTML in Canvas, WebGL, Book, Corner Curl, Material Symbols, 3D">
+    <title>3D Book Corner Curl (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            flex-grow: 1;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .ui-card {
+            background: rgba(var(--md-sys-color-surface-container-rgb), 0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            pointer-events: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            opacity: 0.7;
+            color: var(--md-sys-color-on-surface-variant);
+            pointer-events: none;
+            text-align: center;
+        }
+
+        /* Book Page DOM Styles exactly as standard book example */
+        .book-page {
+            position: absolute;
+            width: 800px;
+            height: 1200px;
+            background-color: #fff;
+            color: #1a1a1a;
+            box-sizing: border-box;
+            padding: 80px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .book-page.cover {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            align-items: center;
+            border: 20px solid var(--md-sys-color-on-primary);
+            padding: 40px;
+        }
+
+        .book-page h2 {
+            font-size: 68px;
+            margin-bottom: 24px;
+            text-align: center;
+            color: inherit;
+        }
+
+        .book-page p {
+            font-size: 36px;
+            line-height: 1.6;
+            margin-bottom: 34px;
+            text-align: justify;
+            color: inherit;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+            font-size: 28px;
+            left: 0;
+            opacity: 0.4;
+        }
+
+        #prev-btn,
+        #next-btn {
+            padding-inline: 20px
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="ui-overlay">
+        <div class="ui-card">
+            <h1>Sherlock Holmes Subtle Curl</h1>
+            <md-filled-tonal-button id="prev-btn">
+                <md-icon slot="icon">arrow_back</md-icon>
+                Prev
+            </md-filled-tonal-button>
+            <md-filled-button id="next-btn">
+                Next
+                <md-icon slot="icon">arrow_forward</md-icon>
+            </md-filled-button>
+        </div>
+    </div>
+
+    <div class="hint">
+        Use <b>Arrow Keys</b> or drag for flip effect. <br>
+        The book is interactive with text selection.
+    </div>
+
+    <canvas id="gl-canvas" layoutsubtree>
+        <!-- Page 0 (Front Cover) -->
+        <div id="page-0" class="book-page cover">
+            <h2>The Adventures of<br>Sherlock Holmes</h2>
+            <p style="text-align:center; opacity: 1;">By Arthur Conan Doyle</p>
+        </div>
+
+        <!-- Page 1 (Inside Cover) -->
+        <div id="page-1" class="book-page">
+        </div>
+
+        <!-- Page 2 -->
+        <div id="page-2" class="book-page">
+            <h2 style="color: var(--md-sys-color-on-primary); font-size: 48px;">A Scandal in Bohemia</h2>
+            <p>To Sherlock Holmes she is always the woman. I have seldom heard him mention her under any other name. In
+                his eyes she eclipses and predominates the whole of her sex. It was not that he felt any emotion akin to
+                love for Irene Adler.</p>
+            <p>He was, I take it, the most perfect reasoning and observing machine that the world has seen, but as a
+                lover he would have placed himself in a false position.</p>
+            <div class="page-number">2</div>
+        </div>
+
+        <!-- Page 3 -->
+        <div id="page-3" class="book-page">
+            <p>He never spoke of the softer passions, save with a gibe and a sneer. They were admirable things for the
+                observer—excellent for drawing the veil from men’s motives and actions. But for the trained reasoner to
+                admit such intrusions into his own delicate temperament was to introduce a distracting factor.</p>
+            <p>Grit in a sensitive instrument would not be more
+                disturbing than a strong emotion in a nature such as his.</p>
+            <div class="page-number">3</div>
+        </div>
+
+        <!-- Page 4 -->
+        <div id="page-4" class="book-page">
+            <p>And yet there was but one woman to him, and that woman was the late Irene Adler, of dubious and
+                questionable memory.</p>
+            <p>I had seen little of Holmes lately. My marriage had drifted us away from each other. My own complete
+                happiness, and the home-centred interests were sufficient to absorb all my attention, while Holmes
+                remained in Baker Street, buried among his old
+                books.</p>
+            <div class="page-number">4</div>
+        </div>
+
+        <!-- Page 5 (Back Cover) -->
+        <div id="page-5" class="book-page cover"
+            style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border: none;">
+            <h2 style="font-size: 40px;">The End</h2>
+        </div>
+    </canvas>
+
+    <script src="../js/gl-matrix.js"></script>
+    <script type="module">
+        import { setupCurlBookRendering } from './js/webgl-book-curl.js';
+
+        const canvas = document.getElementById('gl-canvas');
+        setupCurlBookRendering(canvas, 6);
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+        });
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+        });
+    </script>
+</body>
+
+</html>

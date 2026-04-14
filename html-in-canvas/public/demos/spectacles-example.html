@@ -1,0 +1,737 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive 3D Spectacles model using HTML-in-Canvas and Raw WebGL.">
+    <title>Spectacles - Raw WebGL Experience</title>
+    
+    <link rel="stylesheet" href="../css/theme.css">
+    <script src="../js/gl-matrix.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #ca8a04;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Eyesight Chart inside Canvas */
+        #eyesight-chart {
+            position: absolute;
+            background: #ffffff;
+            color: #000000;
+            padding: 40px;
+            border-radius: 10px;
+            width: 400px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+
+        .chart-header {
+            font-size: 12px;
+            letter-spacing: 5px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .chart-row {
+            font-weight: bold;
+            letter-spacing: 15px;
+            text-align: center;
+            width: 100%;
+            text-indent: 15px;
+            color: rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        .level-1 { font-size: 90px; }
+        .level-2 { font-size: 60px; }
+        .level-3 { font-size: 40px; }
+        .level-4 { font-size: 30px; }
+        .level-5 { font-size: 20px; }
+        .level-6 { font-size: 15px; }
+        .level-7 { font-size: 10px; }
+
+        .chart-color-bars {
+            display: flex;
+            width: 80%;
+            height: 8px;
+            margin-top: 10px;
+        }
+
+        .color-bar {
+            flex: 1;
+        }
+
+        .color-bar.green { background: #00aa00; }
+        .color-bar.red { background: #ff0000; }
+    </style>
+</head>
+
+<body>
+
+    <!-- UI Overlay rendered into Canvas via layoutsubtree -->
+    <canvas id="gl-canvas" layoutsubtree>
+        <div id="eyesight-chart">
+            <div class="chart-header">SNELLEN SCALE</div>
+            <div class="chart-row level-1">E</div>
+            <div class="chart-row level-2">F P</div>
+            <div class="chart-row level-3">T O Z</div>
+            <div class="chart-row level-4">L P E D</div>
+            <div class="chart-row level-5">P E C F D</div>
+            <div class="chart-row level-6">E D F C Z P</div>
+            <div class="chart-row level-7">F E L O P Z D</div>
+            <div class="chart-color-bars">
+                <div class="color-bar green"></div>
+                <div class="color-bar red"></div>
+            </div>
+        </div>
+
+        <!-- HD Chart for Glass Effect (Scaled down in CSS but full res for texture) -->
+        <div id="eyesight-chart-hd" style="position: absolute; top: 0; left: 0; width: 400px; height: 600px; transform: scale(0.1); transform-origin: top left; opacity: 0.01; background: #ffffff; color: #000000; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; font-family: 'Courier New', Courier, monospace; pointer-events: none;">
+            <div style="font-size: 12px; letter-spacing: 5px; font-weight: bold; color: #666;">SNELLEN SCALE</div>
+            <div style="font-size: 90px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">E</div>
+            <div style="font-size: 60px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">F P</div>
+            <div style="font-size: 40px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">T O Z</div>
+            <div style="font-size: 30px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">L P E D</div>
+            <div style="font-size: 20px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">P E C F D</div>
+            <div style="font-size: 15px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">E D F C Z P</div>
+            <div style="font-size: 10px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">F E L O P Z D</div>
+            <div style="display: flex; width: 80%; height: 8px;">
+                <div style="flex: 1; background: #00aa00;"></div>
+                <div style="flex: 1; background: #ff0000;"></div>
+            </div>
+        </div>
+    </canvas>
+
+    <!-- Content Menu in Top Right Corner -->
+    <div id="content-menu" style="position: absolute; top: 20px; right: 20px; width: 380px; background: rgba(15, 23, 42, 0.9); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; font-family: 'Inter', sans-serif;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <span style="color: #fff; font-size: 18px; font-weight: 700;">HTML-in-Canvas Demo</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #94a3b8; font-size: 12px;">Read something else:</span>
+                <button id="prev-content" style="background: #ca8a04; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">&lt;</button>
+                <button id="next-content" style="background: #ca8a04; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">&gt;</button>
+            </div>
+        </div>
+        
+        <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0;">
+            This is an HTML in canvas demo, the scene that is rendered on this page is a canvas, but the great thing about it is that it has a real DOM inside it! Canvas enables the great visual effects. But unlike regular canvas, it's fully interactive! Try translating, copy-pasting, saving or clicking the elements.
+        </p>
+    </div>
+
+    <script type="module">
+        const canvas = document.getElementById('gl-canvas');
+        const gl = canvas.getContext('webgl2', { antialias: true, alpha: true });
+
+        if (!gl) {
+            alert('WebGL2 not supported');
+            throw new Error('WebGL2 not supported');
+        }
+
+        // --- Shaders ---
+        const vsSource = `#version 300 es
+        layout(location=0) in vec3 aPosition;
+        layout(location=1) in vec3 aNormal;
+        layout(location=2) in vec2 aTexCoord;
+
+        uniform mat4 uProjectionMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uModelMatrix;
+
+        out vec2 vTexCoord;
+        out vec3 vNormal;
+        out vec3 vWorldPos;
+
+        void main() {
+            vec4 worldPos = uModelMatrix * vec4(aPosition, 1.0);
+            vWorldPos = worldPos.xyz;
+            vNormal = mat3(uModelMatrix) * aNormal;
+            vTexCoord = aTexCoord;
+            gl_Position = uProjectionMatrix * uViewMatrix * worldPos;
+        }`;
+
+        const fsSource = `#version 300 es
+        precision highp float;
+
+        in vec2 vTexCoord;
+        in vec3 vNormal;
+        in vec3 vWorldPos;
+
+        uniform sampler2D uTexture;
+        uniform vec3 uCameraPos;
+        uniform bool uIsGlass;
+        uniform mat4 uInverseChartModelMatrix;
+
+        out vec4 fragColor;
+
+        void main() {
+            vec3 n = normalize(vNormal);
+            vec3 viewDir = normalize(uCameraPos - vWorldPos);
+            
+            // Simple lighting
+            vec3 lightDir = normalize(vec3(5.0, 5.0, 5.0));
+            float diff = max(dot(n, lightDir), 0.3);
+            
+            if (uIsGlass) {
+                // Glass effect: vision support simulation!
+                vec3 dir = normalize(vWorldPos - uCameraPos);
+                
+                // Transform ray to chart local space
+                vec4 localOrigin = uInverseChartModelMatrix * vec4(uCameraPos, 1.0);
+                vec4 localDir = uInverseChartModelMatrix * vec4(dir, 0.0);
+                
+                // Intersection with plane z = 0
+                float t = -localOrigin.z / localDir.z;
+                vec3 P = localOrigin.xyz + t * localDir.xyz;
+                
+                // Map P.xy to chart UV space (Quad goes from -0.5 to 0.5)
+                float u = P.x + 0.5;
+                float v = 1.0 - (P.y + 0.5); // Flipped V
+                
+                if (u >= 0.0 && u <= 1.0 && v >= 0.0 && v <= 1.0) {
+                    // Ray hits the chart! Sample the HD texture!
+                    vec4 hdColor = texture(uTexture, vec2(u, v));
+                    
+                    // Add some reflection/fresnel
+                    float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
+                    vec3 spec = vec3(1.0) * pow(max(dot(reflect(-normalize(vec3(5.0, 5.0, 5.0)), n), viewDir), 0.0), 32.0);
+                    
+                    // Mix HD color with glass reflection
+                    fragColor = vec4(mix(hdColor.rgb, vec3(1.0), fresnel * 0.3) + spec * 0.2, 1.0);
+                } else {
+                    // Ray misses chart, show normal glass
+                    float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
+                    vec3 spec = vec3(1.0) * pow(max(dot(reflect(-normalize(vec3(5.0, 5.0, 5.0)), n), viewDir), 0.0), 32.0);
+                    fragColor = vec4(vec3(0.8, 0.9, 1.0) * 0.2 + spec + fresnel * 0.5, 0.3);
+                }
+            } else {
+                // Gold/Frame effect
+                vec4 texColor = vec4(0.8, 0.6, 0.2, 1.0); // Fallback gold color
+                // In a full PBR shader we would use the textures, but for simplicity we use a base color
+                
+                vec3 spec = vec3(1.0) * pow(max(dot(reflect(-lightDir, n), viewDir), 0.0), 16.0);
+                
+                fragColor = vec4(texColor.rgb * diff + spec, 1.0);
+            }
+        }`;
+
+        const unlitVsSource = `#version 300 es
+        layout(location=0) in vec3 aPosition;
+        layout(location=1) in vec2 aTexCoord;
+
+        uniform mat4 uProjectionMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uModelMatrix;
+
+        out vec2 vTexCoord;
+
+        void main() {
+            vTexCoord = aTexCoord;
+            gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+        }`;
+
+        const unlitFsSource = `#version 300 es
+        precision highp float;
+
+        in vec2 vTexCoord;
+        uniform sampler2D uSampler;
+
+        out vec4 fragColor;
+
+        void main() {
+            ivec2 size = textureSize(uSampler, 0);
+            vec2 texelSize = 1.0 / vec2(size);
+            
+            vec4 color = vec4(0.0);
+            int samples = 0;
+            
+            // 5x5 box blur for heavy blur effect
+            for (int x = -2; x <= 2; x++) {
+                for (int y = -2; y <= 2; y++) {
+                    color += texture(uSampler, vTexCoord + vec2(float(x), float(y)) * texelSize);
+                    samples++;
+                }
+            }
+            
+            fragColor = color / float(samples);
+        }`;
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vs, fs) {
+            const prog = gl.createProgram();
+            gl.attachShader(prog, createShader(gl, gl.VERTEX_SHADER, vs));
+            gl.attachShader(prog, createShader(gl, gl.FRAGMENT_SHADER, fs));
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                console.error(gl.getProgramInfoLog(prog));
+                return null;
+            }
+            return prog;
+        }
+
+        const program = createProgram(gl, vsSource, fsSource);
+        const unlitProgram = createProgram(gl, unlitVsSource, unlitFsSource);
+
+        // Uniform locations
+        const uProjectionMatrix = gl.getUniformLocation(program, 'uProjectionMatrix');
+        const uViewMatrix = gl.getUniformLocation(program, 'uViewMatrix');
+        const uModelMatrix = gl.getUniformLocation(program, 'uModelMatrix');
+        const uCameraPos = gl.getUniformLocation(program, 'uCameraPos');
+        const uIsGlass = gl.getUniformLocation(program, 'uIsGlass');
+        const uTexture = gl.getUniformLocation(program, 'uTexture');
+        const uInverseChartModelMatrix = gl.getUniformLocation(program, 'uInverseChartModelMatrix');
+
+        const unlitUniforms = {
+            uProjectionMatrix: gl.getUniformLocation(unlitProgram, 'uProjectionMatrix'),
+            uViewMatrix: gl.getUniformLocation(unlitProgram, 'uViewMatrix'),
+            uModelMatrix: gl.getUniformLocation(unlitProgram, 'uModelMatrix'),
+            uSampler: gl.getUniformLocation(unlitProgram, 'uSampler')
+        };
+
+        // --- Load Spectacles Model (Manual Binary Parsing) ---
+        async function loadSpectacles() {
+            // Path to the .bin file extracted from the GLTF folder
+            const binResponse = await fetch('../assets/round_spectacles_4k.gltf/round_spectacles.bin');
+            const binBuffer = await binResponse.arrayBuffer();
+
+            // --- Spectacles Frame (Mesh 0, Primitive 0) ---
+            const frameVao = gl.createVertexArray();
+            gl.bindVertexArray(frameVao);
+
+            // Positions: Offset 0, Length 84552, Count 7046
+            const framePosData = new Float32Array(binBuffer, 0, 84552 / 4);
+            const framePosBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, framePosBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, framePosData, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            // Normals: Offset 84552, Length 84552, Count 7046
+            const frameNormData = new Float32Array(binBuffer, 84552, 84552 / 4);
+            const frameNormBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, frameNormBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, frameNormData, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            // UVs: Offset 169104, Length 56368, Count 7046
+            const frameUvData = new Float32Array(binBuffer, 169104, 56368 / 4);
+            const frameUvBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, frameUvBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, frameUvData, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(2);
+            gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+
+            // Indices: Offset 310024, Length 62844, Count 31422 (UINT16)
+            const frameIndicesData = new Uint16Array(binBuffer, 310024, 31422);
+            const frameIndexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, frameIndexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, frameIndicesData, gl.STATIC_DRAW);
+
+            // --- Glass (Mesh 0, Primitive 1) ---
+            const glassVao = gl.createVertexArray();
+            gl.bindVertexArray(glassVao);
+
+            // Positions: Offset 372868, Length 9312, Count 776
+            const glassPosData = new Float32Array(binBuffer, 372868, 9312 / 4);
+            const glassPosBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, glassPosBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, glassPosData, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            // Normals: Offset 382180, Length 9312, Count 776
+            const glassNormData = new Float32Array(binBuffer, 382180, 9312 / 4);
+            const glassNormBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, glassNormBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, glassNormData, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            // UVs: Offset 391492, Length 6208, Count 776
+            const glassUvData = new Float32Array(binBuffer, 391492, 6208 / 4);
+            const glassUvBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, glassUvBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, glassUvData, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(2);
+            gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+
+            // Indices: Offset 407012, Length 8016, Count 4008 (UINT16)
+            const glassIndicesData = new Uint16Array(binBuffer, 407012, 4008);
+            const glassIndexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glassIndexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, glassIndicesData, gl.STATIC_DRAW);
+
+            return {
+                frame: { vao: frameVao, count: 31422 },
+                glass: { vao: glassVao, count: 4008 }
+            };
+        }
+
+        // --- UI Quad Setup (for HTML-in-Canvas) ---
+        const uiVao = gl.createVertexArray();
+        gl.bindVertexArray(uiVao);
+
+        const uiPositions = new Float32Array([
+            -0.5, 0.5, 0.0,
+            -0.5, -0.5, 0.0,
+            0.5, 0.5, 0.0,
+            0.5, -0.5, 0.0,
+        ]);
+        const uiPosBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, uiPosBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, uiPositions, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+        const uiUvs = new Float32Array([
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+            1.0, 1.0,
+        ]);
+        const uiUvBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, uiUvBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, uiUvs, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+
+        // UI Texture
+        const uiTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        // HD Texture for Glass Effect
+        const hdTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, hdTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        const uiElement = document.getElementById('eyesight-chart');
+        const hdElement = document.getElementById('eyesight-chart-hd');
+
+        // --- Content Toggle Logic ---
+        const contents = [
+            // Content 0: Snellen Chart
+            `<div class="chart-header">SNELLEN SCALE</div>
+            <div class="chart-row level-1">E</div>
+            <div class="chart-row level-2">F P</div>
+            <div class="chart-row level-3">T O Z</div>
+            <div class="chart-row level-4">L P E D</div>
+            <div class="chart-row level-5">P E C F D</div>
+            <div class="chart-row level-6">E D F C Z P</div>
+            <div class="chart-row level-7">F E L O P Z D</div>
+            <div style="display: flex; width: 80%; height: 8px; margin-top: 10px;">
+                <div style="flex: 1; background: #00aa00;"></div>
+                <div style="flex: 1; background: #ff0000;"></div>
+            </div>`,
+            
+            // Content 1: Musical Ad
+            `<div style="font-family: 'Inter', sans-serif; text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;">
+                <div style="font-size: 14px; color: #ca8a04; font-weight: bold; letter-spacing: 2px;">EXCLUSIVE PREMIERE</div>
+                <div style="font-size: 40px; font-weight: 900; color: #1e1b4b; margin: 10px 0;">THE MAMMOTH</div>
+                <div style="font-size: 20px; font-weight: bold; color: #ca8a04;">MUSICAL SPECTACULAR</div>
+                <div style="border-top: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0; padding: 15px 0; margin: 15px 0;">
+                    <div style="font-size: 18px; font-weight: bold; color: #1e1b4b;">STARTS APRIL 1, 2030</div>
+                    <div style="font-size: 14px; color: #64748b; margin-top: 5px;">LONDON PALLADIUM</div>
+                </div>
+                <div style="font-size: 12px; color: #64748b; font-style: italic;">"A triumph of stagecraft!" - The Times</div>
+                <button id="book-tickets-btn" style="background: #1e1b4b; color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; font-size: 14px; margin-top: 15px; cursor: pointer; width: 100%;">BOOK TICKETS NOW</button>
+            </div>`,
+            
+            // Content 2: Underground Map
+            `<div style="font-family: 'Inter', sans-serif; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 15px;">
+                <div style="font-size: 18px; font-weight: bold; color: #1e1b4b; text-align: center;">CENTRAL NETWORK</div>
+                <div style="position: relative; flex: 1; margin: 15px 0; border: 2px solid #e2e8f0; border-radius: 10px; background: #fafafa;">
+                    <!-- Line 1: Green -->
+                    <div style="position: absolute; top: 30%; left: 10%; right: 10%; height: 6px; background: #10b981;"></div>
+                    <!-- Line 2: Blue -->
+                    <div style="position: absolute; left: 30%; top: 10%; bottom: 10%; width: 6px; background: #3b82f6;"></div>
+                    <!-- Line 3: Yellow -->
+                    <div style="position: absolute; top: 70%; left: 10%; right: 10%; height: 6px; background: #eab308;"></div>
+                    
+                    <!-- Stations -->
+                    <div style="position: absolute; top: 30%; left: 30%; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 4px solid #ef4444; transform: translate(-50%, -50%);"></div>
+                    <div style="font-size: 10px; position: absolute; top: 35%; left: 35%; font-weight: bold;">HUB STATION</div>
+                    
+                    <div style="position: absolute; top: 30%; left: 70%; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 3px solid #10b981; transform: translate(-50%, -50%);"></div>
+                    <div style="font-size: 10px; position: absolute; top: 20%; left: 65%; font-weight: bold;">EAST PARK</div>
+                    
+                    <div style="position: absolute; top: 70%; left: 30%; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 3px solid #eab308; transform: translate(-50%, -50%);"></div>
+                    <div style="font-size: 10px; position: absolute; top: 75%; left: 25%; font-weight: bold;">SOUTH GATE</div>
+                </div>
+                <div style="font-size: 12px; color: #64748b; text-align: center;">Zone 1 Travel Map</div>
+            </div>`,
+            
+            // Content 3: German Translation & Advantages
+            `<div style="font-family: 'Inter', sans-serif; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; background: #ffffff; color: #1e1b4b;">
+                <div style="font-size: 14px; color: #ca8a04; font-weight: bold; letter-spacing: 2px;">NEUE TECHNOLOGIE</div>
+                <div style="font-size: 28px; font-weight: 900; color: #1e1b4b; margin: 5px 0;">HTML in Canvas</div>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 10px 0;">
+                    Wie cool ist es, dass diese Technologie automatische Übersetzungen ermöglicht und man mit dem Text interagieren kann? Stell dir vor, du musst den Inhalt nicht mehr manuell übersetzen, und er ist barrierefrei!
+                </p>
+                
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+                    <div style="font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 5px;">VORTEILE:</div>
+                    <ul style="font-size: 12px; color: #1e1b4b; padding-left: 20px; margin: 0; line-height: 1.5;">
+                        <li>Echte DOM-Interaktivität (Auswählen, Kopieren).</li>
+                        <li>Barrierefreiheit für Screenreader.</li>
+                        <li>Automatische Browser-Übersetzung.</li>
+                        <li>Perfekt für komplexe UI in 3D-Szenen.</li>
+                    </ul>
+                </div>
+                
+                <div style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 5px;">Zukunft des Webdesigns</div>
+            </div>`
+        ];
+
+        let currentContentIndex = 0;
+
+        function updateContent() {
+            uiElement.innerHTML = contents[currentContentIndex];
+            hdElement.innerHTML = contents[currentContentIndex];
+        }
+
+        document.getElementById('prev-content').addEventListener('click', () => {
+            currentContentIndex = (currentContentIndex - 1 + contents.length) % contents.length;
+            updateContent();
+        });
+
+        document.getElementById('next-content').addEventListener('click', () => {
+            currentContentIndex = (currentContentIndex + 1) % contents.length;
+            updateContent();
+        });
+
+        // --- Ticket Button Interactivity ---
+        window.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'book-tickets-btn') {
+                alert('this button is actually interactive!');
+            }
+        });
+
+        // --- Interaction State ---
+        let rotX = 0;
+        let rotY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let zoomScale = 1.0; // Added for model zoom
+
+        window.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Spectacles are always at the center of the screen
+            const dx = mouseX - canvas.width / 2;
+            const dy = mouseY - canvas.height / 2;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // Base radius at zoomScale = 1.0 is roughly 25% of the screen dimension
+            const baseRadius = Math.min(canvas.width, canvas.height) * 0.25;
+            const radius = baseRadius * zoomScale;
+            
+            if (dist < radius) {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - lastMouseX;
+            const deltaY = e.clientY - lastMouseY;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+
+            rotY += deltaX * 0.01;
+            rotX += deltaY * 0.01;
+            rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Add wheel listener for model zoom
+        window.addEventListener('wheel', (e) => {
+            zoomScale -= e.deltaY * 0.001;
+            zoomScale = Math.max(0.5, Math.min(3.0, zoomScale)); // Clamp zoom
+        });
+
+        // --- Render Loop ---
+        loadSpectacles().then((model) => {
+            let lastTime = 0;
+
+            function render(time) {
+                const now = time * 0.001;
+                const deltaTime = now - lastTime;
+                lastTime = now;
+
+                if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                    canvas.width = canvas.clientWidth;
+                    canvas.height = canvas.clientHeight;
+                    gl.viewport(0, 0, canvas.width, canvas.height);
+                }
+
+                gl.clearColor(0.05, 0.05, 0.1, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.enable(gl.DEPTH_TEST);
+
+                const projection = mat4.create();
+                mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100.0);
+
+                const view = mat4.create();
+                const camPos = [0, 0, 5];
+                mat4.lookAt(view, camPos, [0, 0, 0], [0, 1, 0]);
+
+                // --- Draw UI ---
+                gl.useProgram(unlitProgram);
+                if (gl.texElementImage2D) {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+                    
+                    gl.bindTexture(gl.TEXTURE_2D, hdTexture);
+                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, hdElement);
+                }
+
+                const uiModel = mat4.create();
+                // Position UI in 3D space (Corner, Tilted)
+                mat4.translate(uiModel, uiModel, [-2.5, 0.5, -4]); 
+                mat4.rotateY(uiModel, uiModel, 35 * Math.PI / 180); // Tilt
+                mat4.scale(uiModel, uiModel, [2.4, 3.6, 1]);
+
+                const inverseUiModel = mat4.create();
+                mat4.invert(inverseUiModel, uiModel);
+
+                gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projection);
+                gl.uniformMatrix4fv(unlitUniforms.uViewMatrix, false, view);
+                gl.uniformMatrix4fv(unlitUniforms.uModelMatrix, false, uiModel);
+                gl.uniform1i(unlitUniforms.uSampler, 0);
+
+                gl.bindVertexArray(uiVao);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+                // Sync DOM position
+                if (canvas.getElementTransform) {
+                    const width = uiElement.offsetWidth;
+                    const height = uiElement.offsetHeight;
+
+                    const toGLModel = new DOMMatrix()
+                        .scale(1 / width, -1 / height, 1)
+                        .translate(-width / 2, -height / 2);
+
+                    const toCSSViewport = new DOMMatrix()
+                        .translate(canvas.width / 2, canvas.height / 2)
+                        .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+                    const mvp = mat4.create();
+                    mat4.multiply(mvp, projection, view);
+                    mat4.multiply(mvp, mvp, uiModel);
+
+                    const finalTransform = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
+
+                    const transform = canvas.getElementTransform(uiElement, finalTransform);
+                    if (transform) {
+                        uiElement.style.transform = transform.toString();
+                    }
+                }
+
+                // --- Draw Spectacles ---
+                gl.useProgram(program);
+
+                const modelMat = mat4.create();
+                mat4.rotateY(modelMat, modelMat, rotY);
+                mat4.rotateX(modelMat, modelMat, rotX);
+                // The model is very small in the GLTF file, so we scale it up!
+                const baseScale = 15;
+                mat4.scale(modelMat, modelMat, [baseScale * zoomScale, baseScale * zoomScale, baseScale * zoomScale]); 
+
+                gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
+                gl.uniformMatrix4fv(uViewMatrix, false, view);
+                gl.uniformMatrix4fv(uModelMatrix, false, modelMat);
+                gl.uniform3fv(uCameraPos, camPos);
+
+                // Draw Frame
+                gl.uniform1i(uIsGlass, 0);
+                gl.bindVertexArray(model.frame.vao);
+                gl.drawElements(gl.TRIANGLES, model.frame.count, gl.UNSIGNED_SHORT, 0);
+
+                // Draw Glass (with blending)
+                gl.enable(gl.BLEND);
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                gl.uniform1i(uIsGlass, 1);
+                
+                // Bind HD Texture for vision support effect!
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, hdTexture);
+                gl.uniform1i(uTexture, 0);
+                
+                // Pass Inverse Chart Matrix
+                gl.uniformMatrix4fv(uInverseChartModelMatrix, false, inverseUiModel);
+                
+                gl.bindVertexArray(model.glass.vao);
+                gl.drawElements(gl.TRIANGLES, model.glass.count, gl.UNSIGNED_SHORT, 0);
+                gl.disable(gl.BLEND);
+
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+        });
+    </script>
+</body>
+
+</html>

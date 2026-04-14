@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Experimenting with CSS Shaders, filters, and backdrops applied to HTML content rendered inside a canvas using the layoutsubtree API.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, CSS Shaders, WebGL Filters, Backdrop Filter">
+    <title>CSS Shaders & Filters (HTML-in-Canvas)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+</head>
+
+<body>
+  <style>
+    body {
+      margin: 40px;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
+      font-family: system-ui, sans-serif;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+    }
+
+    canvas {
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: 12px;
+      background: var(--md-sys-color-surface-container);
+      width: 638px;
+      height: 318px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .controls {
+      background: var(--md-sys-color-surface-container);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      min-width: 320px;
+    }
+
+    .controls h3 {
+      margin-top: 0;
+      color: var(--md-sys-color-primary);
+      border-bottom: 2px solid var(--md-sys-color-outline-variant);
+      padding-bottom: 12px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .filter-option {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 16px;
+    }
+
+    .filter-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .slider-container {
+      margin-top: 12px;
+      display: none;
+      padding-left: 32px;
+    }
+
+    .slider-container.active {
+      display: block;
+    }
+
+    .value-display {
+      font-size: 0.85em;
+      color: var(--md-sys-color-on-surface-variant);
+      float: right;
+    }
+
+    /* Base style */
+    #draw_element {
+      color: var(--md-sys-color-on-surface);
+    }
+  </style>
+
+  <svg style="height: 0; width: 0; position: absolute;">
+    <defs>
+      <filter id="rain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.05 1.5" numOctaves="2" result="noise">
+          <animate attributeName="baseFrequency" dur="1s" values="0.05 1.5;0.05 1.6;0.05 1.5"
+            repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+      <filter id="wave">
+        <feTurbulence type="turbulence" baseFrequency="0.01 0.05" numOctaves="2" result="turbulence">
+          <animate attributeName="baseFrequency" dur="2s" values="0.01 0.05; 0.01 0.07; 0.01 0.05"
+            repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap id="wave-displacement" in="SourceGraphic" in2="turbulence" scale="10" xChannelSelector="R"
+          yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="main-layout">
+    <div>
+      <canvas id="canvas" width="638" height="318" layoutsubtree="true">
+        <div id="draw_element" style="width: 550px;">
+          Hello from <a href="https://github.com/WICG/html-in-canvas"
+            style="color: var(--md-sys-color-primary)">html-in-canvas</a>!
+          <br>I'm multi-line, <b>formatted</b>,
+          rotated text with emoji (&#128512;), RTL text
+          <span dir=rtl>من فارسی صحبت میکنم</span>,
+          vertical text,
+          <p style="writing-mode: vertical-rl;">
+            这是垂直文本
+          </p>
+          an inline image (<img width="60" src="../assets/flower.jpg" alt="flower">), and
+          <svg width="50" height="50">
+            <circle cx="25" cy="25" r="20" fill="var(--md-sys-color-primary)" />
+            <text x="25" y="30" font-size="15" text-anchor="middle" fill="var(--md-sys-color-on-primary)">
+              SVG
+            </text>
+          </svg>
+        </div>
+      </canvas>
+
+      <div id="not_draw_element" style="width: 550px; margin-top: 20px; color: var(--md-sys-color-on-background)">
+        Hello from <a href="https://github.com/WICG/html-in-canvas"
+          style="color: var(--md-sys-color-primary)">html-in-canvas</a>!
+        <br>I'm multi-line, <b>formatted</b>,
+        rotated text with emoji (&#128512;), RTL text
+        <span dir=rtl>من فارسی صحبت میکنم</span>,
+        vertical text,
+        <p style="writing-mode: vertical-rl;">
+          这是垂直文本
+        </p>
+        an inline image (<img width="60" src="../assets/flower.jpg" alt="flower">), and
+        <svg width="50" height="50">
+          <circle cx="25" cy="25" r="20" fill="var(--md-sys-color-primary)" />
+          <text x="25" y="30" font-size="15" text-anchor="middle" fill="var(--md-sys-color-on-primary)">
+            SVG
+          </text>
+        </svg>! (Live regular DOM element to compare active CSS filters)
+      </div>
+    </div>
+
+    <div class="controls">
+      <h3 id="filters">Filters</h3>
+      <br>
+      <div class="control-group">
+        <div class="filter-option" aria-labelledby="filters">
+          <label class="filter-header">
+            <md-radio name="filter" value="none" checked></md-radio> None
+          </label>
+        </div>
+
+        <div class="filter-option">
+          <label class="filter-header">
+            <md-radio name="filter" value="blur"></md-radio> Blur
+          </label>
+          <div class="slider-container" id="blur-controls">
+            <md-slider id="blur-slider" min="0" max="5" step="0.1" value="0" style="width: 100%"></md-slider>
+            <span class="value-display">0px</span>
+          </div>
+        </div>
+
+        <div class="filter-option">
+          <label class="filter-header">
+            <md-radio name="filter" value="rain"></md-radio> Rain
+          </label>
+          <div class="slider-container" id="rain-controls">
+            <small style="color: var(--md-sys-color-on-surface-variant);">Animated rain effect via SVG filters</small>
+          </div>
+        </div>
+
+        <div class="filter-option">
+          <label class="filter-header">
+            <md-radio name="filter" value="hue-rotate"></md-radio> Hue Rotate
+          </label>
+          <div class="slider-container" id="hue-controls">
+            <md-slider id="hue-slider" min="0" max="360" step="1" value="0" style="width: 100%"></md-slider>
+            <span class="value-display">0deg</span>
+          </div>
+        </div>
+
+        <div class="filter-option">
+          <label class="filter-header">
+            <md-radio name="filter" value="wave"></md-radio> Wave
+          </label>
+          <div class="slider-container" id="wave-controls">
+            <md-slider id="wave-slider" min="0" max="50" step="1" value="10" style="width: 100%"></md-slider>
+            <span class="value-display">10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const drawElement = document.getElementById('draw_element');
+    const notDrawElement = document.getElementById('not_draw_element');
+
+    // UI Elements
+    const radioButtons = document.querySelectorAll('md-radio');
+    const sliders = {
+      blur: { el: document.getElementById('blur-slider'), display: document.querySelector('#blur-controls .value-display') },
+      hue: { el: document.getElementById('hue-slider'), display: document.querySelector('#hue-controls .value-display') },
+      wave: { el: document.getElementById('wave-slider'), display: document.querySelector('#wave-controls .value-display') }
+    };
+
+    const sliderContainers = {
+      blur: document.getElementById('blur-controls'),
+      rain: document.getElementById('rain-controls'),
+      'hue-rotate': document.getElementById('hue-controls'),
+      wave: document.getElementById('wave-controls')
+    };
+
+    const waveDisplacement = document.getElementById('wave-displacement');
+
+    let currentFilter = 'none';
+
+    function updateFilters() {
+      let filterString = '';
+
+      if (currentFilter === 'blur') {
+        const val = sliders.blur.el.value || 0;
+        filterString = `blur(${val}px)`;
+        sliders.blur.display.textContent = `${val}px`;
+      } else if (currentFilter === 'rain') {
+        filterString = `url(#rain)`;
+      } else if (currentFilter === 'hue-rotate') {
+        const val = sliders.hue.el.value || 0;
+        filterString = `hue-rotate(${val}deg)`;
+        sliders.hue.display.textContent = `${val}deg`;
+      } else if (currentFilter === 'wave') {
+        filterString = `url(#wave)`;
+        const val = sliders.wave.el.value || 10;
+        waveDisplacement.scale.baseVal = val;
+        sliders.wave.display.textContent = val;
+      } else {
+        filterString = 'none';
+      }
+
+      drawElement.style.filter = filterString;
+      if (notDrawElement) {
+        notDrawElement.style.filter = filterString;
+      }
+    }
+
+    // Event Listeners for material radios
+    radioButtons.forEach(btn => {
+      btn.addEventListener('change', (e) => {
+        currentFilter = e.target.value;
+
+        Object.values(sliderContainers).forEach(el => {
+          if (el) el.classList.remove('active');
+        });
+        if (sliderContainers[currentFilter]) {
+          sliderContainers[currentFilter].classList.add('active');
+        }
+
+        updateFilters();
+      });
+    });
+
+    // Event Listeners for material sliders
+    Object.values(sliders).forEach(slider => {
+      slider.el.addEventListener('input', updateFilters);
+      slider.el.addEventListener('change', updateFilters);
+    });
+
+    // Track resizing boundaries
+    const observer = new ResizeObserver(([entry]) => {
+      const width = entry.devicePixelContentBoxSize[0].inlineSize;
+      const height = entry.devicePixelContentBoxSize[0].blockSize;
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+    });
+    observer.observe(canvas, { box: 'device-pixel-content-box' });
+
+    // Exclusively render on browser paint pipeline!
+    canvas.onpaint = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      try {
+        if (typeof ctx.reset === 'function') {
+          ctx.reset();
+        } else {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+        ctx.rotate((15 * Math.PI) / 180);
+        ctx.translate(80 * window.devicePixelRatio, -20 * window.devicePixelRatio);
+
+        let transform = ctx.drawElementImage(drawElement, 0, 0);
+        if (transform) {
+          const transformStr = transform.toString();
+          if (transformStr !== drawElement.dataset.lastTransform) {
+            drawElement.style.transform = transformStr;
+            drawElement.dataset.lastTransform = transformStr;
+          }
+        }
+      } catch (e) {
+        console.warn("Skipping cached frame");
+      }
+    };
+
+    // Initial UI state setup
+    updateFilters();
+
+  </script>
+</body>
+
+</html>

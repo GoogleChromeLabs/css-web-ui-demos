@@ -1,0 +1,16 @@
+{
+  "name": "html-in-canvas",
+  "version": "1.0.0",
+  "description": "HTML-in-Canvas Demos",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "gcloud storage rsync --recursive --delete-unmatched-destination-objects public gs://chrome-dev-demos/public/html-in-canvas"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/GoogleChromeLabs/css-web-ui-demos.git"
+  },
+  "author": "Google LLC",
+  "license": "Apache-2.0"
+}

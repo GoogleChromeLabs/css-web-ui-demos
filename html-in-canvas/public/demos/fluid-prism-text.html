@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Dynamic fluid prism shader effect applied to HTML text using the HTML-in-Canvas API. Shows how to combine custom WebGL shaders with DOM content.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL Shader, Prism Effect, Fluid Simulation">
+    <title>Fluid Prism (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        ::selection {
+            color: black;
+            background-color: yellow;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: none;
+        }
+
+        #text-source {
+            width: 800px;
+            padding: 40px;
+            font-size: 32px;
+            line-height: 1.25;
+            /* Denser line height */
+            text-align: justify;
+            color: var(--md-sys-color-on-background);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #text-source b {
+            color: var(--md-sys-color-primary);
+        }
+
+        .debug-overlay {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            pointer-events: none;
+            color: var(--md-sys-color-on-surface-variant);
+            opacity: 0.6;
+            font-size: 13px;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="debug-overlay">
+        HTML-in-Canvas: Experimental WebGL Shader Demo<br>
+        Effect: Fluid Prism Metal &bull; Material Design System
+    </div>
+
+    <canvas id="gl-canvas" layoutsubtree>
+        <div id="text-source">
+            <b>Lorem ipsum</b> dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore
+            et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+            ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+            fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+            mollit anim id est laborum. <b>Experimental API:</b> rendering live HTML directly into a WebGL texture with
+            a custom displacement shader makes it possible to create immersive 3D text effects while maintaining
+            accessibility and SEO. Using the <b>layoutsubtree</b> attribute, we bridge the gap between high-performance
+            graphics and the flexible, familiar world of web layout. This block of text is continuous and dense to
+            showcase the prismatic distortion and fluidity across the entire surface.
+        </div>
+    </canvas>
+
+    <script id="vs" type="x-shader/x-vertex">#version 300 es
+        in vec2 a_position;
+        in vec2 a_texCoord;
+        out vec2 v_texCoord;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            v_texCoord = a_texCoord;
+        }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">#version 300 es
+        precision highp float;
+        uniform sampler2D u_image;
+        uniform vec2 u_mouse;
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform float u_hover;
+        in vec2 v_texCoord;
+        out vec4 outColor;
+
+        void main() {
+            vec2 uv = v_texCoord;
+            vec2 mouse_uv = u_mouse / u_resolution;
+            mouse_uv.y = 1.0 - mouse_uv.y;
+            
+            float dist = distance(uv, mouse_uv);
+            // More subtle strength and slightly faster falloff
+            float strength = u_hover * 0.08 * exp(-dist * 12.0);
+            
+            vec2 dir = normalize(uv - mouse_uv);
+            vec2 disp = dir * strength;
+            
+            // Subtle Chromatic Aberration
+            float r = texture(u_image, uv - disp * 1.1).r;
+            float g = texture(u_image, uv - disp * 1.0).g;
+            float b = texture(u_image, uv - disp * 0.9).b;
+            
+            vec3 color = vec3(r, g, b);
+            
+            // More subtle metallic shine
+            float shine = max(0.0, dot(dir, vec2(1.0, 1.0))) * strength * 2.0;
+            color += shine * vec3(0.7, 0.8, 1.0) * 0.5;
+            
+            // Very subtle flicker
+            color *= 1.0 + 0.02 * sin(u_time * 8.0 + uv.y * 80.0) * u_hover;
+
+            outColor = vec4(color, 1.0);
+        }
+    </script>
+
+    <script>
+        const canvas = document.getElementById('gl-canvas');
+        const gl = canvas.getContext('webgl2');
+
+        if (!gl) {
+            alert('WebGL 2.0 not supported. Please check browser flags.');
+        }
+
+        const textSource = document.getElementById('text-source');
+
+        // High-DPI Support: Scale the source element to its physical rendering resolution
+        const updateDPI = () => {
+            const dpr = window.devicePixelRatio || 1;
+            // Map the layout width to the physical width for 1:1 pixel rendering
+            const targetWidth = canvas.width || (800 * dpr);
+            const baseFontSize = 34; // Slightly larger for better clarity
+            const basePadding = 48;
+
+            textSource.style.width = targetWidth + 'px';
+            textSource.style.fontSize = (baseFontSize * (targetWidth / 800)) + 'px';
+            textSource.style.padding = (basePadding * (targetWidth / 800)) + 'px';
+        };
+        updateDPI();
+
+        // Shader Setup
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vsSource = document.getElementById('vs').text;
+        const fsSource = document.getElementById('fs').text;
+        const program = gl.createProgram();
+        gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+        gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        // Quad Setup
+        const positions = new Float32Array([
+            -1, -1, 1, -1, -1, 1,
+            -1, 1, 1, -1, 1, 1,
+        ]);
+        const texCoords = new Float32Array([
+            0, 0, 1, 0, 0, 1,
+            0, 1, 1, 0, 1, 1,
+        ]);
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+        const aPosition = gl.getAttribLocation(program, 'a_position');
+        gl.enableVertexAttribArray(aPosition);
+        gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+
+        const texCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
+        const aTexCoord = gl.getAttribLocation(program, 'a_texCoord');
+        gl.enableVertexAttribArray(aTexCoord);
+        gl.vertexAttribPointer(aTexCoord, 2, gl.FLOAT, false, 0, 0);
+
+        // Uniforms
+        const uImage = gl.getUniformLocation(program, 'u_image');
+        const uMouse = gl.getUniformLocation(program, 'u_mouse');
+        const uResolution = gl.getUniformLocation(program, 'u_resolution');
+        const uTime = gl.getUniformLocation(program, 'u_time');
+        const uHover = gl.getUniformLocation(program, 'u_hover');
+
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // Flip HTML texture to match WebGL coordinates
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        let mouseX = -1000, mouseY = -1000;
+        let hover = 0;
+        let targetHover = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.pageX;
+            mouseY = e.pageY;
+            targetHover = 1.0;
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            mouseX = e.touches[0].pageX;
+            mouseY = e.touches[0].pageY;
+            targetHover = 1.0;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            mouseX = e.touches[0].pageX;
+            mouseY = e.touches[0].pageY;
+        });
+
+        // Decay hover effect when not moving
+        let idleTimer;
+        window.addEventListener('mousemove', () => {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                targetHover = 0.0;
+            }, 500);
+        });
+
+        const resizeObserver = new ResizeObserver(([entry]) => {
+            const width = entry.devicePixelContentBoxSize[0].inlineSize;
+            const height = entry.devicePixelContentBoxSize[0].blockSize;
+            canvas.width = width;
+            canvas.height = height;
+            gl.viewport(0, 0, width, height);
+
+            // Recalculate DPI scaling on resize to ensure texture stays sharp
+            updateDPI();
+        });
+        resizeObserver.observe(canvas, { box: 'device-pixel-content-box' });
+
+        canvas.onpaint = (e) => {
+            // Update texture using the experimental API
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            // Chromium texElementImage2D implementation
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textSource);
+        };
+
+        function render(time) {
+            // Smooth hover transition
+            hover += (targetHover - hover) * 0.1;
+
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.useProgram(program);
+            gl.uniform2f(uResolution, canvas.clientWidth, canvas.clientHeight);
+            gl.uniform2f(uMouse, mouseX, mouseY);
+            gl.uniform1f(uTime, time * 0.001);
+            gl.uniform1f(uHover, hover);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            // Synchronize selection/hit-testing
+            const sx = canvas.clientWidth / textSource.offsetWidth;
+            const sy = canvas.clientHeight / textSource.offsetHeight;
+            const drawTransform = new DOMMatrix().scale(sx, sy);
+
+            // Deduplicate style updates to prevent redundant onpaint triggers
+            try {
+                const syncTransform = canvas.getElementTransform(textSource, drawTransform);
+                const transformStr = syncTransform.toString();
+                if (transformStr !== textSource.dataset.lastTransform) {
+                    textSource.style.transform = transformStr;
+                    textSource.dataset.lastTransform = transformStr;
+                }
+            } catch (e) {
+                // Ignore if not fully initialized
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+    </script>
+</body>
+
+</html>

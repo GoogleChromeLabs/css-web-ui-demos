@@ -1,0 +1,876 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive 3D Book experience using HTML-in-Canvas and Three.js. Features 15+ pages with smooth turning effects and PBR lighting.">
+    <title>The Chronicle of WebGL - Three.js Edition</title>
+    
+    <!-- We reuse the project's CSS and JS files where applicable -->
+    <link rel="stylesheet" href="../css/theme.css">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #ca8a04; /* Gold accent */
+            --gold-gradient: linear-gradient(135deg, #fef08a 0%, #ca8a04 100%);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Premium Glassmorphic UI */
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        .instruction {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Book Page DOM Styles - Must be 800x1200 for the texture mapping */
+        .book-page {
+            position: absolute;
+            width: 800px;
+            height: 1200px;
+            background-color: #fcfbf7; /* Off-white paper look */
+            color: #1e293b;
+            box-sizing: border-box;
+            padding: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            font-family: 'Georgia', serif; /* Classic book font */
+        }
+
+        /* Cover styles */
+        .book-page.cover {
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+            color: #fef08a;
+            align-items: center;
+            justify-content: center;
+            border: 25px solid #ca8a04;
+            padding: 60px;
+            text-align: center;
+        }
+
+        .cover-title {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.2;
+            color: #fef08a;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .cover-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .cover-author {
+            margin-top: auto;
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            color: #ca8a04;
+        }
+
+        /* Content styles */
+        .page-header {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .page-content {
+            font-size: 24px;
+            line-height: 1.8;
+            text-align: justify;
+            color: #334155;
+            flex-grow: 1;
+        }
+
+        .page-content p {
+            margin-bottom: 24px;
+            text-indent: 40px;
+        }
+
+        .page-content p:first-of-type {
+            text-indent: 0;
+        }
+
+        .page-content p:first-of-type::first-letter {
+            font-size: 64px;
+            font-weight: 700;
+            float: left;
+            line-height: 1;
+            padding-right: 12px;
+            color: #ca8a04;
+            font-family: 'Cinzel', 'Georgia', serif;
+        }
+
+        .page-number {
+            text-align: center;
+            font-size: 16px;
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        /* Chapter splash style */
+        .chapter-splash {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .chapter-number {
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #ca8a04;
+            margin-bottom: 20px;
+        }
+
+        .chapter-title {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 48px;
+            color: #0f172a;
+            margin-bottom: 40px;
+        }
+
+        /* Back cover */
+        .book-page.back-cover {
+            background: #1e1b4b;
+            color: #94a3b8;
+            justify-content: center;
+            align-items: center;
+            border: 25px solid #1e1b4b; /* Subtle border */
+        }
+
+        .barcode {
+            width: 150px;
+            height: 80px;
+            background: white;
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-family: monospace;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Highlight selection */
+        ::selection {
+            background-color: rgba(202, 138, 4, 0.2);
+            color: #0f172a;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <h1>The Chronicle</h1>
+        <div class="instruction">
+            Explore the pages of this 3D interactive book.<br><br>
+            Use <b>←</b> and <b>→</b> keys to flip pages.<br>
+            You can also drag or select text directly!
+        </div>
+        <div class="nav-buttons">
+            <button class="btn" id="prev-btn">◀ Previous</button>
+            <button class="btn" id="next-btn">Next ▶</button>
+        </div>
+    </div>
+
+    <!-- The Canvas must have the 'layoutsubtree' attribute for the HTML-in-Canvas system -->
+    <canvas id="gl-canvas" layoutsubtree>
+        
+        <!-- Paper Edge Texture Source -->
+        <div id="paper-edge" style="position: absolute; width: 100px; height: 1200px; background: repeating-linear-gradient(#fcfbf7, #fcfbf7 3px, #e2e8f0 5px); pointer-events: none;"></div>
+
+        <!-- ================= PAGE 0 (FRONT COVER) ================= -->
+        <div id="page-0" class="book-page cover">
+            <div class="cover-subtitle">A WebGL Experience</div>
+            <div class="cover-title">The Chronicle<br>of Light</div>
+            <div class="cover-author">Volume I</div>
+            <div style="margin-top: 40px; color: #ca8a04;">✧ ✦ ✧</div>
+        </div>
+
+        <!-- ================= PAGE 1 (INSIDE FRONT COVER) ================= -->
+        <div id="page-1" class="book-page">
+            <div style="margin: auto; text-align: center; font-style: italic; color: #64748b;">
+                This book is a demonstration of advanced HTML-in-Canvas techniques, rendering standard DOM elements as textures on 3D geometry with full interactivity.
+            </div>
+            <div class="page-number">ii</div>
+        </div>
+
+        <!-- ================= PAGE 2 (TITLE PAGE) ================= -->
+        <div id="page-2" class="book-page">
+            <div class="chapter-number">Book One</div>
+            <div class="chapter-title">The Awakening of Pixels</div>
+            <div class="page-content">
+                <p>In the beginning, the screen was dark. A silent grid of dormant potentials awaited the command to glow. It was an era of flat representations, where text was static and images were confined to their rigid bounding boxes.</p>
+                <p>Then came the instruction, the binding of shaders, and the allocation of buffers. The vertices aligned, forming the framework of a new reality. The pixels stirred, whispering in colors derived from algorithms.</p>
+            </div>
+            <div class="page-number">1</div>
+        </div>
+
+        <!-- ================= PAGE 3 ================= -->
+        <div id="page-3" class="book-page">
+            <div class="page-header">The Grid Emerges</div>
+            <div class="page-content">
+                <p>We watched as the Cartesian plane transformed. What was once a simple two-dimensional surface began to warp and curve under the influence of depth. The third dimension was not just simulated; it was forged in the fires of the GPU.</p>
+                <p>Each vertex held a secret: a position, a normal, a coordinate in the UV space. These values, passed through the vertex shader, determined the shape of things to come. The math was pure, but the result was art.</p>
+            </div>
+            <div class="page-number">2</div>
+        </div>
+
+        <!-- ================= PAGE 4 ================= -->
+        <div id="page-4" class="book-page">
+            <div class="page-header">The Texture of Reality</div>
+            <div class="page-content">
+                <p>But geometry alone is a skeletal thing. It requires skin, a surface to catch the light and tell a story. This is where the magic of the fragment shader revealed itself. We learned to map images onto complex meshes, stretching them like canvas over a frame.</p>
+                <p>Yet, the true breakthrough was not in mapping static images, but in rendering the living DOM itself. The text you read now is not a picture; it is live layout, styles, and interactivity, projected into the 3D space.</p>
+            </div>
+            <div class="page-number">3</div>
+        </div>
+
+        <!-- ================= PAGE 5 ================= -->
+        <div id="page-5" class="book-page">
+            <div class="page-header">The Interaction</div>
+            <div class="page-content">
+                <p>To touch the virtual is the ultimate goal. When you click, when you drag, the system must translate your intention from the flat glass of your screen into the deep coordinates of the scene.</p>
+                <p>Raycasting, intersection testing, inverse transforms—these are the spells we cast to make the illusion interactive. You are not just a spectator; you are a participant in this rendered world.</p>
+            </div>
+            <div class="page-number">4</div>
+        </div>
+
+        <!-- ================= PAGE 6 (CHAPTER 2) ================= -->
+        <div id="page-6" class="book-page chapter-splash">
+            <div class="chapter-number">Chapter II</div>
+            <div class="chapter-title">The Physics of Paper</div>
+            <div class="page-number">5</div>
+        </div>
+
+        <!-- ================= PAGE 7 ================= -->
+        <div id="page-7" class="book-page">
+            <div class="page-header">Simulating the Fold</div>
+            <div class="page-content">
+                <p>Consider the humble page. It seems simple until you attempt to recreate its behavior in code. It does not just rotate; it bends, it resists, it captures the air as it turns.</p>
+                <p>We used sine waves to simulate the sag, and exponential functions to concentrate the bend near the spine. The vertices must dance in perfect choreography to mimic the natural tension of paper under stress.</p>
+            </div>
+            <div class="page-number">6</div>
+        </div>
+
+        <!-- ================= PAGE 8 ================= -->
+        <div id="page-8" class="book-page">
+            <div class="page-header">Lighting the Curve</div>
+            <div class="page-content">
+                <p>Without light, there is no form. As the page turns, the normals must update dynamically. A point that was once facing the light source now turns away, falling into shadow.</p>
+                <p>We calculate the dot product of the normal and the light vector at every fragment. We add ambient light to keep the shadows from being absolute voids, and specular highlights to suggest the finish of the paper.</p>
+            </div>
+            <div class="page-number">7</div>
+        </div>
+
+        <!-- ================= PAGE 9 ================= -->
+        <div id="page-9" class="book-page">
+            <div class="page-header">The Spine Shadow</div>
+            <div class="page-content">
+                <p>A book is not just a collection of separate planes. It is a bound object. The center, the spine, is where the pages converge. This area naturally receives less light, creating a distinct gradient of shadow.</p>
+                <p>By calculating the distance of each fragment from the spine, we apply a darkening factor. This simple addition grounds the object, making it feel heavy and real rather than floating and synthetic.</p>
+            </div>
+            <div class="page-number">8</div>
+        </div>
+
+        <!-- ================= PAGE 10 ================= -->
+        <div id="page-10" class="book-page">
+            <div class="page-header">Optimization Secrets</div>
+            <div class="page-content">
+                <p>Rendering 15 pages simultaneously at high resolution would crush the performance of many devices. We must be clever. We do not update all textures every frame.</p>
+                <p>Only the pages that are currently visible or in the process of turning receive updates. The rest are cached. We leverage the power of the GPU to handle the heavy lifting of transformation, leaving the CPU free to handle layout.</p>
+            </div>
+            <div class="page-number">9</div>
+        </div>
+
+        <!-- ================= PAGE 11 (CHAPTER 3) ================= -->
+        <div id="page-11" class="book-page chapter-splash">
+            <div class="chapter-number">Chapter III</div>
+            <div class="chapter-title">The Future Unbound</div>
+            <div class="page-number">10</div>
+        </div>
+
+        <!-- ================= PAGE 12 ================= -->
+        <div id="page-12" class="book-page">
+            <div class="page-header">Beyond the Screen</div>
+            <div class="page-content">
+                <p>What we have built here is just a stepping stone. The techniques of mapping HTML to canvas are evolving. Soon, entire interfaces will be rendered this way, breaking free from the rectangle.</p>
+                <p>Imagine immersive environments where every surface is a live document, styled with standard CSS but responding to the physics of a virtual world. The line between UI and scene will blur completely.</p>
+            </div>
+            <div class="page-number">11</div>
+        </div>
+
+        <!-- ================= PAGE 13 ================= -->
+        <div id="page-13" class="book-page">
+            <div class="page-header">Conclusion</div>
+            <div class="page-content">
+                <p>And so, our brief journey through the digital manuscript concludes. We have seen pixels become pages, and code become art. The tools are in your hands to build the next chapter.</p>
+                <p>The grid is ready. The shaders are compiled. The interaction is yours to define. What will you create on the canvas of tomorrow?</p>
+            </div>
+            <div class="page-number">12</div>
+        </div>
+
+        <!-- ================= PAGE 14 (INSIDE BACK COVER) ================= -->
+        <div id="page-14" class="book-page">
+            <div style="margin: auto; text-align: center; color: #64748b;">
+                <div style="font-size: 24px; margin-bottom: 20px;">✧</div>
+                Thank you for exploring this demo.<br>
+                Built with passion for the web.
+            </div>
+            <div class="page-number">xiii</div>
+        </div>
+
+        <!-- ================= PAGE 15 (BACK COVER) ================= -->
+        <div id="page-15" class="book-page back-cover">
+            <div style="font-family: 'Cinzel', serif; font-size: 24px; color: #ca8a04; margin-bottom: 20px;">FINIS</div>
+            <div style="font-size: 14px; color: #64748b;">The Chronicle of Light</div>
+            <div class="barcode">
+                |||| | || ||| | ||
+            </div>
+        </div>
+
+    </canvas>
+
+    <!-- Import Map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@latest/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const PAGE_WIDTH = 2.0;
+        const PAGE_HEIGHT = 3.0;
+        const TOTAL_PAGES = 16;
+
+        const canvas = document.getElementById('gl-canvas');
+
+        // --- Three.js Setup ---
+        const renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: true,
+            alpha: true
+        });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = true;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 2, 7);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't go too far below ground
+
+        // --- Lighting ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+        hemiLight.position.set(0, 20, 0);
+        scene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 25;
+        dirLight.shadow.camera.left = -5;
+        dirLight.shadow.camera.right = 5;
+        dirLight.shadow.camera.top = 5;
+        dirLight.shadow.camera.bottom = -5;
+        dirLight.shadow.bias = -0.0005;
+        scene.add(dirLight);
+
+        // --- Texture Hijack Helper ---
+        const gl = renderer.getContext();
+
+        function createHijackedTexture(width, height) {
+            const texture = new THREE.Texture();
+            texture.format = THREE.RGBAFormat;
+            texture.type = THREE.UnsignedByteType;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
+
+            const webglTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+            renderer.properties.get(texture).__webglTexture = webglTexture;
+            return { texture, webglTexture };
+        }
+
+        function updateHijackedTexture(webglTexture, domId) {
+            if (!gl.texElementImage2D) return;
+            const element = document.getElementById(domId);
+            if (!element) return;
+
+            gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+        }
+
+        // --- Materials ---
+        // Custom Shader Material for page bending
+        const pageVertexShader = `
+            uniform float uTurnProgress;
+            uniform float uPageWidth;
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vWorldPos;
+
+            void main() {
+                vUv = uv;
+                float t = uTurnProgress;
+                float theta = t * 3.14159265;
+                vec3 pos = position;
+
+                float normalizedDist = pos.x / uPageWidth;
+                
+                // Bending logic
+                float sagAmount = -sin(theta) * uPageWidth * 0.15;
+                float sagProfile = pow(normalizedDist, 1.5); 
+                pos.z += sagAmount * sagProfile;
+
+                // Rotation around spine
+                float xRot = pos.x * cos(theta) - pos.z * sin(theta);
+                float zRot = pos.x * sin(theta) + pos.z * cos(theta);
+                pos.x = xRot;
+                pos.z = zRot;
+
+                vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
+                vWorldPos = worldPosition.xyz;
+
+                // Approximate normals
+                vec3 n = normal;
+                float nx = n.x * cos(theta) - n.z * sin(theta);
+                float nz = n.x * sin(theta) + n.z * cos(theta);
+                vNormal = mat3(modelMatrix) * vec3(nx, n.y, nz);
+
+                gl_Position = projectionMatrix * viewMatrix * worldPosition;
+            }
+        `;
+
+        const pageFragmentShader = `
+            uniform sampler2D uFrontTex;
+            uniform sampler2D uBackTex;
+            uniform float uTurnProgress;
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vWorldPos;
+
+            void main() {
+                vec2 uv = vUv;
+                vec4 texColor;
+                vec3 n = normalize(vNormal);
+
+                // Determine front or back facing
+                // In Three.js, we can check the sign of the normal relative to view direction
+                // or use a uniform. For simplicity in this custom shader, we use a simple check.
+                // Better yet, we can use two separate meshes or materials for front/back if needed,
+                // but let's try to keep it in one shader.
+                
+                // Approximate front/back based on turn progress
+                bool isFront = true;
+                if (uTurnProgress > 0.5) {
+                    isFront = false;
+                }
+
+                if (isFront) {
+                    texColor = texture2D(uFrontTex, uv);
+                } else {
+                    vec2 backUv = vec2(1.0 - uv.x, uv.y);
+                    texColor = texture2D(uBackTex, backUv);
+                    n = -n;
+                }
+
+                // Simple lighting
+                vec3 lightDir = normalize(vec3(0.5, 1.0, 0.5));
+                float diff = max(dot(n, lightDir), 0.3);
+                vec3 color = texColor.rgb * diff;
+
+                // Spine shadow
+                float distToSpine = isFront ? uv.x : (1.0 - uv.x);
+                float shadow = mix(0.5, 1.0, smoothstep(0.0, 0.2, distToSpine));
+                color *= shadow;
+
+                gl_FragColor = vec4(color, texColor.a);
+            }
+        `;
+
+        // --- Book Construction ---
+        const pageGeometry = new THREE.PlaneGeometry(PAGE_WIDTH, PAGE_HEIGHT, 50, 50);
+        // Shift geometry so spine is at x=0
+        pageGeometry.translate(PAGE_WIDTH / 2, 0, 0);
+
+        const pages = [];
+        const pageMeshes = [];
+
+        // Create paper edge texture
+        const { texture: paperEdgeTex, webglTexture: paperEdgeWebGL } = createHijackedTexture(100, 1200);
+
+        // Cover material (solid color for spine/edges in Three.js)
+        const coverMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1e1b4b,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+
+        const paperMaterial = new THREE.MeshStandardMaterial({
+            map: paperEdgeTex,
+            roughness: 0.9,
+            metalness: 0.0
+        });
+
+        for (let i = 0; i < TOTAL_PAGES / 2; i++) {
+            const frontId = `page-${i * 2}`;
+            const backId = `page-${i * 2 + 1}`;
+
+            const { texture: frontTex, webglTexture: frontGL } = createHijackedTexture(800, 1200);
+            const { texture: backTex, webglTexture: backGL } = createHijackedTexture(800, 1200);
+
+            const mat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uFrontTex: { value: frontTex },
+                    uBackTex: { value: backTex },
+                    uTurnProgress: { value: 0.0 },
+                    uPageWidth: { value: PAGE_WIDTH }
+                },
+                vertexShader: pageVertexShader,
+                fragmentShader: pageFragmentShader,
+                side: THREE.DoubleSide
+            });
+
+            const mesh = new THREE.Mesh(pageGeometry, mat);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            pages.push({
+                frontId,
+                backId,
+                frontGL,
+                backGL,
+                material: mat,
+                mesh: mesh,
+                progress: 0,
+                targetProgress: 0
+            });
+        }
+
+        // --- Solid Edges and Cover (Parallelepiped) ---
+        // We use standard Three.js meshes for the static parts
+        const maxThickness = 0.15;
+        
+        // Right Edge
+        const rightEdgeGeom = new THREE.PlaneGeometry(maxThickness, PAGE_HEIGHT);
+        rightEdgeGeom.rotateY(Math.PI / 2);
+        rightEdgeGeom.translate(PAGE_WIDTH, 0, -maxThickness / 2);
+        const rightEdgeMesh = new THREE.Mesh(rightEdgeGeom, paperMaterial);
+        scene.add(rightEdgeMesh);
+
+        // Left Edge (Spine)
+        const leftEdgeGeom = new THREE.PlaneGeometry(maxThickness, PAGE_HEIGHT);
+        leftEdgeGeom.rotateY(-Math.PI / 2);
+        leftEdgeGeom.translate(0, 0, -maxThickness / 2);
+        const leftEdgeMesh = new THREE.Mesh(leftEdgeGeom, coverMaterial);
+        scene.add(leftEdgeMesh);
+
+        // Top Edge
+        const topEdgeGeom = new THREE.PlaneGeometry(PAGE_WIDTH, maxThickness);
+        topEdgeGeom.rotateX(-Math.PI / 2);
+        topEdgeGeom.translate(PAGE_WIDTH / 2, PAGE_HEIGHT / 2, -maxThickness / 2);
+        const topEdgeMesh = new THREE.Mesh(topEdgeGeom, paperMaterial);
+        scene.add(topEdgeMesh);
+
+        // Bottom Edge
+        const botEdgeGeom = new THREE.PlaneGeometry(PAGE_WIDTH, maxThickness);
+        botEdgeGeom.rotateX(Math.PI / 2);
+        botEdgeGeom.translate(PAGE_WIDTH / 2, -PAGE_HEIGHT / 2, -maxThickness / 2);
+        const botEdgeMesh = new THREE.Mesh(botEdgeGeom, paperMaterial);
+        scene.add(botEdgeMesh);
+
+        // Back Cover
+        const backCoverGeom = new THREE.PlaneGeometry(PAGE_WIDTH * 2 + 0.1, PAGE_HEIGHT + 0.1);
+        backCoverGeom.translate(0, 0, -maxThickness - 0.01);
+        const backCoverMesh = new THREE.Mesh(backCoverGeom, coverMaterial);
+        scene.add(backCoverMesh);
+
+        // --- UI and Interaction ---
+        function getTurnablePage(direction) {
+            if (direction > 0) {
+                return pages.find(p => p.targetProgress === 0.0) || null;
+            } else {
+                const reversed = [...pages].reverse();
+                return reversed.find(p => p.targetProgress === 1.0) || null;
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight') {
+                let p = getTurnablePage(1);
+                if (p) { p.targetProgress = 1.0; p.progress = Math.max(0.01, p.progress); }
+            }
+            if (e.key === 'ArrowLeft') {
+                let p = getTurnablePage(-1);
+                if (p) { p.targetProgress = 0.0; p.progress = Math.min(0.99, p.progress); }
+            }
+        });
+
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        nextBtn.addEventListener('click', () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowRight' }));
+        });
+
+        prevBtn.addEventListener('click', () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowLeft' }));
+        });
+
+        // --- Render Loop ---
+        let lastTime = 0;
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            const dt = (time - lastTime) / 1000;
+            lastTime = time;
+
+            // Update page physics
+            for (let p of pages) {
+                if (p.progress !== p.targetProgress) {
+                    const speed = 1.0;
+                    if (p.progress < p.targetProgress) {
+                        p.progress = Math.min(p.targetProgress, p.progress + speed * dt);
+                    } else {
+                        p.progress = Math.max(p.targetProgress, p.progress - speed * dt);
+                    }
+                    p.material.uniforms.uTurnProgress.value = p.progress;
+                }
+
+                // Update textures
+                updateHijackedTexture(p.frontGL, p.frontId);
+                updateHijackedTexture(p.backGL, p.backId);
+            }
+
+            updateHijackedTexture(paperEdgeWebGL, 'paper-edge');
+
+            // Dynamic thickness update (scale edges based on page counts)
+            let numSheetsRight = 0;
+            for (let p of pages) {
+                if (p.progress <= 0.001) numSheetsRight++;
+            }
+            const currentThickness = maxThickness * (numSheetsRight / pages.length);
+            
+            // Adjust edges scale and position
+            rightEdgeMesh.scale.set(1, 1, currentThickness / maxThickness);
+            rightEdgeMesh.position.z = -currentThickness / 2 + maxThickness / 2;
+            
+            topEdgeMesh.scale.set(1, currentThickness / maxThickness, 1);
+            topEdgeMesh.position.z = -currentThickness / 2 + maxThickness / 2;
+            
+            botEdgeMesh.scale.set(1, currentThickness / maxThickness, 1);
+            botEdgeMesh.position.z = -currentThickness / 2 + maxThickness / 2;
+
+            // Z-Offset for stacked pages to avoid Z-fighting
+            for (let i = 0; i < pages.length; i++) {
+                const p = pages[i];
+                const t = p.progress;
+                const zRight = -i * 0.01;
+                const zLeft = -(pages.length - 1 - i) * 0.01;
+                const zOffset = (1.0 - t) * zRight + t * zLeft;
+                p.mesh.position.z = zOffset;
+            }
+
+            // --- HTML-in-Canvas DOM Sync ---
+            if (canvas.getElementTransform) {
+                const toGLModel = new DOMMatrix()
+                    .scale(PAGE_WIDTH / 800, -PAGE_HEIGHT / 1200, 1)
+                    .translate(0, -1200 / 2);
+
+                const toCSSViewport = new DOMMatrix()
+                    .translate(canvas.width / 2, canvas.height / 2)
+                    .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+                for (let i = 0; i < pages.length; i++) {
+                    const p = pages[i];
+                    const t = p.progress;
+
+                    // Calculate flat transform for DOM elements (approximate position)
+                    const flatModelFront = new THREE.Matrix4();
+                    flatModelFront.makeTranslation(0, 0, p.mesh.position.z);
+                    flatModelFront.multiply(new THREE.Matrix4().makeRotationY(-t * Math.PI));
+
+                    const flatModelBack = new THREE.Matrix4();
+                    flatModelBack.makeTranslation(0, 0, p.mesh.position.z);
+                    flatModelBack.multiply(new THREE.Matrix4().makeRotationY(-t * Math.PI));
+                    flatModelBack.multiply(new THREE.Matrix4().makeTranslation(PAGE_WIDTH, 0, 0));
+                    flatModelBack.multiply(new THREE.Matrix4().makeScale(-1, 1, 1));
+
+                    // Front Page DOM
+                    const mvpFront = new THREE.Matrix4();
+                    mvpFront.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                    mvpFront.multiply(flatModelFront);
+
+                    const frontEl = document.getElementById(p.frontId);
+                    if (frontEl) {
+                        const finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront.elements))).multiply(toGLModel);
+                        const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
+                        if (tFront) frontEl.style.transform = tFront.toString();
+                        frontEl.style.zIndex = Math.round((p.mesh.position.z + 1.0) * 10000);
+                        frontEl.style.pointerEvents = (t < 0.5) ? 'auto' : 'none';
+                    }
+
+                    // Back Page DOM
+                    const mvpBack = new THREE.Matrix4();
+                    mvpBack.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                    mvpBack.multiply(flatModelBack);
+
+                    const backEl = document.getElementById(p.backId);
+                    if (backEl) {
+                        const finalTransformBack = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpBack.elements))).multiply(toGLModel);
+                        const tBack = canvas.getElementTransform(backEl, finalTransformBack);
+                        if (tBack) backEl.style.transform = tBack.toString();
+                        backEl.style.zIndex = Math.round((p.mesh.position.z + 1.0) * 10000);
+                        backEl.style.pointerEvents = (t > 0.5) ? 'auto' : 'none';
+                    }
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start loop
+        requestAnimationFrame(animate);
+    </script>
+</body>
+
+</html>

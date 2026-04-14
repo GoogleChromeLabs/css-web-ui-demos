@@ -1,0 +1,129 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Native HTML text input fields rendered inside a canvas using the layoutsubtree API. Demonstrates full interactivity and accessibility for form elements.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, Text Input, Form, Accessibility, Interactivity">
+    <title>Native Text Input (HTML-in-Canvas)</title>
+<link rel="stylesheet" href="../css/theme.css">
+<script type="module" src="../js/material-web-bundle.js"></script>
+
+<style>
+  body {
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: system-ui, sans-serif;
+  }
+
+  canvas {
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 12px;
+    width: 638px;
+    height: 600px;
+    background-color: var(--md-sys-color-surface-container);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  #draw_element {
+    padding: 20px;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  form p {
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  fieldset {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  legend {
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+    padding: 0 8px;
+    font-size: 1.1em;
+  }
+</style>
+
+<canvas id="canvas" width="638" height="600" layoutsubtree="true">
+  <div id="draw_element" style="width: 578px">
+    <form id="demo-form" action="#" method="get" onsubmit="event.preventDefault(); alert('Spaceship Launched!')">
+      <fieldset>
+        <legend>🚀 Spaceship Control Panel</legend>
+        <p>
+          <md-outlined-text-field label="Ship Name" id="shipName" value="The 'Canvas' Voyager"
+            style="width: 100%"></md-outlined-text-field>
+        </p>
+        <p>
+          <md-checkbox id="hyperdrive" checked></md-checkbox>
+          <label for="hyperdrive">Engage Hyperdrive</label>
+        </p>
+        <fieldset>
+          <legend>Target System</legend>
+          <p>
+            <md-radio id="alpha" name="system" value="alpha" checked></md-radio>
+            <label for="alpha">Alpha Centauri</label>
+          </p>
+          <p>
+            <md-radio id="beta" name="system" value="beta"></md-radio>
+            <label for="beta">Betelgeuse</label>
+          </p>
+        </fieldset>
+        <p style="flex-direction: column; align-items: flex-start;">
+          <label for="shieldLevel" style="font-weight: 500;">Shield Strength:</label>
+          <md-slider id="shieldLevel" min="0" max="100" value="75" style="width: 100%"></md-slider>
+        </p>
+        <p style="justify-content: flex-end; margin: 0;">
+          <md-filled-button style="width: 100%" type="submit">Launch!</md-filled-button>
+        </p>
+      </fieldset>
+    </form>
+  </div>
+</canvas>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const draw_element = document.getElementById('draw_element');
+
+  let posX = 0;
+  let posY = 0;
+
+  const observer = new ResizeObserver(([entry]) => {
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+    posX = canvas.width / 25;
+    posY = canvas.height / 25;
+  });
+  // Track geometry bounds
+  observer.observe(canvas, { box: 'device-pixel-content-box' });
+
+  // Chrome layoutsubtree strictly demands drawElementImage is invoked within onpaint
+  canvas.onpaint = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    try {
+      let transform = ctx.drawElementImage(draw_element, posX, posY);
+      if (transform) {
+        draw_element.style.transform = transform.toString();
+      }
+    } catch (e) {
+      console.warn("Skipping frame: Paint record not ready yet");
+    }
+  };
+</script>

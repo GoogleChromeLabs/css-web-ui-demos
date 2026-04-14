@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Explore HTML-in-Canvas: an experimental API for rendering interactive, accessible DOM elements inside 2D/3D canvas via layoutsubtree.">
+    <meta name="keywords"
+        content="HTML in Canvas, layoutsubtree, WebGL, Three.js, Canvas, Accessibility, DOM in Canvas">
+    <title>HTML-in-Canvas WebGL Examples</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
+    <script type="module" src="js/material-web-bundle.js"></script>
+</head>
+
+<body>
+    <main id="main-nav">
+        <h1>HTML-in-Canvas WebGL Demos</h1>
+        <p>Explore the experimental HTML in Canvas API.</p>
+
+        <div class="container">
+            <br>
+            <h3>Immersive 3D Experiences</h3>
+            <div class="button-grid">
+                <md-filled-tonal-button has-icon="true" href="demos/billboard.html">
+                    <md-icon slot="icon">featured_play_list</md-icon>
+                    3D Interactive Billboard
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/webgl_animation_translate.html">
+                    <md-icon slot="icon">translate</md-icon>
+                    Tokyo 3D Labels (Translation)
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/webgl-book-example.html">
+                    <md-icon slot="icon">menu_book</md-icon>
+                    3D Interactive Book
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/webgl-book-curl.html">
+                    <md-icon slot="icon">auto_stories</md-icon>
+                    3D Book Corner Curl
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/webgl-deformable-page.html">
+                    <md-icon slot="icon">gesture</md-icon>
+                    Deformable HTML Page
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/webgl-dragon-example.html">
+                    <md-icon slot="icon">auto_fix_high</md-icon>
+                    Stanford Dragon (WebGL)
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/webgl-mammoth-example.html">
+                    <md-icon slot="icon">pets</md-icon>
+                    Woolly Mammoth PBR
+                </md-filled-tonal-button>
+                <md-filled-tonal-button has-icon="true" href="demos/spectacles-example.html">
+                    <md-icon slot="icon">eyeglasses_2</md-icon>
+                    Interactive Spectacles
+                </md-filled-tonal-button>
+            </div>
+
+            <br>
+            <h3>Core Capability Tests</h3>
+            <div class="button-grid">
+                <md-filled-button has-icon="true" href="demos/complex-text.html">
+                    <md-icon slot="icon">text_fields</md-icon>
+                    Complex Text Rendering
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/complex-text-css-shaders.html">
+                    <md-icon slot="icon">blur_on</md-icon>
+                    CSS Shaders & Filters
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/fluid-prism-text.html">
+                    <md-icon slot="icon">waves</md-icon>
+                    Fluid Prism Shader
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/d3-charts-example.html">
+                    <md-icon slot="icon">bar_chart</md-icon>
+                    D3 Data Visualization
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/text-input.html">
+                    <md-icon slot="icon">edit_note</md-icon>
+                    Native Text Input
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/typebeat.html">
+                    <md-icon slot="icon">album</md-icon>
+                    Typebeat (Canvas Layout)
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/webgl-physics-elements.html">
+                    <md-icon slot="icon">slow_motion_video</md-icon>
+                    Physics Interaction
+                </md-filled-button>
+                <md-filled-button has-icon="true" href="demos/webgl-physics-v2.html">
+                    <md-icon slot="icon">sports_soccer</md-icon>
+                    Physics Interaction v2
+                </md-filled-button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>Check the <a href="https://github.com/WICG/html-in-canvas">HTML-in-Canvas explainer</a> for more details
+        </p>
+    </footer>
+</body>
+
+</html>

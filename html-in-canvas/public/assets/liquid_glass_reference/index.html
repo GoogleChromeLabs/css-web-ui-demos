@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquid Glass Reference</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      padding: 40px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .demo-container {
+      margin-bottom: 60px;
+      border: 1px solid #333;
+      padding: 20px;
+      border-radius: 12px;
+      background: #1a1a1a;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      color: #ccc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Liquid Glass Reference</h1>
+  <p>Extracted from <a href="https://kube.io/blog/liquid-glass-css-svg/">kube.io</a></p>
+
+  <!-- SWITCH DEMO -->
+  <div class="demo-container">
+    <h2>Switch Demo</h2>
+    <!-- Extracted HTML from Switch Demo -->
+    <div
+      class="relative h-96 flex justify-center items-center rounded-xl -ml-[15px] w-[calc(100%+30px)] select-none text-black/5 dark:text-white/5 [--bg1:#f8fafc] [--bg2:#e7eeef] dark:[--bg1:#1b1b22] dark:[--bg2:#0f0f14] border border-black/10 dark:border-white/10 touch-pan-y touch-none contain-layout contain-style contain-paint [content-visibility:auto]"
+      style="background-image:linear-gradient(to right, currentColor 1px, transparent 1px),linear-gradient(to bottom, currentColor 1px, transparent 1px),radial-gradient(120% 100% at 10% 0%, var(--bg1), var(--bg2));background-size:24px 24px, 24px 24px, 100% 100%;background-position:12px 12px, 12px 12px, 0 0">
+      <div
+        style="display:inline-block;width:160px;height:67px;border-radius:33.5px;position:relative;cursor:pointer;background-color:rgba(59, 191, 78, 0.93333)">
+        <svg color-interpolation-filters="sRGB" style="display:none">
+          <defs>
+            <filter id="thumb-filter">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.2" result="blurred_source"></feGaussianBlur>
+              <!-- Note: References updated to local file path -->
+              <feImage href="displacement-map-z1p3yi.png" x="0" y="0" width="146" height="92" result="displacement_map">
+              </feImage>
+              <feDisplacementMap in="blurred_source" in2="displacement_map" scale="22.26064761799501"
+                xChannelSelector="R" yChannelSelector="G" result="displaced"></feDisplacementMap>
+              <feColorMatrix in="displaced" type="saturate" result="displaced_saturated" values="6"></feColorMatrix>
+              <feImage href="specular-map-z1p3yi.png" x="0" y="0" width="146" height="92" result="specular_layer">
+              </feImage>
+              <feComposite in="displaced_saturated" in2="specular_layer" operator="in" result="specular_saturated">
+              </feComposite>
+              <feComponentTransfer in="specular_layer" result="specular_faded">
+                <feFuncA type="linear" slope="0.5"></feFuncA>
+              </feComponentTransfer>
+              <feBlend in="specular_saturated" in2="displaced" mode="normal" result="withSaturation"></feBlend>
+              <feBlend in="specular_faded" in2="withSaturation" mode="normal"></feBlend>
+            </filter>
+          </defs>
+        </svg>
+        <div class="absolute"
+          style="height:92px;width:146px;margin-left:-21.95px;border-radius:46px;top:33.5px;backdrop-filter:url(#thumb-filter);background-color:rgba(255, 255, 255, 1);box-shadow:0 4px 22px rgba(0,0,0,0.1);transform:translateX(57.9px) translateY(-50%) scale(0.65)">
+        </div>
+      </div>
+      <label
+        class="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs bg-white/10 dark:bg-black/10 backdrop-blur px-2 py-1 rounded-md flex items-center gap-2 text-black/80 dark:text-white/80">
+        <input type="checkbox" class="accent-blue-600" checked> Force active
+      </label>
+    </div>
+  </div>
+
+  <!-- MUSIC PLAYER DEMO REFERENCE (Simplified Structure) -->
+  <div class="demo-container">
+    <h2>Music Player Demo (Reference)</h2>
+    <div class="relative h-[640px] max-h-[70vh] rounded-xl overflow-hidden bg-gray-900 border border-white/10">
+      <!-- Simplified content to show the filter usage -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+        <p>Music Player Content Placeholder</p>
+        <p>(The full HTML was too large to extract completely, but the filter logic is below)</p>
+      </div>
+
+      <!-- Navigation Bar with Refraction Effect -->
+      <div
+        class="absolute bottom-0 w-full h-20 bg-black/40 backdrop-blur-md border-t border-white/10 flex items-center justify-around">
+        <!-- Apply filter to this element or its background -->
+        <div class="w-full h-full absolute inset-0" style="backdrop-filter: url(#mixed-ui-search-filter);"></div>
+      </div>
+
+      <!-- Filter Definition -->
+      <svg color-interpolation-filters="sRGB" style="display:none">
+        <defs>
+          <filter id="mixed-ui-search-filter">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blurred_source" />
+            <feImage href="displacement-map-uihtky.png" x="0" y="0" width="320" height="42" result="displacement_map" />
+            <!-- Scale might be animated by JS in original -->
+            <feDisplacementMap in="blurred_source" in2="displacement_map" scale="82.9" xChannelSelector="R"
+              yChannelSelector="G" result="displaced" />
+          </filter>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+</body>
+
+</html>

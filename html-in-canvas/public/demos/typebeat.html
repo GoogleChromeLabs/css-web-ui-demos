@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TYPEBEAT by @alexanderchen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/theme.css">
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0b0b10;
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Roboto', 'Space Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            user-select: none;
+        }
+
+        #main-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0b0b10;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            max-width: 1400px;
+            width: 95vw;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        @media (min-width: 1000px) {
+            #app {
+                flex-direction: row;
+                align-items: start;
+                justify-content: center;
+                gap: 6rem;
+                padding: 2rem;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.5;
+            letter-spacing: 0.2rem;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        #pads {
+            display: grid;
+            grid-template-columns: repeat(4, 180px);
+            grid-template-rows: repeat(3, 180px);
+            gap: 10px;
+            width: 750px;
+            height: 560px;
+            margin: 0;
+            touch-action: none;
+            justify-content: center;
+            align-content: center;
+            grid-auto-flow: row;
+        }
+
+        .pad,
+        .step,
+        #sequencer,
+        .steps {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pad {
+            position: relative;
+            cursor: pointer;
+            height: 180px;
+            width: 180px;
+            grid-column: span 1;
+            grid-row: span 1;
+            overflow: hidden;
+        }
+
+        .pad-text {
+            position: absolute;
+            font-size: 11px;
+            font-family: 'Rubik', sans-serif;
+            text-align: left;
+            word-break: break-all;
+            width: 180px;
+            height: 180px;
+            opacity: 0.8;
+            pointer-events: none;
+            box-sizing: border-box;
+            padding: 2px;
+            text-transform: uppercase;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .pad-text span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            text-align: center;
+            line-height: 12px;
+            pointer-events: auto;
+            color: inherit !important;
+            /* Force inheritance from parent pad-text */
+        }
+
+        .pad-text span:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 1px;
+        }
+
+        #sequencer {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .seq-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: pre;
+            justify-content: center;
+        }
+
+        .label {
+            width: 100px;
+            font-size: 1rem;
+            opacity: 1.0;
+            text-transform: uppercase;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .steps {
+            display: flex;
+        }
+
+        .step {
+            cursor: pointer;
+            transition: opacity 0.1s;
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            text-align: center;
+            line-height: 22px;
+        }
+
+        .step.active:hover,
+        .step.inactive:hover {
+            background-color: var(--row-bg-color, rgba(255, 255, 255, 0.25)) !important;
+            color: var(--row-color, #fff) !important;
+            opacity: 1 !important;
+        }
+
+        .step.active {
+            color: var(--row-color, #fff) !important;
+            opacity: 1;
+        }
+
+        .step.inactive {
+            color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .step.playhead {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 0;
+            transition: none !important;
+        }
+
+        .step.active.playhead {
+            filter: brightness(1.5);
+        }
+
+        .step.inactive.playhead {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .step.bar-start {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .separator {
+            color: rgba(255, 255, 255, 0.2);
+            margin: 0 0.2rem;
+        }
+
+        #controls {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            margin-top: 2rem;
+            padding: 0.4rem 0;
+        }
+
+        .control-btn {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            text-transform: inherit;
+            letter-spacing: inherit;
+        }
+
+        .control-btn:hover {
+            opacity: 1;
+        }
+
+
+        @media (max-width: 999px) {
+            .label {
+                font-size: 0.75rem !important;
+                width: 75px !important;
+            }
+
+            body {
+                justify-content: flex-start !important;
+                padding-top: 0 !important;
+            }
+
+            #pads-wrapper {
+                width: 100vw !important;
+                overflow: hidden !important;
+                position: relative !important;
+                margin: 0 !important;
+                padding: 0 10px !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                justify-content: flex-start !important;
+                align-items: center !important;
+                flex-grow: 1 !important;
+            }
+
+            #app {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100vw !important;
+                overflow-x: hidden !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            #sequencer-section {
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+                width: 100% !important;
+                flex-shrink: 0 !important;
+            }
+
+            #sequencer {
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                margin-bottom: 0.5rem !important;
+                border-top: 1px solid #444 !important;
+                padding-top: 0.5rem !important;
+            }
+
+            #controls {
+                background-color: #000 !important;
+                padding: 0.8rem 1rem !important;
+                margin: 0 !important;
+                border-top: 1px solid #444 !important;
+                width: 100vw !important;
+                box-sizing: border-box !important;
+                flex-shrink: 0 !important;
+                position: relative !important;
+            }
+
+            .context-panels-wrapper {
+                position: absolute !important;
+                bottom: 100% !important;
+                left: 0 !important;
+                width: 100% !important;
+                background-color: #000 !important;
+                border-top: 1px solid #444 !important;
+                z-index: 10 !important;
+            }
+
+            #paste-container,
+            #help-container,
+            #status-message {
+                position: static !important;
+                width: 100% !important;
+                padding: 0.8rem 1rem !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            z-index: 100;
+            background-color: var(--md-sys-color-surface);
+        }
+
+        #help-container {
+            font-size: 0.75rem;
+            color: var(--md-sys-color-on-surface-variant);
+            max-width: 600px;
+            line-height: 1.6;
+            margin: 0 auto;
+            font-family: 'Roboto', sans-serif;
+            pointer-events: auto;
+        }
+
+        #help-container a {
+            color: var(--md-sys-color-primary);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="main-canvas" width="1400" height="900" layoutsubtree="true">
+        <div id="app">
+            <div id="pads-wrapper">
+                <div id="pads">
+                    <!-- Pads will be generated by JS -->
+                </div>
+            </div>
+
+            <div id="sequencer-section">
+                <div id="sequencer">
+                    <!-- Rows will be generated by JS -->
+                </div>
+
+                <div id="controls"
+                    style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center; margin-top: 1.5rem;">
+                    <md-filled-icon-button id="play-btn" toggle>
+                        <md-icon>play_arrow</md-icon>
+                        <md-icon slot="selected">pause</md-icon>
+                    </md-filled-icon-button>
+
+                    <md-icon-button id="clear-btn">
+                        <md-icon>restart_alt</md-icon>
+                    </md-icon-button>
+
+                    <div
+                        style="display: flex; flex-direction: row; align-items: center; gap: 0.2rem; background: var(--md-sys-color-surface-container-high); padding: 8px 16px; border-radius: 28px; min-width: 200px;">
+                        <span>BPM</span>
+                        <md-slider id="bpm-slider" min="20" max="300" value="120" step="1" labeled
+                            style="width: 100%;"></md-slider>
+                    </div>
+
+                    <div class="context-panels-wrapper"
+                        style="position: relative; flex-grow: 1; display: flex; align-items: flex-end; justify-content: center;">
+                        <div id="status-message"
+                            style="display: none; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--md-sys-color-primary); margin-top: 0.5rem; font-family: 'Roboto', sans-serif; position: absolute; bottom: 100%; background: var(--md-sys-color-surface-container-highest); padding: 8px 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); white-space: nowrap;">
+                            <md-icon style="font-size: 16px;">check</md-icon>
+                            <span id="status-text">Song copied to clipboard.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </canvas>
+
+    <footer>
+        <div id="help-container">
+            Refactored with <b>HTML-in-Canvas</b>. Original work & Tone.js audio by <a
+                href="https://x.com/alexanderchen" target="_blank">@alexanderchen</a>.
+            Press 0-9, -, = to play.
+        </div>
+    </footer>
+
+    <script type="module" src="../js/typebeat.js"></script>
+</body>
+
+</html>
