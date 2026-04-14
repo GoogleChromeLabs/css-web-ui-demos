@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Newtonian HTML v2 – Interactive WebGL Physics with alternating buttons and Google-colored balls. Elements fall, bounce, and tumble while remaining clickable.">
+    <title>Newtonian HTML v2 (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 320px;
+            pointer-events: none;
+            filter: grayscale(1) contrast(1.5);
+        }
+
+        .control-card {
+            background: var(--md-sys-color-surface-container-low);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: auto;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-card h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
+        }
+
+        /* Box buttons: black bg, white text — controlled via MD3 CSS tokens */
+        .physics-item {
+            position: absolute;
+            padding: 24px 40px;
+            cursor: pointer;
+            user-select: none;
+            min-width: 100px;
+            font-size: 1.5rem;
+
+            /* Default: black container, white label */
+            --md-filled-tonal-button-container-color: #000;
+            --md-filled-tonal-button-label-text-color: #fff;
+            --md-filled-tonal-button-with-icon-icon-color: #fff;
+            --md-filled-tonal-button-container-shape: 16px;
+
+            /* Kill the MD ripple/state-layer so it doesn't fog the color swap */
+            --md-filled-tonal-button-hover-state-layer-opacity: 0;
+            --md-filled-tonal-button-pressed-state-layer-opacity: 0.12;
+            --md-filled-tonal-button-pressed-container-color: #1a1a1a;
+        }
+
+        /* Hover: invert to white bg, black text, black outline */
+        .physics-item:is(:hover, :focus) {
+            --md-filled-tonal-button-container-color: #fff;
+            --md-filled-tonal-button-label-text-color: #000;
+            --md-filled-tonal-button-with-icon-icon-color: #000;
+            outline: 4px solid #000;
+            outline-offset: -4px;
+        }
+
+        /* Google-colored balls */
+        .ball {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .ball.google-blue {
+            background: #c8ddff;
+        }
+
+        .ball.google-red {
+            background: #f6c4bf;
+        }
+
+        .ball.google-yellow {
+            background: #fceec3;
+        }
+
+        .ball.google-green {
+            background: #aaf3d0;
+        }
+
+        /* Suppress shadow inside layoutsubtree */
+        canvas .physics-item,
+        canvas .ball {
+            box-shadow: none !important;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .simulation-bounds {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 72.4vh;
+            border-left: 1px dashed var(--md-sys-color-on-background);
+            border-right: 1px dashed var(--md-sys-color-on-background);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.15;
+        }
+    </style>
+</head>
+
+<body class="light-only">
+    <div class="simulation-bounds"></div>
+
+    <div class="ui-overlay">
+        <div class="control-card">
+            <h1>Newtonian HTML v2</h1>
+            <p style="font-size: 0.9rem; opacity: 0.8;">
+                Black buttons &amp; Google balls tumble together. Each click alternates between a text element and a
+                rolling ball.
+            </p>
+            <md-filled-button id="btn-spawn">
+                Spawn All
+                <md-icon slot="icon">restart_alt</md-icon>
+            </md-filled-button>
+            <md-filled-tonal-button id="btn-add">
+                Add (Button / Ball)
+                <md-icon slot="icon">add</md-icon>
+            </md-filled-tonal-button>
+            <p style="font-size: 0.8rem; opacity: 0.7;">Inspired by: <a
+                    href="https://www.instagram.com/p/DV_vqC8ih7D/">@ema_colombo</a></p>
+        </div>
+    </div>
+
+    <div class="hint">Click or drag the falling objects!</div>
+
+    <canvas id="gl-canvas" layoutsubtree>
+        <!-- Strictly alternating: button, ball, button, ball … -->
+        <md-filled-tonal-button class="physics-item">Once</md-filled-tonal-button>
+        <button class="ball google-blue" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Upon</md-filled-tonal-button>
+        <button class="ball google-red" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">A</md-filled-tonal-button>
+        <button class="ball google-yellow" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Time</md-filled-tonal-button>
+        <button class="ball google-green" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">There</md-filled-tonal-button>
+        <button class="ball google-blue" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Was</md-filled-tonal-button>
+        <button class="ball google-red" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">HTML-in-Canvas</md-filled-tonal-button>
+        <button class="ball google-yellow" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">It</md-filled-tonal-button>
+        <button class="ball google-green" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Was</md-filled-tonal-button>
+        <button class="ball google-blue" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Accessible</md-filled-tonal-button>
+        <button class="ball google-red" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Interactive</md-filled-tonal-button>
+        <button class="ball google-yellow" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">And</md-filled-tonal-button>
+        <button class="ball google-green" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Felt</md-filled-tonal-button>
+        <button class="ball google-blue" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">Like</md-filled-tonal-button>
+        <button class="ball google-red" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button class="physics-item">MAGIC 🪄</md-filled-tonal-button>
+        <button class="ball google-yellow" tabindex="-1"><md-ripple></md-ripple></button>
+    </canvas>
+
+    <script src="../js/gl-matrix.js"></script>
+    <script type="module">
+        import { setupPhysicsRendering } from './js/webgl-physics-v2.js';
+
+        const canvas = document.getElementById('gl-canvas');
+        const physics = setupPhysicsRendering(canvas, '.physics-item');
+
+        document.getElementById('btn-spawn').addEventListener('click', () => {
+            physics.spawn();
+        });
+
+        const GOOGLE_COLORS = ['google-blue', 'google-red', 'google-yellow', 'google-green'];
+        const BALL_LABELS = ['', '', '', '', '', '', '', '', '', '', '', '', ''];
+        const phrases = [
+            "MAGIC! 🪄", "amazing", "beautiful",
+            "remarkable", "epic", "awesome", "wild", "fun", "real",
+            "Why", "not", "try", "it", "yourself", "today"
+        ];
+
+        let addTurn = 0; // 0 = button, 1 = ball
+        let phraseIndex = 0;
+        let ballIndex = 0;
+
+        document.getElementById('btn-add').addEventListener('click', () => {
+            if (addTurn % 2 === 0) {
+                // Spawn a word button
+                const newEl = document.createElement('md-filled-tonal-button');
+                newEl.className = 'physics-item';
+                newEl.textContent = phraseIndex < phrases.length
+                    ? phrases[phraseIndex++]
+                    : `+${phraseIndex - phrases.length + 1}`;
+                canvas.appendChild(newEl);
+                setTimeout(() => physics.add(newEl, false), 60);
+            } else {
+                // Spawn a Google ball
+                const newEl = document.createElement('button');
+                const ripple = document.createElement('md-ripple');
+                ripple.unbounded = true;
+                newEl.appendChild(ripple);
+                const colorClass = GOOGLE_COLORS[ballIndex % GOOGLE_COLORS.length];
+                newEl.className = `ball ${colorClass}`;
+                newEl.tabIndex = -1;
+                ballIndex++;
+                canvas.appendChild(newEl);
+                setTimeout(() => physics.add(newEl, true), 60);
+            }
+            addTurn++;
+        });
+    </script>
+</body>
+
+</html>

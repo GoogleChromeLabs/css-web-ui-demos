@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive 3D Billboard demo using HTML-in-Canvas (layoutsubtree) and WebGL to render accessible DOM elements on a rotating 3D surface.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL, 3D Billboard, Accessibility, DOM in Canvas">
+    <title>3D Interactive Billboard (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        ::selection {
+            color: black;
+            background-color: yellow;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #8DB8F9;
+            color: var(--md-sys-color-on-background);
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        #gl-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #billboard-content {
+            width: 1024px;
+            height: 576px;
+            background-color: #0a0a0f;
+            color: #fff;
+            padding: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #scribble-container {
+            width: 100%;
+            height: 400px;
+            display: grid;
+            place-items: center;
+            position: relative;
+        }
+
+        .line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+
+        .is-animated .line {
+            animation-name: drawLine, fadeDown;
+            animation-duration: 4s, 4s;
+            animation-timing-function: linear, linear;
+            animation-fill-mode: forwards, forwards;
+        }
+
+        .line1 {
+            animation-delay: 0s, 3.6s;
+        }
+
+        .line2 {
+            animation-delay: 1.4s, 3.6s;
+        }
+
+        .line3 {
+            animation-delay: 1.85s, 3.6s;
+        }
+
+        .line4 {
+            animation-delay: 2.85s, 3.6s;
+        }
+
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes fadeDown {
+            0% {
+                opacity: 1;
+                translate: 0 0px;
+                filter: brightness(1) grayscale(0);
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                translate: 0 40px;
+                filter: brightness(2) grayscale(1);
+            }
+        }
+
+        .pen {
+            position: absolute;
+            top: -20px;
+            left: 20%;
+            transform: translateX(-50%);
+            offset-path: path("M50 189.848C51.3891 188.229 54.1743 185.437 57.5493 182.878C60.6378 180.537 64.3936 175.455 67.5593 171.825C69.9607 169.071 73.7195 167.287 75.9358 164.844C78.1522 162.401 80.6999 159.846 83.4956 158.209C86.5117 156.443 89.0764 155.183 95.2332 155.292C98.7001 155.352 98.6256 160.516 99.6727 163.312C100.829 166.398 103.735 168.432 105.142 170.991C106.562 173.573 107.002 176.571 108.744 179.252C111.342 183.251 119.79 180.313 122.586 178.802C125.291 177.339 128.167 176.125 131.078 174.613C134.218 172.983 137.241 172.634 141.196 172.282C144.546 171.983 149.094 171.001 156.633 170.422C170.08 169.388 180.059 170.533 183.989 170.882C197.924 172.12 200.763 169.382 203.559 168.097C204.574 167.631 205.627 166.956 206.72 166.141M206.72 166.141C209.606 163.988 212.769 160.854 216.232 157.986C220.5 154.451 224.259 153.327 227.408 151.348C230.939 149.128 232.65 147.275 233.117 145.882C234.083 143.006 228.911 138.364 226 136.5C222.652 134.357 219 133.309 216.232 131.321C213 129 209 126.445 204.746 126.445C200.769 126.445 197.538 129.104 194.505 131.321C191.512 133.508 190.083 136.783 188.914 139.694C187.375 143.526 189.134 147.952 190.533 150.747C192.098 153.873 196.324 158.171 200.299 161.567C202.75 163.66 204.751 164.99 206.72 166.141ZM206.72 166.141C207.933 166.85 209.134 167.491 210.421 168.202C213.844 170.092 216.818 172.858 221.003 174.599C225.386 176.424 227.987 178.205 233.795 180.533C236.126 181.234 237.766 181.702 239.274 182.051C240.091 182.17 245.551 184.198 246.5 183.5M237.5 182C239.119 182.23 248.216 183.091 251.724 184.955C254.583 186.474 263.754 187.056 275.897 184.044C281.509 182.652 286.148 181.709 292.074 180.316C303.871 177.544 308.261 174.728 311.637 173.797C314.551 172.865 317.336 171.706 319.776 170.544C320.833 170.073 321.524 169.842 322.236 169.605C329.615 169.605 382.166 176.352 387.649 176.942C393.332 177.554 401.265 177.986 409.854 178.108C414.144 178.169 417.32 176.366 420.695 175.434C423.719 174.599 426.394 172.415 431.507 167.77C434.446 165.1 438.722 163.118 441.755 160.2C445.025 157.054 448.739 154.259 450.246 154.026C451.053 153.9 451.984 154.252 452.689 154.717C455.454 156.537 456.647 160.06 458.511 163.435C460.183 166.463 462.232 169.135 464.211 171.815C466.111 174.389 484.876 174.035 494.809 171.372C498.036 170.507 497.371 165.672 498.3 161.945C500.052 154.908 513.175 169.372 517.834 171.815C522.888 174.465 528.769 175.654 540.723 176.244C547.616 176.827 552.279 176.366 554.021 175.553C554.841 175.201 555.532 174.97 557.64 174.035L591.684 176.698C597.907 176.698 610.116 176.698 622.694 176");
+            offset-distance: 0%;
+            offset-rotate: 0deg;
+        }
+
+        .is-animated .pen {
+            animation-name: movePenAlongPath, fadeOut;
+            animation-duration: 3s, 3s;
+            animation-timing-function: linear, linear;
+            animation-fill-mode: forwards, forwards;
+        }
+
+        @keyframes movePenAlongPath {
+            to {
+                offset-distance: 100%;
+            }
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .gemini1 {
+            transform-origin: 0;
+        }
+
+        .is-animated .gemini1 {
+            animation-name: move;
+            animation-duration: 1.2s;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        .gemini2 {
+            opacity: 0;
+            translate: 0px 40px;
+            transform-origin: 0;
+        }
+
+        .is-animated .gemini2 {
+            animation-name: appear, move;
+            animation-duration: 0.6s, 1.2s;
+            animation-delay: 0.2s, 0.2s;
+            animation-timing-function: linear, linear;
+            animation-fill-mode: forwards, forwards;
+        }
+
+        @keyframes move {
+            from {
+                scale: 1;
+            }
+
+            to {
+                scale: 0;
+            }
+        }
+
+        @keyframes appear {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .badge {
+            background: #4285f4;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 40px;
+            font-weight: 700;
+        }
+
+        p {
+            margin: 0;
+            font-size: 20px;
+            opacity: 0.8;
+            max-width: 650px;
+        }
+
+        .badge {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .debug-info {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: #fff;
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-family: inherit;
+            border: 2px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            z-index: 100;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="debug-info">
+        Interactive 3D Billboard<br>
+        HTMl-in-Canvas WebGL Content
+    </div>
+
+    <canvas id="gl-canvas" layoutsubtree>
+        <!-- Live Gemini Scribble Integrated via JS Refresh -->
+        <form id="billboard-content">
+            <div class="badge">Gemini Note Taking</div>
+
+            <div id="scribble-container" class="is-animated">
+                <figure>
+                    <!-- Main Scribble SVG -->
+                    <svg width="716" height="240" viewBox="0 0 716 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_243_198)">
+                            <mask id="mask0_243_198" style="mask-type: alpha" maskUnits="userSpaceOnUse" x="558" y="-6"
+                                width="215" height="215">
+                                <rect x="558" y="70.3893" width="157.565" height="157.565"
+                                    transform="rotate(-29 558 70.3893)" fill="#D9D9D9" />
+                            </mask>
+                            <path class="line1 line"
+                                d="M50 189.848C51.3891 188.229 54.1743 185.437 57.5493 182.878C60.6378 180.537 64.3936 175.455 67.5593 171.825C69.9607 169.071 73.7195 167.287 75.9358 164.844C78.1522 162.401 80.6999 159.846 83.4956 158.209C86.5117 156.443 89.0764 155.183 95.2332 155.292C98.7001 155.352 98.6256 160.516 99.6727 163.312C100.829 166.398 103.735 168.432 105.142 170.991C106.562 173.573 107.002 176.571 108.744 179.252C111.342 183.251 119.79 180.313 122.586 178.802C125.291 177.339 128.167 176.125 131.078 174.613C134.218 172.983 137.241 172.634 141.196 172.282C144.546 171.983 149.094 171.001 156.633 170.422C170.08 169.388 180.059 170.533 183.989 170.882C197.924 172.12 200.763 169.382 203.559 168.097C207.254 166.399 211.457 161.94 216.232 157.986C220.5 154.451 224.259 153.327 227.408 151.348C230.939 149.128 232.65 147.275 233.117 145.882C234.083 143.006 228.911 138.364 226 136.5C222.652 134.357 219 133.309 216.232 131.321C213 129 209 126.445 204.746 126.445C200.769 126.445 197.538 129.104 194.505 131.321C191.512 133.508 190.083 136.783 188.914 139.694C187.375 143.526 189.134 147.952 190.533 150.747C192.098 153.873 196.324 158.171 200.299 161.567C204.259 164.95 207.046 166.338 210.421 168.202C213.844 170.092 216.818 172.858 221.003 174.599C225.386 176.424 227.987 178.205 233.795 180.533C236.126 181.234 237.766 181.702 239.274 182.051C240.091 182.17 245.551 184.198 246.5 183.5"
+                                stroke="#298EF7" stroke-width="15" stroke-linecap="round" />
+                            <path class="line2 line"
+                                d="M237.5 182C239.119 182.23 248.216 183.091 251.724 184.955C254.583 186.474 263.754 187.056 275.897 184.044C281.509 182.652 286.148 181.709 292.074 180.316C303.871 177.544 308.262 174.728 311.637 173.797C314.551 172.865 317.336 171.706 319.776 170.544C320.833 170.073 321.524 169.842 322.236 169.605"
+                                stroke="url(#paint0_linear_243_198)" stroke-width="15" stroke-linecap="round" />
+                            <path class="line3 line"
+                                d="M358 175.431C365.378 175.431 382.166 176.352 387.649 176.942C393.332 177.554 401.265 177.986 409.854 178.108C414.144 178.169 417.32 176.366 420.695 175.434C423.719 174.599 426.394 172.415 431.507 167.77C434.446 165.1 438.722 163.118 441.755 160.2C445.025 157.054 448.739 154.259 450.246 154.026C451.053 153.9 451.984 154.252 452.689 154.717C455.454 156.537 456.647 160.06 458.511 163.435C460.183 166.463 462.232 169.135 464.211 171.815C466.111 174.389 484.876 174.035 494.809 171.372C498.036 170.507 497.371 165.672 498.3 161.945C500.052 154.908 513.175 169.372 517.834 171.815C522.888 174.465 528.769 175.654 540.723 176.244C547.616 176.827 552.279 176.366 554.021 175.553C554.841 175.201 555.532 174.97 557.64 174.035"
+                                stroke="url(#paint1_linear_243_198)" stroke-width="15" stroke-linecap="round" />
+                            <path class="line4 line"
+                                d="M585 176.698C585.23 176.698 585.461 176.698 591.684 176.698C597.907 176.698 610.116 176.698 622.694 176"
+                                stroke="#A88EEC" stroke-width="15" stroke-linecap="round" />
+                            <g clip-path="url(#clip1_243_198)" class="gemini gemini1">
+                                <path
+                                    d="M9 196H24C24 204.284 17.2843 211 9 211C0.715728 211 -6 204.284 -6 196C-6 187.716 0.715728 181 9 181V196ZM39 181C47.2843 181 54 187.716 54 196C54 204.284 47.2843 211 39 211C30.7157 211 24 204.284 24 196H39V181ZM24 166C24 174.284 30.7157 181 39 181C30.7157 181 24 187.716 24 196C24 187.716 17.2843 181 9 181C17.2843 181 24 174.284 24 166ZM9 151C17.2843 151 24 157.716 24 166H9V181C0.715728 181 -6 174.284 -6 166C-6 157.716 0.715728 151 9 151ZM39 151C47.2843 151 54 157.716 54 166C54 174.284 47.2843 181 39 181V166H24C24 157.716 30.7157 151 39 151Z"
+                                    fill="#298EF7" />
+                            </g>
+                            <g clip-path="url(#clip2_243_198)" class="gemini gemini2">
+                                <path
+                                    d="M18.5 163.5H29C29 169.299 24.299 174 18.5 174C12.701 174 8 169.299 8 163.5C8 157.701 12.701 153 18.5 153V163.5ZM39.5 153C45.299 153 50 157.701 50 163.5C50 169.299 45.299 174 39.5 174C33.701 174 29 169.299 29 163.5H39.5V153ZM29 142.5C29 148.299 33.701 153 39.5 153C33.701 153 29 157.701 29 163.5C29 157.701 24.299 153 18.5 153C24.299 153 29 148.299 29 142.5ZM18.5 132C24.299 132 29 136.701 29 142.5H18.5V153C12.701 153 8 148.299 8 142.5C8 136.701 12.701 132 18.5 132ZM39.5 132C45.299 132 50 136.701 50 142.5C50 148.299 45.299 153 39.5 153V142.5H29C29 136.701 33.701 132 39.5 132Z"
+                                    fill="#298EF7" />
+                            </g>
+                        </g>
+                        <defs>
+                            <linearGradient id="paint0_linear_243_198" x1="241.961" y1="177.903" x2="322.236"
+                                y2="177.903" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#298EF7" />
+                                <stop offset="1" stop-color="#5791F4" />
+                            </linearGradient>
+                            <linearGradient id="paint1_linear_243_198" x1="358" y1="166.055" x2="557.64" y2="166.055"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#6A90F2" />
+                                <stop offset="1" stop-color="#9E8DED" />
+                            </linearGradient>
+                            <clipPath id="clip0_243_198">
+                                <rect width="716" height="240" fill="white" />
+                            </clipPath>
+                            <clipPath id="clip1_243_198">
+                                <rect width="30" height="30" fill="white" transform="translate(9 166)" />
+                            </clipPath>
+                            <clipPath id="clip2_243_198">
+                                <rect width="20" height="20" fill="white" transform="translate(19 143)" />
+                            </clipPath>
+                        </defs>
+                    </svg>
+
+                    <!-- Pen SVG -->
+                    <svg class="pen" width="158" height="209" viewBox="0 0 158 209" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <mask id="mask0_245_163" style="mask-type: alpha" maskUnits="userSpaceOnUse" x="0" y="-6"
+                            width="215" height="215">
+                            <rect y="70.3893" width="157.565" height="157.565" transform="rotate(-29 0 70.3893)"
+                                fill="#D9D9D9" />
+                        </mask>
+                        <g mask="url(#mask0_245_163)" class="pen-body">
+                            <path
+                                d="M89.1852 163.574L97.3677 159.039L122.384 71.7972L109.666 68.1504L84.6496 155.392L89.1852 163.574ZM84.0668 181.424L70.5396 157.02L104.4 39.3545C104.965 37.6652 105.782 36.1489 106.852 34.8055C107.921 33.4621 109.222 32.366 110.753 31.5172C112.284 30.6684 113.927 30.1333 115.68 29.9118C117.434 29.6903 119.156 29.8619 120.845 30.4268L133.196 34.0893C134.928 34.5054 136.455 35.2854 137.777 36.4291C139.099 37.5729 140.158 38.8625 140.954 40.298C141.803 41.8292 142.349 43.4346 142.592 45.114C142.834 46.7934 142.7 48.5256 142.188 50.3106L108.471 167.897L84.0668 181.424ZM115.993 70.0854L109.666 68.1504L122.384 71.7972L115.993 70.0854Z"
+                                fill="#FDFDFE" />
+                        </g>
+                    </svg>
+                    <figcaption>Google Meet Scribble Effect</figcaption>
+                </figure>
+            </div>
+
+            <h1>Gemini Notes</h1>
+            <p>Real-time AI visualization.</p>
+        </form>
+    </canvas>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@latest/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+        const canvas = document.getElementById('gl-canvas');
+        const billboardContent = document.getElementById('billboard-content');
+
+        // Three.js Scene Setup (High Quality)
+        const renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: true,
+            alpha: true
+        });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setClearAlpha(0);
+        renderer.setClearColor(0x000000, 0);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // Adjust camera to look from closer and higher
+        camera.position.set(60, 20, 50);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        controls.target.set(0, 10, 0);
+        controls.update();
+
+        // 🎬 Camera Intro Animation Setup
+        let introStartTime = performance.now();
+        const introDuration = 2200; // ms
+
+        // Start (far cinematic position)
+        const camStartPos = new THREE.Vector3(80, 50, 140);
+
+        // End (your current composition)
+        const camEndPos = new THREE.Vector3(30, 14, 28);
+
+        // Target animation (important for OrbitControls sync)
+        const targetStart = new THREE.Vector3(0, 0, 0);
+        const targetEnd = new THREE.Vector3(0, 10, 0);
+
+        // Flag so it runs only once
+        let introFinished = false;
+
+        // Environment & Lighting (Enhanced for PBR)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const grid = new THREE.GridHelper(100, 20);
+        scene.add(grid);
+        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+        scene.add(hemisphereLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
+        directionalLight.position.set(20, 40, 20);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.top = 20;
+        directionalLight.shadow.camera.bottom = -20;
+        directionalLight.shadow.camera.left = -20;
+        directionalLight.shadow.camera.right = 20;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.bias = -0.0001;
+        scene.add(directionalLight);
+
+        // Ground to catch shadows
+        const groundGeom = new THREE.PlaneGeometry(100, 100);
+        const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+        const ground = new THREE.Mesh(groundGeom, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = 0;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Texture Setup
+        const billboardTexture = new THREE.Texture();
+        billboardTexture.format = THREE.RGBAFormat;
+        billboardTexture.type = THREE.UnsignedByteType;
+        billboardTexture.internalFormat = 'RGBA8';
+        billboardTexture.minFilter = THREE.LinearFilter;
+        billboardTexture.magFilter = THREE.LinearFilter;
+        billboardTexture.generateMipmaps = false;
+        billboardTexture.colorSpace = THREE.SRGBColorSpace;
+
+        // "Raw WebGL" Hijack: Initialize the texture manually to avoid the 'immutable' 
+        // texStorage2D path used by WebGL2-aware renderers like Three.js.
+        const gl = renderer.getContext();
+        const webglTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+
+        // Explicitly allocate storage with texImage2D (NOT texStorage2D)
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 576, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        // Map the raw GL texture to the Three.js texture object
+        renderer.properties.get(billboardTexture).__webglTexture = webglTexture;
+        renderer.properties.get(billboardTexture).__version = billboardTexture.version;
+
+        const screenMaterial = new THREE.MeshBasicMaterial({
+            map: billboardTexture,
+            transparent: false
+        });
+
+        // Load Billboard Model
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        let screenMesh = null;
+        let billboardBounds = null;
+
+        loader.load('./../assets/Billboard.glb', (gltf) => {
+            const model = gltf.scene;
+
+            model.rotation.y = 5.4;
+            scene.add(model);
+
+            // Enable only casting shadows for the model (prevent self-shadowing)
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = false;
+
+                    if (child.name.toLowerCase().includes('screen') || child.name.toLowerCase().includes('display')) {
+                        screenMesh = child;
+                        child.material = screenMaterial;
+
+                        // Compute bounds once
+                        child.geometry.computeBoundingBox();
+                        const box = child.geometry.boundingBox;
+                        billboardBounds = {
+                            width: box.max.x - box.min.x,
+                            height: box.max.y - box.min.y
+                        };
+                    }
+                }
+            });
+
+            // If no screen found by name, let's just make a plane for demonstration
+            if (!screenMesh) {
+                console.warn('Screen mesh not found in GLB. Falling back to custom plane.');
+                const fallbackGeom = new THREE.PlaneGeometry(6.9, 3);
+                screenMesh = new THREE.Mesh(fallbackGeom, screenMaterial);
+                screenMesh.position.set(0, 15, 0);
+                screenMesh.rotation.y = 0.69;
+                screenMesh.scale.set(2.67, 2.67, 2.67);
+                scene.add(screenMesh);
+
+                screenMesh.geometry.computeBoundingBox();
+                const box = screenMesh.geometry.boundingBox;
+                billboardBounds = {
+                    width: box.max.x - box.min.x,
+                    height: box.max.y - box.min.y
+                };
+            }
+        });
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener('resize', onWindowResize);
+
+        let lastRestartTime = performance.now();
+        const animationCycleDuration = 5500;
+
+        function restartAnimations() {
+            const container = document.getElementById('scribble-container');
+            if (container) {
+                container.classList.remove('is-animated');
+                container.offsetHeight; // force reflow
+                container.classList.add('is-animated');
+            }
+            lastRestartTime = performance.now();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+
+
+            // 🎬 Intro Camera Animation
+            if (!introFinished) {
+                const elapsed = performance.now() - introStartTime;
+                const t = Math.min(elapsed / introDuration, 1);
+
+                // Smooth cinematic easing (easeOutCubic)
+                const ease = 1 - Math.pow(1 - t, 3);
+
+                // Animate camera position
+                camera.position.lerpVectors(camStartPos, camEndPos, ease);
+
+                // Animate controls target
+                controls.target.lerpVectors(targetStart, targetEnd, ease);
+
+                controls.update();
+                camera.lookAt(controls.target);
+
+                if (t >= 1) {
+                    introFinished = true;
+                }
+            }
+
+            const currentTime = performance.now();
+            if (currentTime - lastRestartTime > animationCycleDuration) {
+                restartAnimations();
+            }
+
+            // 1. Update Texture from HTML Element (Every Frame)
+            const gl = renderer.getContext();
+            const textureProperties = renderer.properties.get(billboardTexture);
+
+            if (textureProperties && textureProperties.__webglTexture && gl.texElementImage2D) {
+                const webglTexture = textureProperties.__webglTexture;
+                gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+                try {
+                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, billboardContent);
+                } catch (err) {
+                    if (window.debugLogErr === undefined) {
+                        console.error('texElementImage2D failed:', err);
+                        window.debugLogErr = true;
+                    }
+                }
+            }
+
+            // 2. Interactivity Synchronization
+            if (canvas.getElementTransform && screenMesh) {
+                // Ensure camera and screen matrices are fresh before projection
+                camera.updateMatrixWorld();
+                camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+                screenMesh.updateMatrixWorld();
+
+                const viewportW = canvas.width;
+                const viewportH = canvas.height;
+
+                // Convert Three.js matrices (column-major) to DOMMatrix
+                const toDOM = (m) => new DOMMatrix(m.elements);
+
+                // Precise geometry bounds
+                const box = screenMesh.geometry.boundingBox;
+                const width = box.max.x - box.min.x;
+                const height = box.max.y - box.min.y;
+
+                // Local mapping: DOM (0,0) -> Mesh (min.x, max.y)
+                const localTransform = new DOMMatrix()
+                    .translate(box.min.x, box.max.y, 0)
+                    .scale(width / 1024, -height / 576, 1);
+
+                // Viewport * Projection * View * Model * Local
+                const mvp = new DOMMatrix()
+                    .translate(viewportW / 2, viewportH / 2)
+                    .scale(viewportW / 2, -viewportH / 2, 1)
+                    .multiply(toDOM(camera.projectionMatrix))
+                    .multiply(toDOM(camera.matrixWorldInverse))
+                    .multiply(toDOM(screenMesh.matrixWorld))
+                    .multiply(localTransform);
+
+                const syncT = canvas.getElementTransform(billboardContent, mvp);
+                if (syncT) {
+                    billboardContent.style.transformOrigin = '0 0';
+                    billboardContent.style.transform = syncT.toString();
+                    billboardContent.style.zIndex = 10;
+                    billboardContent.style.pointerEvents = 'auto';
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>

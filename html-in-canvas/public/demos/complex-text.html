@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+        content="High-quality complex text rendering using HTML-in-Canvas. Demonstrates how to handle layout and drawing of rich typography inside a canvas.">
+  <meta name="keywords" content="HTML in Canvas, layoutsubtree, Typography, Rendering, Canvas Text">
+  <title>Complex Text (HTML-in-Canvas)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+</head>
+<!-- class="light-only" -->
+
+<body>
+  <style>
+    canvas {
+      border: 1px solid blue;
+      width: 638px;
+      height: 318px;
+    }
+  </style>
+
+  <canvas id="canvas" width="638" height="318" layoutsubtree>
+    <div id="draw_element" style="width: 550px;">
+      Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
+      <br>I'm multi-line, <b>formatted</b>,
+      rotated text with emoji (&#128512;), RTL text
+      <span dir=rtl>من فارسی صحبت میکنم</span>,
+      vertical text,
+      <p style="writing-mode: vertical-rl;">
+        这是垂直文本
+      </p>
+      an inline image (<img width="60" src="../assets/flower.jpg" alt="A flower blooming">), and
+      <svg width="50" height="50">
+        <circle cx="25" cy="25" r="20" fill="green" />
+        <text x="25" y="30" font-size="15" text-anchor="middle" fill="#fff">
+          SVG
+        </text>
+      </svg>!
+    </div>
+  </canvas>
+
+  <script>
+    const ctx = document.getElementById('canvas').getContext('2d');
+    canvas.onpaint = () => {
+      const observer = new ResizeObserver(([entry]) => {
+        canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+        canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+
+        ctx.reset();
+        ctx.rotate((15 * Math.PI) / 180); // rotates the context 15 degrees 
+        ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio); //moves the context to the right a bit 
+        let transform = ctx.drawElementImage(draw_element, 0, 0);
+
+        draw_element.style.transform = transform.toString();
+      });
+      observer.observe(canvas, { box: 'device-pixel-content-box', fireOnEveryPaint: true });
+    }
+  </script>
+</body>
+
+</html>

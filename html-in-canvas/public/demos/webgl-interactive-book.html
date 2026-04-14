@@ -1,0 +1,1061 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive 3D Book experience using HTML-in-Canvas and WebGL. Features 15+ pages with smooth turning effects.">
+    <title>The Chronicle of WebGL - Interactive 3D Book</title>
+    
+    <!-- We reuse the project's CSS and JS files -->
+    <link rel="stylesheet" href="../css/theme.css">
+    <script src="../js/gl-matrix.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #ca8a04; /* Gold accent */
+            --gold-gradient: linear-gradient(135deg, #fef08a 0%, #ca8a04 100%);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Premium Glassmorphic UI */
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        .instruction {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Book Page DOM Styles - Must be 800x1200 for the WebGL math */
+        .book-page {
+            position: absolute;
+            width: 800px;
+            height: 1200px;
+            background-color: #fcfbf7; /* Off-white paper look */
+            color: #1e293b;
+            box-sizing: border-box;
+            padding: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            font-family: 'Georgia', serif; /* Classic book font */
+        }
+
+        /* Cover styles */
+        .book-page.cover {
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+            color: #fef08a;
+            align-items: center;
+            justify-content: center;
+            border: 25px solid #ca8a04;
+            padding: 60px;
+            text-align: center;
+        }
+
+        .cover-title {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.2;
+            color: #fef08a;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .cover-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .cover-author {
+            margin-top: auto;
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            color: #ca8a04;
+        }
+
+        /* Content styles */
+        .page-header {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .page-content {
+            font-size: 24px;
+            line-height: 1.8;
+            text-align: justify;
+            color: #334155;
+            flex-grow: 1;
+        }
+
+        .page-content p {
+            margin-bottom: 24px;
+            text-indent: 40px;
+        }
+
+        .page-content p:first-of-type {
+            text-indent: 0;
+        }
+
+        .page-content p:first-of-type::first-letter {
+            font-size: 64px;
+            font-weight: 700;
+            float: left;
+            line-height: 1;
+            padding-right: 12px;
+            color: #ca8a04;
+            font-family: 'Cinzel', 'Georgia', serif;
+        }
+
+        .page-number {
+            text-align: center;
+            font-size: 16px;
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        /* Chapter splash style */
+        .chapter-splash {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .chapter-number {
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #ca8a04;
+            margin-bottom: 20px;
+        }
+
+        .chapter-title {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 48px;
+            color: #0f172a;
+            margin-bottom: 40px;
+        }
+
+        /* Back cover */
+        .book-page.back-cover {
+            background: #1e1b4b;
+            color: #94a3b8;
+            justify-content: center;
+            align-items: center;
+            border: 25px solid #1e1b4b; /* Subtle border */
+        }
+
+        .barcode {
+            width: 150px;
+            height: 80px;
+            background: white;
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-family: monospace;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Highlight selection */
+        ::selection {
+            background-color: rgba(202, 138, 4, 0.2);
+            color: #0f172a;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <h1>The Chronicle</h1>
+        <div class="instruction">
+            Explore the pages of this 3D interactive book.<br><br>
+            Use <b>←</b> and <b>→</b> keys to flip pages.<br>
+            You can also drag or select text directly!
+        </div>
+        <div class="nav-buttons">
+            <button class="btn" id="prev-btn">◀ Previous</button>
+            <button class="btn" id="next-btn">Next ▶</button>
+        </div>
+    </div>
+
+    <!-- The Canvas must have the 'layoutsubtree' attribute for the HTML-in-Canvas system -->
+    <canvas id="gl-canvas" layoutsubtree>
+        
+        <!-- Paper Edge Texture Source -->
+        <div id="paper-edge" style="position: absolute; width: 100px; height: 1200px; background: repeating-linear-gradient(#fcfbf7, #fcfbf7 3px, #e2e8f0 5px); pointer-events: none;"></div>
+
+        <!-- ================= PAGE 0 (FRONT COVER) ================= -->
+        <div id="page-0" class="book-page cover">
+            <div class="cover-subtitle">A WebGL Experience</div>
+            <div class="cover-title">The Chronicle<br>of Light</div>
+            <div class="cover-author">Volume I</div>
+            <div style="margin-top: 40px; color: #ca8a04;">✧ ✦ ✧</div>
+        </div>
+
+        <!-- ================= PAGE 1 (INSIDE FRONT COVER) ================= -->
+        <div id="page-1" class="book-page">
+            <div style="margin: auto; text-align: center; font-style: italic; color: #64748b;">
+                This book is a demonstration of advanced HTML-in-Canvas techniques, rendering standard DOM elements as textures on 3D geometry with full interactivity.
+            </div>
+            <div class="page-number">ii</div>
+        </div>
+
+        <!-- ================= PAGE 2 (TITLE PAGE) ================= -->
+        <div id="page-2" class="book-page">
+            <div class="chapter-number">Book One</div>
+            <div class="chapter-title">The Awakening of Pixels</div>
+            <div class="page-content">
+                <p>In the beginning, the screen was dark. A silent grid of dormant potentials awaited the command to glow. It was an era of flat representations, where text was static and images were confined to their rigid bounding boxes.</p>
+                <p>Then came the instruction, the binding of shaders, and the allocation of buffers. The vertices aligned, forming the framework of a new reality. The pixels stirred, whispering in colors derived from algorithms.</p>
+            </div>
+            <div class="page-number">1</div>
+        </div>
+
+        <!-- ================= PAGE 3 ================= -->
+        <div id="page-3" class="book-page">
+            <div class="page-header">The Grid Emerges</div>
+            <div class="page-content">
+                <p>We watched as the Cartesian plane transformed. What was once a simple two-dimensional surface began to warp and curve under the influence of depth. The third dimension was not just simulated; it was forged in the fires of the GPU.</p>
+                <p>Each vertex held a secret: a position, a normal, a coordinate in the UV space. These values, passed through the vertex shader, determined the shape of things to come. The math was pure, but the result was art.</p>
+            </div>
+            <div class="page-number">2</div>
+        </div>
+
+        <!-- ================= PAGE 4 ================= -->
+        <div id="page-4" class="book-page">
+            <div class="page-header">The Texture of Reality</div>
+            <div class="page-content">
+                <p>But geometry alone is a skeletal thing. It requires skin, a surface to catch the light and tell a story. This is where the magic of the fragment shader revealed itself. We learned to map images onto complex meshes, stretching them like canvas over a frame.</p>
+                <p>Yet, the true breakthrough was not in mapping static images, but in rendering the living DOM itself. The text you read now is not a picture; it is live layout, styles, and interactivity, projected into the 3D space.</p>
+            </div>
+            <div class="page-number">3</div>
+        </div>
+
+        <!-- ================= PAGE 5 ================= -->
+        <div id="page-5" class="book-page">
+            <div class="page-header">The Interaction</div>
+            <div class="page-content">
+                <p>To touch the virtual is the ultimate goal. When you click, when you drag, the system must translate your intention from the flat glass of your screen into the deep coordinates of the scene.</p>
+                <p>Raycasting, intersection testing, inverse transforms—these are the spells we cast to make the illusion interactive. You are not just a spectator; you are a participant in this rendered world.</p>
+            </div>
+            <div class="page-number">4</div>
+        </div>
+
+        <!-- ================= PAGE 6 (CHAPTER 2) ================= -->
+        <div id="page-6" class="book-page chapter-splash">
+            <div class="chapter-number">Chapter II</div>
+            <div class="chapter-title">The Physics of Paper</div>
+            <div class="page-number">5</div>
+        </div>
+
+        <!-- ================= PAGE 7 ================= -->
+        <div id="page-7" class="book-page">
+            <div class="page-header">Simulating the Fold</div>
+            <div class="page-content">
+                <p>Consider the humble page. It seems simple until you attempt to recreate its behavior in code. It does not just rotate; it bends, it resists, it captures the air as it turns.</p>
+                <p>We used sine waves to simulate the sag, and exponential functions to concentrate the bend near the spine. The vertices must dance in perfect choreography to mimic the natural tension of paper under stress.</p>
+            </div>
+            <div class="page-number">6</div>
+        </div>
+
+        <!-- ================= PAGE 8 ================= -->
+        <div id="page-8" class="book-page">
+            <div class="page-header">Lighting the Curve</div>
+            <div class="page-content">
+                <p>Without light, there is no form. As the page turns, the normals must update dynamically. A point that was once facing the light source now turns away, falling into shadow.</p>
+                <p>We calculate the dot product of the normal and the light vector at every fragment. We add ambient light to keep the shadows from being absolute voids, and specular highlights to suggest the finish of the paper.</p>
+            </div>
+            <div class="page-number">7</div>
+        </div>
+
+        <!-- ================= PAGE 9 ================= -->
+        <div id="page-9" class="book-page">
+            <div class="page-header">The Spine Shadow</div>
+            <div class="page-content">
+                <p>A book is not just a collection of separate planes. It is a bound object. The center, the spine, is where the pages converge. This area naturally receives less light, creating a distinct gradient of shadow.</p>
+                <p>By calculating the distance of each fragment from the spine, we apply a darkening factor. This simple addition grounds the object, making it feel heavy and real rather than floating and synthetic.</p>
+            </div>
+            <div class="page-number">8</div>
+        </div>
+
+        <!-- ================= PAGE 10 ================= -->
+        <div id="page-10" class="book-page">
+            <div class="page-header">Optimization Secrets</div>
+            <div class="page-content">
+                <p>Rendering 15 pages simultaneously at high resolution would crush the performance of many devices. We must be clever. We do not update all textures every frame.</p>
+                <p>Only the pages that are currently visible or in the process of turning receive updates. The rest are cached. We leverage the power of the GPU to handle the heavy lifting of transformation, leaving the CPU free to handle layout.</p>
+            </div>
+            <div class="page-number">9</div>
+        </div>
+
+        <!-- ================= PAGE 11 (CHAPTER 3) ================= -->
+        <div id="page-11" class="book-page chapter-splash">
+            <div class="chapter-number">Chapter III</div>
+            <div class="chapter-title">The Future Unbound</div>
+            <div class="page-number">10</div>
+        </div>
+
+        <!-- ================= PAGE 12 ================= -->
+        <div id="page-12" class="book-page">
+            <div class="page-header">Beyond the Screen</div>
+            <div class="page-content">
+                <p>What we have built here is just a stepping stone. The techniques of mapping HTML to canvas are evolving. Soon, entire interfaces will be rendered this way, breaking free from the rectangle.</p>
+                <p>Imagine immersive environments where every surface is a live document, styled with standard CSS but responding to the physics of a virtual world. The line between UI and scene will blur completely.</p>
+            </div>
+            <div class="page-number">11</div>
+        </div>
+
+        <!-- ================= PAGE 13 ================= -->
+        <div id="page-13" class="book-page">
+            <div class="page-header">Conclusion</div>
+            <div class="page-content">
+                <p>And so, our brief journey through the digital manuscript concludes. We have seen pixels become pages, and code become art. The tools are in your hands to build the next chapter.</p>
+                <p>The grid is ready. The shaders are compiled. The interaction is yours to define. What will you create on the canvas of tomorrow?</p>
+            </div>
+            <div class="page-number">12</div>
+        </div>
+
+        <!-- ================= PAGE 14 (INSIDE BACK COVER) ================= -->
+        <div id="page-14" class="book-page">
+            <div style="margin: auto; text-align: center; color: #64748b;">
+                <div style="font-size: 24px; margin-bottom: 20px;">✧</div>
+                Thank you for exploring this demo.<br>
+                Built with passion for the web.
+            </div>
+            <div class="page-number">xiii</div>
+        </div>
+
+        <!-- ================= PAGE 15 (BACK COVER) ================= -->
+        <div id="page-15" class="book-page back-cover">
+            <div style="font-family: 'Cinzel', serif; font-size: 24px; color: #ca8a04; margin-bottom: 20px;">FINIS</div>
+            <div style="font-size: 14px; color: #64748b;">The Chronicle of Light</div>
+            <div class="barcode">
+                |||| | || ||| | ||
+            </div>
+        </div>
+
+    </canvas>
+
+    <script type="module">
+        // We embed the WebGL setup here to allow full customization of the interaction
+        // and to make the demo self-contained.
+
+        const PAGE_WIDTH = 2.0;
+        const PAGE_HEIGHT = 3.0;
+
+        function createPlane(width, height, segX, segY) {
+            const positions = [], normals = [], uvs = [], indices = [];
+            for (let y = 0; y <= segY; y++) {
+                for (let x = 0; x <= segX; x++) {
+                    const u = x / segX;
+                    const v = y / segY;
+                    positions.push(u * width, (v - 0.5) * height, 0);
+                    normals.push(0, 0, 1);
+                    uvs.push(u, 1.0 - v);
+                }
+            }
+            for (let y = 0; y < segY; y++) {
+                for (let x = 0; x < segX; x++) {
+                    const p1 = y * (segX + 1) + x;
+                    const p2 = p1 + 1;
+                    const p3 = (y + 1) * (segX + 1) + x;
+                    const p4 = p3 + 1;
+                    indices.push(p1, p2, p3);
+                    indices.push(p2, p4, p3);
+                }
+            }
+            return {
+                positions: new Float32Array(positions),
+                normals: new Float32Array(normals),
+                uvs: new Float32Array(uvs),
+                indices: new Uint16Array(indices)
+            };
+        }
+
+        function createPageTexture(gl) {
+            const tex = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            return tex;
+        }
+
+        function updatePageTextureFromDOM(gl, tex, domId) {
+            if (!gl.texElementImage2D) return;
+            const element = document.getElementById(domId);
+            if (!element) return;
+
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+        }
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vsSource = `#version 300 es
+        layout(location=0) in vec3 aPosition;
+        layout(location=1) in vec3 aNormal;
+        layout(location=2) in vec2 aTexCoord;
+
+        uniform mat4 uProjection;
+        uniform mat4 uView;
+        uniform mat4 uModel;
+
+        uniform float uTurnProgress;
+        uniform float uPageWidth;
+
+        out vec2 vTexCoord;
+        out vec3 vNormal;
+        out vec3 vWorldPos;
+
+        void main() {
+            float t = uTurnProgress;
+            float theta = t * 3.14159265;
+            vec3 pos = aPosition;
+
+            float normalizedDist = pos.x / uPageWidth;
+            
+            // Pages bow backwards when peeled (air resistance/tension)
+            float sagAmount = -sin(theta) * uPageWidth * 0.15;
+            float sagProfile = pow(normalizedDist, 1.5); 
+            pos.z += sagAmount * sagProfile;
+
+            // Rotate around spine
+            float xRot = pos.x * cos(theta) - pos.z * sin(theta);
+            float zRot = pos.x * sin(theta) + pos.z * cos(theta);
+            pos.x = xRot;
+            pos.z = zRot;
+
+            vec4 worldPos = uModel * vec4(pos, 1.0);
+            gl_Position = uProjection * uView * worldPos;
+
+            // Approximate normals for lighting
+            vec3 n = aNormal;
+            float nx = n.x * cos(theta) - n.z * sin(theta);
+            float nz = n.x * sin(theta) + n.z * cos(theta);
+            vNormal = mat3(uModel) * vec3(nx, n.y, nz);
+            
+            vWorldPos = worldPos.xyz;
+            vTexCoord = aTexCoord;
+        }`;
+
+        const fsSource = `#version 300 es
+        precision highp float;
+
+        in vec2 vTexCoord;
+        in vec3 vNormal;
+        in vec3 vWorldPos;
+
+        uniform sampler2D uFrontTex;
+        uniform sampler2D uBackTex;
+
+        out vec4 fragColor;
+
+        void main() {
+            vec2 texCoord = vTexCoord;
+            vec4 texColor;
+            vec3 n = normalize(vNormal);
+
+            if (gl_FrontFacing) {
+                texColor = texture(uFrontTex, texCoord);
+            } else {
+                texCoord.x = 1.0 - texCoord.x;
+                texColor = texture(uBackTex, texCoord);
+                n = -n;
+            }
+
+            vec3 lightDir = normalize(vec3(0.4, 0.8, 0.8)); // angled lit
+            float diff = max(dot(n, lightDir), 0.3); 
+            vec3 color = texColor.rgb * diff;
+            
+            // Spine shadow gradient
+            float distToSpine = gl_FrontFacing ? vTexCoord.x : (1.0 - vTexCoord.x);
+            float shadow = mix(0.4, 1.0, smoothstep(0.0, 0.2, distToSpine));
+            color *= shadow;
+
+            fragColor = vec4(color, texColor.a);
+        }`;
+
+        function setupBookRendering(canvas, numTotalPages = 6) {
+            const gl = canvas.getContext('webgl2', { antialias: true });
+            if (!gl) { alert('WebGL2 not supported'); throw new Error('WebGL2 not supported'); }
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            });
+            window.dispatchEvent(new Event('resize'));
+
+            const program = gl.createProgram();
+            gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+            gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+            gl.linkProgram(program);
+
+            const uniforms = {
+                uProjection: gl.getUniformLocation(program, 'uProjection'),
+                uView: gl.getUniformLocation(program, 'uView'),
+                uModel: gl.getUniformLocation(program, 'uModel'),
+                uTurnProgress: gl.getUniformLocation(program, 'uTurnProgress'),
+                uPageWidth: gl.getUniformLocation(program, 'uPageWidth'),
+                uFrontTex: gl.getUniformLocation(program, 'uFrontTex'),
+                uBackTex: gl.getUniformLocation(program, 'uBackTex')
+            };
+
+            const plane = createPlane(PAGE_WIDTH, PAGE_HEIGHT, 50, 50);
+            const vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            const posBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, plane.positions, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            const normBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, plane.normals, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            const uvBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, plane.uvs, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+
+            const idxBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, plane.indices, gl.STATIC_DRAW);
+
+            // Create textures for edges and covers
+            const whiteTex = createPageTexture(gl);
+            const darkTex = createPageTexture(gl);
+            gl.bindTexture(gl.TEXTURE_2D, darkTex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([30, 27, 75, 255])); // #1e1b4b
+            
+            const paperEdgeTex = createPageTexture(gl);
+
+            const pages = [];
+            for (let i = 0; i < numTotalPages / 2; i++) {
+                const frontId = `page-${i * 2}`;
+                const backId = `page-${i * 2 + 1}`;
+                const frontTex = createPageTexture(gl);
+                const backTex = createPageTexture(gl);
+
+                pages.push({
+                    frontId,
+                    backId,
+                    frontTex,
+                    backTex,
+                    progress: 0,
+                    targetProgress: 0
+                });
+            }
+
+            function getTurnablePage(direction) {
+                if (direction > 0) {
+                    return pages.find(p => p.targetProgress === 0.0) || null;
+                } else {
+                    const reversed = [...pages].reverse();
+                    return reversed.find(p => p.targetProgress === 1.0) || null;
+                }
+            }
+
+            window.addEventListener('keydown', e => {
+                if (e.key === 'ArrowRight') {
+                    let p = getTurnablePage(1);
+                    if (p) { p.targetProgress = 1.0; p.progress = Math.max(0.01, p.progress); }
+                }
+                if (e.key === 'ArrowLeft') {
+                    let p = getTurnablePage(-1);
+                    if (p) { p.targetProgress = 0.0; p.progress = Math.min(0.99, p.progress); }
+                }
+            });
+
+            // Interaction variables for spinning the book
+            let rotX = -0.15;
+            let rotY = 0.0;
+            let isDragging = false;
+            let lastMouseX = 0;
+            let lastMouseY = 0;
+
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('#ui')) return;
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+
+                rotY += deltaX * 0.005;
+                rotX += deltaY * 0.005;
+                rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            // Support touch events
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches[0].target.tagName === 'BUTTON' || e.touches[0].target.closest('#ui')) return;
+                isDragging = true;
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.touches[0].clientX - lastMouseX;
+                const deltaY = e.touches[0].clientY - lastMouseY;
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+
+                rotY += deltaX * 0.005;
+                rotX += deltaY * 0.005;
+                rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+            });
+
+            window.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            let lastTime = 0;
+
+            function render(time) {
+                const dt = (time - lastTime) / 1000;
+                lastTime = time;
+
+                for (let p of pages) {
+                    if (p.targetProgress !== -1 && p.progress !== p.targetProgress) {
+                        const speed = 1.0;
+                        if (p.progress < p.targetProgress) {
+                            p.progress = Math.min(p.targetProgress, p.progress + speed * dt);
+                        } else {
+                            p.progress = Math.max(p.targetProgress, p.progress - speed * dt);
+                        }
+                    }
+                    updatePageTextureFromDOM(gl, p.frontTex, p.frontId);
+                    updatePageTextureFromDOM(gl, p.backTex, p.backId);
+                }
+
+                let topRightIndex = -1;
+                for (let i = 0; i < pages.length; i++) {
+                    if (pages[i].progress <= 0.001) { topRightIndex = i; break; }
+                }
+                let topLeftIndex = -1;
+                for (let i = pages.length - 1; i >= 0; i--) {
+                    if (pages[i].progress >= 0.999) { topLeftIndex = i; break; }
+                }
+
+                gl.clearColor(0.1, 0.1, 0.1, 0.0); // transparent background
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.enable(gl.DEPTH_TEST);
+                gl.disable(gl.CULL_FACE);
+
+                gl.useProgram(program);
+
+                const projection = mat4.create();
+                mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100.0);
+
+                const view = mat4.create();
+                mat4.lookAt(view, [0, 0, 7], [0, 0, 0], [0, 1, 0]);
+
+                gl.uniformMatrix4fv(uniforms.uProjection, false, projection);
+                gl.uniformMatrix4fv(uniforms.uView, false, view);
+                gl.uniform1f(uniforms.uPageWidth, PAGE_WIDTH);
+
+                gl.bindVertexArray(vao);
+
+                // --- Render Edges and Cover to create thickness (Parallelepiped effect) ---
+                let numSheetsLeft = 0;
+                let numSheetsRight = 0;
+                for (let p of pages) {
+                    if (p.progress >= 0.999) numSheetsLeft++;
+                    else if (p.progress <= 0.001) numSheetsRight++;
+                }
+                
+                const maxThickness = 0.15;
+                const thicknessLeft = maxThickness * (numSheetsLeft / pages.length);
+                const thicknessRight = maxThickness * (numSheetsRight / pages.length);
+
+                // Common setup for non-deforming meshes
+                gl.uniform1f(uniforms.uTurnProgress, 0.0);
+
+                // Update paper edge texture
+                updatePageTextureFromDOM(gl, paperEdgeTex, 'paper-edge');
+
+                // Bind paper edge texture for all edges
+                gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, paperEdgeTex); gl.uniform1i(uniforms.uFrontTex, 0);
+                gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, paperEdgeTex); gl.uniform1i(uniforms.uBackTex, 1);
+
+                // 1. Right Edge (Outer Wall)
+                if (thicknessRight > 0.005) {
+                    const model = mat4.create();
+                    mat4.translate(model, model, [PAGE_WIDTH, 0, 0]);
+                    mat4.rotateY(model, model, Math.PI / 2);
+                    mat4.scale(model, model, [thicknessRight / PAGE_WIDTH, 1, 1]);
+                    
+                    const finalModel = mat4.create();
+                    mat4.rotateY(finalModel, finalModel, rotY);
+                    mat4.rotateX(finalModel, finalModel, rotX);
+                    mat4.multiply(finalModel, finalModel, model);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, finalModel);
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+                }
+
+                // 2. Left Edge (Outer Wall)
+                if (thicknessLeft > 0.005) {
+                    const model = mat4.create();
+                    mat4.translate(model, model, [-PAGE_WIDTH, 0, -thicknessLeft]);
+                    mat4.rotateY(model, model, -Math.PI / 2);
+                    mat4.scale(model, model, [thicknessLeft / PAGE_WIDTH, 1, 1]);
+                    
+                    const finalModel = mat4.create();
+                    mat4.rotateY(finalModel, finalModel, rotY);
+                    mat4.rotateX(finalModel, finalModel, rotX);
+                    mat4.multiply(finalModel, finalModel, model);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, finalModel);
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+                }
+
+                // 3. Right Stack Top Edge
+                if (thicknessRight > 0.005) {
+                    const model = mat4.create();
+                    mat4.translate(model, model, [0, PAGE_HEIGHT / 2, 0]);
+                    mat4.rotateX(model, model, -Math.PI / 2);
+                    mat4.scale(model, model, [1, thicknessRight / PAGE_HEIGHT, 1]);
+                    
+                    const finalModel = mat4.create();
+                    mat4.rotateY(finalModel, finalModel, rotY);
+                    mat4.rotateX(finalModel, finalModel, rotX);
+                    mat4.multiply(finalModel, finalModel, model);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, finalModel);
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+                }
+
+                // 4. Right Stack Bottom Edge
+                if (thicknessRight > 0.005) {
+                    const model = mat4.create();
+                    mat4.translate(model, model, [0, -PAGE_HEIGHT / 2, -thicknessRight]);
+                    mat4.rotateX(model, model, Math.PI / 2);
+                    mat4.scale(model, model, [1, thicknessRight / PAGE_HEIGHT, 1]);
+                    
+                    const finalModel = mat4.create();
+                    mat4.rotateY(finalModel, finalModel, rotY);
+                    mat4.rotateX(finalModel, finalModel, rotX);
+                    mat4.multiply(finalModel, finalModel, model);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, finalModel);
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+                }
+
+                // 4b. Left Stack Top Edge
+                if (thicknessLeft > 0.005) {
+                    const model = mat4.create();
+                    mat4.translate(model, model, [0, PAGE_HEIGHT / 2, 0]);
+                    mat4.rotateX(model, model, -Math.PI / 2);
+                    mat4.scale(model, model, [-1, thicknessLeft / PAGE_HEIGHT, 1]);
+                    
+                    const finalModel = mat4.create();
+                    mat4.rotateY(finalModel, finalModel, rotY);
+                    mat4.rotateX(finalModel, finalModel, rotX);
+                    mat4.multiply(finalModel, finalModel, model);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, finalModel);
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+                }
+
+                // 4c. Left Stack Bottom Edge
+                if (thicknessLeft > 0.005) {
+                    const model = mat4.create();
+                    mat4.translate(model, model, [0, -PAGE_HEIGHT / 2, -thicknessLeft]);
+                    mat4.rotateX(model, model, Math.PI / 2);
+                    mat4.scale(model, model, [-1, thicknessLeft / PAGE_HEIGHT, 1]);
+                    
+                    const finalModel = mat4.create();
+                    mat4.rotateY(finalModel, finalModel, rotY);
+                    mat4.rotateX(finalModel, finalModel, rotX);
+                    mat4.multiply(finalModel, finalModel, model);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, finalModel);
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+                }
+
+                // 5. Spine (Binding at x=0)
+                // Rendered with cover material (darkTex)
+                const spineThickness = maxThickness;
+                const spineModel = mat4.create();
+                mat4.translate(spineModel, spineModel, [0, 0, -spineThickness]);
+                mat4.rotateY(spineModel, spineModel, -Math.PI / 2);
+                mat4.scale(spineModel, spineModel, [spineThickness / PAGE_WIDTH, 1, 1]);
+                
+                const finalSpineModel = mat4.create();
+                mat4.rotateY(finalSpineModel, finalSpineModel, rotY);
+                mat4.rotateX(finalSpineModel, finalSpineModel, rotX);
+                mat4.multiply(finalSpineModel, finalSpineModel, spineModel);
+
+                gl.uniformMatrix4fv(uniforms.uModel, false, finalSpineModel);
+
+                gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, darkTex); gl.uniform1i(uniforms.uFrontTex, 0);
+                gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, darkTex); gl.uniform1i(uniforms.uBackTex, 1);
+
+                gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+
+                // 6. Back Cover
+                const coverScaleX = (PAGE_WIDTH * 2 + 0.1) / PAGE_WIDTH;
+                const coverScaleY = (PAGE_HEIGHT + 0.1) / PAGE_HEIGHT;
+                
+                const coverModel = mat4.create();
+                mat4.translate(coverModel, coverModel, [0, 0, -maxThickness - 0.01]);
+                mat4.scale(coverModel, coverModel, [coverScaleX, coverScaleY, 1]);
+                mat4.translate(coverModel, coverModel, [-PAGE_WIDTH / 2, 0, 0]); // Center it
+                
+                const finalCoverModel = mat4.create();
+                mat4.rotateY(finalCoverModel, finalCoverModel, rotY);
+                mat4.rotateX(finalCoverModel, finalCoverModel, rotX);
+                mat4.multiply(finalCoverModel, finalCoverModel, coverModel);
+
+                gl.uniformMatrix4fv(uniforms.uModel, false, finalCoverModel);
+
+                gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, darkTex); gl.uniform1i(uniforms.uFrontTex, 0);
+                gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, darkTex); gl.uniform1i(uniforms.uBackTex, 1);
+
+                gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+
+                // --- Render Pages ---
+                for (let i = 0; i < pages.length; i++) {
+                    const p = pages[i];
+                    const t = p.progress;
+                    const zRight = -i * 0.01;
+                    const zLeft = -(pages.length - 1 - i) * 0.01;
+                    const zOffset = (1.0 - t) * zRight + t * zLeft;
+
+                    const model = mat4.create();
+                    mat4.translate(model, model, [0, 0, zOffset]);
+                    mat4.rotateY(model, model, rotY);
+                    mat4.rotateX(model, model, rotX);
+
+                    gl.uniformMatrix4fv(uniforms.uModel, false, model);
+                    gl.uniform1f(uniforms.uTurnProgress, t);
+
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, p.frontTex);
+                    gl.uniform1i(uniforms.uFrontTex, 0);
+
+                    gl.activeTexture(gl.TEXTURE1);
+                    gl.bindTexture(gl.TEXTURE_2D, p.backTex);
+                    gl.uniform1i(uniforms.uBackTex, 1);
+
+                    gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+
+                    if (canvas.getElementTransform) {
+                        const toGLModel = new DOMMatrix()
+                            .scale(PAGE_WIDTH / 800, -PAGE_HEIGHT / 1200, 1)
+                            .translate(0, -1200 / 2);
+
+                        const flatModelFront = mat4.create();
+                        mat4.translate(flatModelFront, flatModelFront, [0, 0, zOffset]);
+                        mat4.rotateY(flatModelFront, flatModelFront, rotY);
+                        mat4.rotateX(flatModelFront, flatModelFront, rotX);
+                        mat4.rotateY(flatModelFront, flatModelFront, -t * Math.PI);
+
+                        const flatModelBack = mat4.create();
+                        mat4.translate(flatModelBack, flatModelBack, [0, 0, zOffset]);
+                        mat4.rotateY(flatModelBack, flatModelBack, rotY);
+                        mat4.rotateX(flatModelBack, flatModelBack, rotX);
+                        mat4.rotateY(flatModelBack, flatModelBack, -t * Math.PI);
+                        mat4.translate(flatModelBack, flatModelBack, [2.0, 0, 0]);
+                        mat4.scale(flatModelBack, flatModelBack, [-1, 1, 1]);
+
+                        const toCSSViewport = new DOMMatrix()
+                            .translate(canvas.width / 2, canvas.height / 2)
+                            .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+                        const mvpFront = mat4.create();
+                        mat4.multiply(mvpFront, projection, view);
+                        mat4.multiply(mvpFront, mvpFront, flatModelFront);
+
+                        const isFrontVisible = t < 0.5;
+                        const turnBoost = Math.sin(t * Math.PI) * 1000;
+                        const zBase = (zOffset + 1.0) * 10000 + turnBoost;
+                        
+                        const isTurning = t > 0.001 && t < 0.999;
+                        const isTopActive = (i === topRightIndex || i === topLeftIndex || isTurning);
+
+                        const frontEl = document.getElementById(p.frontId);
+                        if (frontEl) {
+                            const finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront))).multiply(toGLModel);
+                            const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
+                            if (tFront) frontEl.style.transform = tFront.toString();
+                            frontEl.style.zIndex = Math.round(zBase + (isFrontVisible ? 10 : -10));
+                            frontEl.style.pointerEvents = (isFrontVisible && isTopActive) ? 'auto' : 'none';
+                        }
+
+                        const mvpBack = mat4.create();
+                        mat4.multiply(mvpBack, projection, view);
+                        mat4.multiply(mvpBack, mvpBack, flatModelBack);
+
+                        const backEl = document.getElementById(p.backId);
+                        if (backEl) {
+                            const finalTransformBack = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpBack))).multiply(toGLModel);
+                            const tBack = canvas.getElementTransform(backEl, finalTransformBack);
+                            if (tBack) backEl.style.transform = tBack.toString();
+                            backEl.style.zIndex = Math.round(zBase + (!isFrontVisible ? 10 : -10));
+                            backEl.style.pointerEvents = (!isFrontVisible && isTopActive) ? 'auto' : 'none';
+                        }
+                    }
+                }
+                requestAnimationFrame(render);
+            }
+            
+            let renderLoopStarted = false;
+            
+            function startLoop() {
+                if (!renderLoopStarted) {
+                    renderLoopStarted = true;
+                    requestAnimationFrame(render);
+                }
+            }
+
+            canvas.onpaint = startLoop;
+            startLoop();
+        }
+
+        const canvas = document.getElementById('gl-canvas');
+        const totalPages = 16;
+        
+        setupBookRendering(canvas, totalPages);
+
+        // UI Interactions
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        nextBtn.addEventListener('click', () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowRight' }));
+        });
+
+        prevBtn.addEventListener('click', () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowLeft' }));
+        });
+    </script>
+</body>
+
+</html>

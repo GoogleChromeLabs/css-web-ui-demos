@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive WebGL Physics demo using HTML-in-Canvas. Elements fall, bounce, and tumble while remaining clickable.">
+    <title>3D Physics Elements (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 320px;
+            pointer-events: none;
+        }
+
+        .control-card {
+            background: var(--md-sys-color-surface-container-low);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: auto;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-card h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
+        }
+
+        .physics-source {
+            position: absolute;
+            top: -2000px;
+            /* Hide offscreen but visible for layoutsubtree */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .physics-item {
+            position: absolute;
+            padding: 24px 40px;
+            border-radius: 16px;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            user-select: none;
+            min-width: 100px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.5rem;
+            transition: background 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Cleanest capture: hide shadow for elements inside the canvas layoutsubtree */
+        canvas .physics-item {
+            box-shadow: none !important;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--md-sys-color-surface-container-low);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Border marking the active physics simulation width (±6.5 units) */
+        .simulation-bounds {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 104.611vh;
+            /* (6.5 * 2) * 8.047vh */
+            border-left: 1px dashed var(--md-sys-color-on-background);
+            border-right: 1px dashed var(--md-sys-color-on-background);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="simulation-bounds"></div>
+
+
+
+    <div class="ui-overlay">
+        <div class="control-card">
+            <h1>Newtonian HTML</h1>
+            <p style="font-size: 0.9rem; opacity: 0.8;">
+                HTML elements treated as physical objects. Even as they fall and tumble, they maintain
+                standard focus and interaction.
+            </p>
+            <md-filled-button id="btn-spawn">
+                Spawn All
+                <md-icon slot="icon">restart_alt</md-icon>
+            </md-filled-button>
+            <md-filled-tonal-button id="btn-add">
+                Add Random Element
+                <md-icon slot="icon">add</md-icon>
+            </md-filled-tonal-button>
+            <p style="font-size: 0.8rem; opacity: 0.7;">Inspired by: <a
+                    href="https://www.instagram.com/p/DV_vqC8ih7D/">@ema_colombo</a></p>
+        </div>
+    </div>
+
+    <div class="hint">Click or drag the falling objects!</div>
+    <canvas id="gl-canvas" layoutsubtree>
+        <md-filled-tonal-button class="physics-item">Once</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Upon</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">A</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Time</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">There</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Was</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">HTML-in-Canvas</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">It</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Was</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Accessible</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Interactive</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">And</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Felt</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">Like</md-filled-tonal-button>
+        <md-filled-tonal-button class="physics-item">MAGIC 🪄</md-filled-tonal-button>
+    </canvas>
+
+    <script src="../js/gl-matrix.js"></script>
+    <script type="module">
+        import { setupPhysicsRendering } from './js/webgl-physics-elements.js';
+
+        const canvas = document.getElementById('gl-canvas');
+        const physics = setupPhysicsRendering(canvas, '.physics-item');
+
+        document.getElementById('btn-spawn').addEventListener('click', () => {
+            physics.spawn();
+        });
+
+        const phrases = ["It", "is", "remarkable", "epic", "amazing", "beautiful", "whatnot", "I", "can", "say", "amazing", "things", "about", "it", "all", "day", "but", "why", "are", "you", "still", "here", "I", "feel", "you're", "here", "because", "you", "wanted", "to", "see", "me", "break", "the", "fourth", "wall", "you", "really", "like", "it", "don't", "you", "well", "I", "don't", "know", "what", "else", "to", "say", "so", "I", "will", "just", "start", "throwing", "in", "some", "numbers"];
+        let phraseIndex = 0;
+        let numberCounter = 1;
+
+        // JavaScript creating tonal buttons
+        document.getElementById('btn-add').addEventListener('click', () => {
+            const newEl = document.createElement('md-filled-tonal-button');
+            newEl.className = 'physics-item';
+
+            if (phraseIndex < phrases.length) {
+                newEl.textContent = phrases[phraseIndex++];
+            } else {
+                newEl.textContent = numberCounter++;
+                newEl.classList.add('circle');
+            }
+
+            canvas.appendChild(newEl);
+
+            // Wait a split second for the custom element to upgrade and paint
+            // This ensures the physics engine reads the correct, consistent layout size
+            setTimeout(() => {
+                physics.add(newEl);
+            }, 60);
+        });
+    </script>
+</body>
+
+</html>

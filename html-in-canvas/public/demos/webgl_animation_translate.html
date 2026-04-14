@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="3D Tokyo micro-neighborhood with occlusion-aware labels and multi-language support (EN, JP, ES) using the experimental HTML-in-Canvas API.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, Littlest Tokyo, Three.js, Selective Occlusion, Translation">
+    <title>Tokyo 3D Labels (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Roboto', 'Inter', system-ui, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            overscroll-behavior: none;
+        }
+
+        a {
+            color: var(--md-sys-color-on-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        #info {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: fit-content;
+            max-width: 90%;
+            padding: 16px 24px;
+            box-sizing: border-box;
+            text-align: center;
+            color: var(--md-sys-color-surface);
+            user-select: none;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        a,
+        button,
+        input,
+        select {
+            pointer-events: auto;
+        }
+
+        #container {
+            display: block;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Overlay canvas for HTML-in-Canvas labels */
+        #label-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+            /* Allow click-through to labels */
+            z-index: 5;
+
+            & ::selection {
+                background-color: rgba(255, 220, 0, 0.6);
+                color: #000;
+            }
+        }
+
+        #controls {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 20;
+            background: var(--md-sys-color-surface-container);
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: var(--md-sys-elevation-level2);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        #controls h1 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Label chip styling - MD3 inspired, Static */
+        .label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 10px 18px;
+            background: var(--md-sys-color-secondary-container) !important;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 12px;
+            color: var(--md-sys-color-on-secondary-container);
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: text;
+            user-select: text;
+            transform-origin: 0 0;
+            box-shadow: var(--md-sys-elevation-level2);
+            opacity: 1;
+        }
+
+        /* The "Pin" at the 3D point - More visible */
+        .pin {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--md-sys-color-primary);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .label .sub {
+            font-size: 11px;
+            opacity: 0.8;
+            font-weight: 400;
+            color: var(--md-sys-color-on-secondary-container);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="container"></div>
+
+    <div id="controls">
+        <h1>Translation Settings</h1>
+        <md-filled-select id="lang-select" label="Select Language" value="jp">
+            <md-select-option value="en">
+                <div slot="headline">English</div>
+            </md-select-option>
+            <md-select-option value="jp">
+                <div slot="headline">Japanese (日本語)</div>
+            </md-select-option>
+            <md-select-option value="es">
+                <div slot="headline">Spanish (Español)</div>
+            </md-select-option>
+        </md-filled-select>
+
+        <label
+            style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface); font-size: 14px; cursor: pointer; margin-top: 8px;">
+            <md-checkbox id="toggle-labels" touch-target="wrapper" checked></md-checkbox>
+            Show 3D Labels
+        </label>
+
+        <p
+            style="margin: 6px 0 0 0; max-width: 250px; font-size: 11px; color: var(--md-sys-color-on-surface-variant); line-height: 1.0;">
+            Note: Translations are for demonstration purposes and may not be 100% accurate.
+        </p>
+    </div>
+
+    <div id="info">
+        <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - animation - keyframes<br />
+        Model: <a href="https://artstation.com/artwork/1AGwX" target="_blank" rel="noopener">Littlest Tokyo</a> by
+        <a href="https://artstation.com/glenatron" target="_blank" rel="noopener">Glen Fox</a>, CC Attribution.
+    </div>
+
+    <!-- Transparent overlay canvas with layoutsubtree for HTML labels -->
+    <canvas id="label-canvas" layoutsubtree>
+        <!-- The Pin (reused or one per label) -->
+        <div class="pin" id="pin-element"></div>
+
+        <!-- Authentic Tokyo Signs - Defaulting to Japanese (JP) -->
+        <div class="label" id="lbl-panda">興 <span class="sub">Panda Cafe</span></div>
+        <div class="label" id="lbl-fish">おいしい魚 <span class="sub">Seafood Place</span></div>
+        <div class="label" id="lbl-sushi">寿司 <span class="sub">Sushi Shop</span></div>
+        <div class="label" id="lbl-geisha">芸者 <span class="sub">Theme Restaurant</span></div>
+        <div class="label" id="lbl-barber">理容室 <span class="sub">Barbershop</span></div>
+        <div class="label" id="lbl-ocean">水族館 <span class="sub">Aquarium</span></div>
+        <div class="label" id="lbl-mountain">駅 <span class="sub">Train Station</span></div>
+        <div class="label" id="lbl-egg">卵料理 <span class="sub">Egg Dishes</span></div>
+        <div class="label" id="lbl-sushiking">寿司王 <span class="sub">Sushi King</span></div>
+    </canvas>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@latest/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+
+        import * as THREE from 'three';
+
+        import Stats from 'three/addons/libs/stats.module.js';
+
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { Sky } from 'three/addons/objects/Sky.js';
+
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+        let mixer, model;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        const timer = new THREE.Timer();
+
+        timer.connect(document);
+        const container = document.getElementById('container');
+
+        const stats = new Stats();
+        stats.dom.style.top = '0px';
+        stats.dom.style.right = '0px';
+        stats.dom.style.left = 'auto'; // Clear default left: 0
+        container.appendChild(stats.dom);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(renderer.domElement);
+
+        // Move label canvas inside container so it stacks on top
+        const labelCanvas = document.getElementById('label-canvas');
+        container.appendChild(labelCanvas);
+        const labelCtx = labelCanvas.getContext('2d');
+        const pinElement = document.getElementById('pin-element');
+        const scene = new THREE.Scene();
+
+        // Sky
+        const sky = new Sky();
+
+        const uniforms = sky.material.uniforms;
+        uniforms['turbidity'].value = 0;
+        uniforms['rayleigh'].value = 3;
+        uniforms['mieDirectionalG'].value = 0.7;
+        uniforms['cloudElevation'].value = 1;
+        uniforms['sunPosition'].value.set(- 0.8, 0.19, 0.56);
+
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        const environment = pmremGenerator.fromScene(sky).texture;
+        scene.background = environment;
+        scene.environment = environment;
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 100);
+        camera.position.set(5, 2, 8);
+
+        const controls = new OrbitControls(camera, labelCanvas);
+        controls.enableDamping = true;
+        controls.target.set(0, 0.7, 0);
+        controls.update();
+
+        // ─── HTML-in-Canvas Label System ─────────────────────────────────────────
+        // The model is placed at position (1, 1, 0) with scale 0.01.
+        // All world positions below are in Three.js world space.
+        const LABELS = [
+            { id: 'lbl-panda', world: new THREE.Vector3(1.5, 2.8, -1.0) },
+            { id: 'lbl-fish', world: new THREE.Vector3(1.1, 1.8, 0.8) },
+            { id: 'lbl-sushi', world: new THREE.Vector3(2.0, 0.8, 2.5) },
+            { id: 'lbl-geisha', world: new THREE.Vector3(-1.8, 1.2, 1.0) },
+            { id: 'lbl-barber', world: new THREE.Vector3(-1.0, 3.2, 0.0) },
+            { id: 'lbl-ocean', world: new THREE.Vector3(0.5, 2.2, -1.5) },
+            { id: 'lbl-mountain', world: new THREE.Vector3(1.5, 1.5, -3.0) },
+            { id: 'lbl-egg', world: new THREE.Vector3(1.0, 2.5, 1.2) },
+            { id: 'lbl-sushiking', world: new THREE.Vector3(-0.5, 2.0, -2.0) },
+        ].map(l => ({
+            ...l,
+            el: document.getElementById(l.id),
+            px: 0, py: 0, offscreen: true, labelOccluded: true
+        }));
+
+        const TRANSLATIONS = {
+            en: {
+                'lbl-panda': { main: 'Prosperity Cafe', sub: 'Exciting Desserts' },
+                'lbl-fish': { main: 'Seafood Restaurant', sub: 'Delicious Fish' },
+                'lbl-sushi': { main: 'Sushi Shop', sub: 'Authentic Sushi' },
+                'lbl-geisha': { main: 'Themed Bar', sub: 'Geisha Culture' },
+                'lbl-barber': { main: 'Barbershop', sub: 'Local Services' },
+                'lbl-ocean': { main: 'Aquarium', sub: 'Maritime Life' },
+                'lbl-mountain': { main: 'Train Station', sub: 'Local Transit' },
+                'lbl-egg': { main: 'Egg Cafe', sub: 'Breakfast Specialty' },
+                'lbl-sushiking': { main: 'Sushi King', sub: 'Premium Rolls' }
+            },
+            jp: {
+                'lbl-panda': { main: '興', sub: 'Panda Cafe' },
+                'lbl-fish': { main: 'おいしい魚', sub: 'Seafood Place' },
+                'lbl-sushi': { main: '寿司', sub: 'Sushi Shop' },
+                'lbl-geisha': { main: '芸者', sub: 'Theme Restaurant' },
+                'lbl-barber': { main: '理容室', sub: 'Barbershop' },
+                'lbl-ocean': { main: '水族館', sub: 'Aquarium' },
+                'lbl-mountain': { main: '駅', sub: 'Train Station' },
+                'lbl-egg': { main: '卵料理', sub: 'Egg Dishes' },
+                'lbl-sushiking': { main: '寿司王', sub: 'Sushi King' }
+            },
+            es: {
+                'lbl-panda': { main: 'Café Prosperidad', sub: 'Postres Panda' },
+                'lbl-fish': { main: 'Pescado Delicioso', sub: 'Restaurante Marino' },
+                'lbl-sushi': { main: 'Tienda de Sushi', sub: 'Rollos Frescos' },
+                'lbl-geisha': { main: 'Bar Temático', sub: 'Cultura Geisha' },
+                'lbl-barber': { main: 'Barbería', sub: 'Servicios Locales' },
+                'lbl-ocean': { main: 'Acuario', sub: 'Vida Marina' },
+                'lbl-mountain': { main: 'Estación de Tren', sub: 'Tránsito Local' },
+                'lbl-egg': { main: 'Café de Huevos', sub: 'Especial de Desayuno' },
+                'lbl-sushiking': { main: 'Rey del Sushi', sub: 'Rollos Premium' }
+            }
+        };
+
+        const langSelect = document.getElementById('lang-select');
+        langSelect.addEventListener('change', (e) => {
+            const lang = e.target.value;
+            const data = TRANSLATIONS[lang];
+            LABELS.forEach(lbl => {
+                const trans = data[lbl.id];
+                // Update elements with a clean innerHTML or append logic
+                lbl.el.innerHTML = `${trans.main} <span class="sub">${trans.sub}</span>`;
+            });
+            labelCanvas.requestPaint();
+        });
+
+        let labelsVisible = true;
+        const toggleCheckbox = document.getElementById('toggle-labels');
+        toggleCheckbox.addEventListener('change', (e) => {
+            labelsVisible = e.target.checked;
+            labelCanvas.requestPaint();
+        });
+
+        // Sync label canvas size with renderer
+        function syncLabelCanvasSize() {
+            labelCanvas.width = Math.floor(window.innerWidth * window.devicePixelRatio);
+            labelCanvas.height = Math.floor(window.innerHeight * window.devicePixelRatio);
+        }
+        syncLabelCanvasSize();
+
+        // Project a 3D world position → 2D DOMMatrix for getElementTransform
+        function updateLabels() {
+            const canvasW = labelCanvas.width;
+            const canvasH = labelCanvas.height;
+
+            LABELS.forEach((lbl) => {
+                const { el, world } = lbl;
+                // Project from world space → NDC (x,y in [-1,1], z in [-1,1])
+                const ndc = world.clone().project(camera);
+
+                // Basic frustum clipping
+                lbl.offscreen = ndc.z > 1 || Math.abs(ndc.x) > 1.3 || Math.abs(ndc.y) > 1.3;
+
+                // ─── Occlusion Check via Raycaster (Only for the label itself) ───
+                let isOccluded = false;
+                if (!lbl.offscreen && model) {
+                    mouse.x = ndc.x;
+                    mouse.y = ndc.y;
+                    raycaster.setFromCamera(mouse, camera);
+
+                    const intersects = raycaster.intersectObject(model, true);
+                    if (intersects.length > 0) {
+                        const distToHit = intersects[0].distance;
+                        const distToLabel = world.distanceTo(camera.position);
+                        if (distToHit < (distToLabel - 0.1)) {
+                            isOccluded = true;
+                        }
+                    }
+                }
+
+                lbl.labelOccluded = isOccluded;
+                // Only show labels if toggle is on
+                el.style.opacity = (lbl.offscreen || lbl.labelOccluded || !labelsVisible) ? '0' : '1';
+                el.style.pointerEvents = (lbl.offscreen || lbl.labelOccluded || !labelsVisible) ? 'none' : 'auto';
+
+                if (lbl.offscreen) return;
+
+                // Convert NDC to canvas physical pixel coordinates
+                lbl.px = (ndc.x + 1) * 0.5 * canvasW;
+                lbl.py = (-ndc.y + 1) * 0.5 * canvasH;
+
+                // Project "Ground" position (y=-2 in scene space for depth)
+                const groundWorld = new THREE.Vector3(world.x, -1, world.z);
+                const groundNdc = groundWorld.project(camera);
+                lbl.groundPx = (groundNdc.x + 1) * 0.5 * canvasW;
+                lbl.groundPy = (-groundNdc.y + 1) * 0.5 * canvasH;
+            });
+        }
+        // ─────────────────────────────────────────────────────────────────────────
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+        loader.load('./../assets/LittlestTokyo.glb', function (gltf) {
+
+            model = gltf.scene;
+            model.position.set(1, 1, 0);
+            model.scale.set(0.01, 0.01, 0.01);
+            scene.add(model);
+
+            mixer = new THREE.AnimationMixer(model);
+            mixer.clipAction(gltf.animations[0]).play();
+
+            renderer.setAnimationLoop(animate);
+
+        }, undefined, function (e) {
+
+            console.error(e);
+
+        });
+
+        window.onresize = function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            syncLabelCanvasSize();
+        };
+
+        function animate() {
+
+            timer.update();
+
+            const delta = timer.getDelta();
+
+            if (mixer) mixer.update(delta);
+
+            controls.update();
+
+            stats.update();
+
+            renderer.render(scene, camera);
+
+            // Sync HTML labels to 3D positions every frame
+            updateLabels();
+
+            labelCanvas.requestPaint();
+        }
+
+        labelCanvas.onpaint = () => {
+            labelCtx.reset();
+
+            if (!labelsVisible) return;
+
+            LABELS.forEach(({ el, px, py, groundPx, groundPy, offscreen, labelOccluded }) => {
+                if (offscreen) return;
+
+                try {
+                    // 1. Draw a "Ground Line" from the floor to the pin
+                    labelCtx.beginPath();
+                    labelCtx.moveTo(groundPx, groundPy);
+                    labelCtx.lineTo(px, py);
+                    labelCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    labelCtx.setLineDash([5, 5]); // Dashed line
+                    labelCtx.lineWidth = 1 * window.devicePixelRatio;
+                    labelCtx.stroke();
+                    labelCtx.setLineDash([]); // Reset dash
+
+                    // 2. Draw the label chip (Occlusion aware)
+                    if (!labelOccluded) {
+                        // Position ABOVE the pin, horizontally centered
+                        const labelW = el.offsetWidth * window.devicePixelRatio;
+                        const labelH = el.offsetHeight * window.devicePixelRatio;
+                        const labelYOffset = 2 * window.devicePixelRatio; // Gap/Overlap
+
+                        const drawX = px - labelW / 2;
+                        const drawY = py - labelH + (labelYOffset * 1); // Allow small overlap so pin is on bottom edge
+
+                        const matrix = new DOMMatrix().translate(drawX, drawY);
+                        labelCtx.drawElementImage(el, drawX, drawY);
+
+                        // 3. Synchronize the DOM element's position for hit-testing/interaction
+                        if (labelCanvas.getElementTransform) {
+                            el.style.transform = labelCanvas.getElementTransform(el, matrix).toString();
+                            el.style.transformOrigin = '0 0';
+                        }
+                    }
+
+                    // 4. Draw a small "Pin" point (Center it on px, py) - Drawn LAST to be on top in Z-index
+                    const pinSize = 14 * window.devicePixelRatio;
+                    labelCtx.drawElementImage(pinElement, px - pinSize / 2, py - pinSize / 2);
+                } catch (e) {
+                    // Snapshot might not be ready on first frames
+                }
+            });
+        };
+
+    </script>
+
+</body>
+
+</html>

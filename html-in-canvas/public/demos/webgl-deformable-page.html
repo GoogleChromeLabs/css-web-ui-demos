@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive deformable HTML-in-Canvas page with multiple effects (Curl, Wave, Roll).">
+    <title>Deformable Page (HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .side-panel {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            width: 320px;
+            background: rgba(var(--md-sys-color-surface-container-rgb), 0.85);
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .side-panel h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0.8;
+            padding-left: 4px;
+            display: block;
+            cursor: pointer;
+        }
+
+        md-radio {
+            --md-radio-selected-icon-color: var(--md-sys-color-primary);
+        }
+
+        .radio-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 8px;
+            padding: 8px 0;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        /* Page Content Styles */
+        .content-sheet {
+            position: absolute;
+            width: 800px;
+            height: 1100px;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            box-sizing: border-box;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sheet-header {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .sheet-body {
+            padding: 48px;
+            flex-grow: 1;
+        }
+
+        .sheet-body h2 {
+            font-size: 3rem;
+            margin: 0 0 16px 0;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .sheet-body p {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            text-align: justify;
+            margin-bottom: 24px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .sheet-body md-filled-button {
+            padding: 5px 24px;
+        }
+
+        .sheet-footer {
+            padding: 32px 48px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Spectral:wght@400;600&display=swap');
+    </style>
+</head>
+
+<body>
+    <div class="side-panel">
+        <h1>Deformation Engine</h1>
+
+        <div class="control-group">
+            <span class="control-label">Effect Mode</span>
+            <div class="radio-group" id="radio-group">
+                <label class="radio-item"><md-radio name="mode" value="0" checked></md-radio> Wave</label>
+                <label class="radio-item"><md-radio name="mode" value="1"></md-radio> Curl</label>
+                <label class="radio-item"><md-radio name="mode" value="2"></md-radio> Roll</label>
+                <label class="radio-item"><md-radio name="mode" value="3"></md-radio> Bulge</label>
+                <label class="radio-item"><md-radio name="mode" value="4"></md-radio> Twist</label>
+                <label class="radio-item"><md-radio name="mode" value="5"></md-radio> Fold</label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="slide-intensity">Intensity</label>
+            <md-slider id="slide-intensity" min="0" max="1" value="0.8" step="0.01"></md-slider>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="slide-speed">Speed</label>
+            <md-slider id="slide-speed" min="0" max="2" value="1.6" step="0.01"></md-slider>
+        </div>
+
+        <md-divider></md-divider>
+
+        <md-filled-button id="test-btn">
+            Trigger UI Action
+            <md-icon slot="icon">bolt</md-icon>
+        </md-filled-button>
+    </div>
+
+    <canvas id="gl-canvas" layoutsubtree>
+        <div id="target-page" class="content-sheet">
+            <img src="../assets/hero.png" class="sheet-header" alt="Hero">
+            <div class="sheet-body">
+                <h2>HTML In Canvas</h2>
+                <p>
+                    This entire sheet is standard <b>HTML and CSS</b>. Because we are using the experimental
+                    <code>layoutsubtree</code> attribute, the browser renders this element into a
+                    WebGL texture without ever adding it to the main viewport.
+                </p>
+                <p>
+                    Try <b>selecting this text</b> or hovering over the button below. Even as the page
+                    waves or curls in 3D space, the interaction points remain perfectly synchronized with
+                    the visual deformation. This allows for premium, high-fidelity UI that doesn't
+                    sacrifice accessibility.
+                </p>
+                <md-filled-button>Material Component</md-filled-button>
+            </div>
+            <div class="sheet-footer">
+                <span style="font-weight: bold; opacity: 0.6;">EXPERIMENTAL</span>
+                <md-filled-icon-button toggle>
+                    <md-icon>check</md-icon>
+                    <md-icon slot="selected">check</md-icon>
+                </md-filled-icon-button>
+            </div>
+        </div>
+    </canvas>
+
+    <script src="../js/gl-matrix.js"></script>
+    <script type="module">
+        import { setupDeformableRendering } from './js/webgl-deformable-page.js';
+
+        const canvas = document.getElementById('gl-canvas');
+        const renderer = setupDeformableRendering(canvas, 'target-page');
+
+        const radios = document.querySelectorAll('md-radio[name="mode"]');
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) renderer.setMode(parseInt(radio.value));
+            });
+        });
+
+        const sliderIntensity = document.getElementById('slide-intensity');
+        const sliderSpeed = document.getElementById('slide-speed');
+
+        sliderIntensity.addEventListener('input', () => {
+            renderer.setIntensity(sliderIntensity.value);
+        });
+
+        sliderSpeed.addEventListener('input', () => {
+            renderer.setSpeed(sliderSpeed.value);
+        });
+
+        document.getElementById('test-btn').addEventListener('click', () => {
+            // We can also interact with the canvas-rendered HTML directly!
+            const innerBtn = document.querySelector('canvas md-filled-button');
+            innerBtn.click();
+        });
+    </script>
+</body>
+
+</html>
