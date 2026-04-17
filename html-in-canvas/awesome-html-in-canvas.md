@@ -1,6 +1,6 @@
 # Awesome HTML-in-Canvas
 
-This is a curated list of links to awesome HTML-in-canvas demos created by the ecosystem. Note that the demos featured here are contributed by third-party developers and are not created or maintained by Google. Read the [contribution guidelines](CONTRIBUTING.md) to suggest another demo.
+This is a curated list of links to awesome HTML-in-canvas demos created by the ecosystem. Note that the demos featured here are contributed by third-party developers and are not created or maintained by Google. Read the [contribution guidelines](https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/awesome-html-in-canvas.md) to suggest another demo.
 
 ## HTML-in-Canvas demos by the ecosystem 
 
