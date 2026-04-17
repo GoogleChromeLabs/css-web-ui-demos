@@ -4,7 +4,7 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 
 ## HTML-in-Canvas demos by the ecosystem 
 
-| Demo | Author | Source code | Description |
+| Demo | Description | Author | Source code | 
 | :--- | :--- | :--- | :--- |
 | Coming soon | Coming soon | Coming soon | Coming soon |
 
