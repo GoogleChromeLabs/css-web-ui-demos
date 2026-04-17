@@ -6,6 +6,8 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 
 | Demo | Description | Author | Source code | 
 | :--- | :--- | :--- | :--- |
+| [Duck Hunt TODO](https://x.com/wesbos/status/2041594973674483851) | A form that's also a shooting game | [Wes Bos](https://github.com/wesbos) | [Source](https://github.com/wesbos/hot-tips/blob/main/html-in-canvas/demos/wicg/website-shatter-shooter.html) |
+| [Wobble Buttons](https://x.com/wesbos/status/2041974552478052507) | Interactive ripple-effect buttons | [Wes Bos](https://github.com/wesbos) | [Source](https://github.com/wesbos/hot-tips/blob/main/html-in-canvas/demos/wicg/ripple-buttons.html) |
 | [Compiz Web](https://compiz-web.vercel.app/) | Shader-driven web page transitions demo | [Max Leiter](https://github.com/MaxLeiter) | [Source](https://github.com/MaxLeiter/compiz-web) |
 | More | demos | coming | soon... |
 
