@@ -6,7 +6,8 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 
 | Demo | Description | Author | Source code | 
 | :--- | :--- | :--- | :--- |
-| Coming soon | Coming soon | Coming soon | Coming soon |
+| [Compiz Web](https://compiz-web.vercel.app/) | Shader-driven web page transitions demo | [Max Leiter](https://github.com/MaxLeiter) | [Source](https://github.com/MaxLeiter/compiz-web) |
+| More | demos | coming | soon... |
 
 ## Disclaimer
 
