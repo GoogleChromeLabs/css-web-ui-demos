@@ -1,8 +1,11 @@
 # Awesome HTML-in-Canvas
 
-This is a curated list of links to awesome HTML-in-canvas demos created by the ecosystem. Note that the demos featured here are contributed by third-party developers and are not created or maintained by Google. Read the [contribution guidelines](https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/CONTRIBUTING.md#add-a-demo-to-the-awesome-html-in-canvas-list) to suggest another demo.
+This is a collection of resources to help developers build with HTML-in-Canvas.
+
+Check out the HTML-in-canvas deployed at [chrome.dev](https://chrome.dev/html-in-canvas/) or view the source code [here](https://github.com/GoogleChromeLabs/css-web-ui-demos/tree/main/html-in-canvas).
 
 ## HTML-in-Canvas demos by the ecosystem 
+This is a curated list of links to awesome HTML-in-canvas demos created by the ecosystem. Note that the demos featured here are contributed by third-party developers and are not created or maintained by Google. Read the [contribution guidelines](https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/CONTRIBUTING.md#add-a-demo-to-the-awesome-html-in-canvas-list) to suggest another demo.
 
 | Demo | Description | Author | Source code | 
 | :--- | :--- | :--- | :--- |
@@ -14,4 +17,8 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 
 ## Disclaimer
 
-The demos linked here are created by third-party developers and are not supported by Google. 
+**Important note on external content**: The demos linked in the [HTML-in-Canvas demos by the ecosystem](#html-in-canvas-demos-by-the-ecosystem) section are created by third-party developers and are not created, maintained, or supported by Google. Please be aware of the following:
+
+* No endorsement: Inclusion of these links does not constitute an endorsement or recommendation by Google.
+* Subject to change: Content, functionality, and availability are at the sole discretion of the third-party owners and may change or be removed without notice.
+* No liability: Google assumes no responsibility or liability for the accuracy, legality, or performance of these demos.
