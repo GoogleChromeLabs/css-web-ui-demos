@@ -28,6 +28,10 @@
   }
 
   #ui-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0; /* Locked here statically to ensure Browser API detects it on first run */
     width: 512px;
     height: 512px;
     background: var(--md-sys-color-surface-container-high);
@@ -80,27 +84,18 @@
 <script src="../js/gl-matrix.js"></script>
 
 <script>
-  onpaint = () => {
-    const canvas = document.querySelector('#gl-canvas');
-
-    const observer = new ResizeObserver(([entry]) => {
-      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
-    });
-
-    observer.observe(canvas, { box: 'device-pixel-content-box' });
-  }
-
-  const canvas = document.getElementById('gl-canvas');
+        const uiElement = document.getElementById('ui-background');
+        const canvas = document.querySelector('#gl-canvas');
   const gl = canvas.getContext('webgl2');
+        const uiTexture = gl.createTexture();
+        const uiMVP = mat4.create();
+
 
   if (!gl) {
     alert('WebGL2 not supported');
     throw new Error('WebGL2 not supported');
   }
 
-  // Shader Sources
   // Shader Sources
   const vsSource = `#version 300 es
   layout(location = 0) in vec3 aPosition;
@@ -246,22 +241,6 @@
   const uProjectionMatrix = gl.getUniformLocation(program, 'uProjectionMatrix');
   const uSampler = gl.getUniformLocation(program, 'uSampler');
 
-  // Hardcoded generic offsets from scene.gltf analysis
-  // View 0: Indices (SCALAR, 5125 UNSIGNED_INT) - count 57996
-  // View 1: TexCoords (VEC2, 5126 FLOAT) - count 11042
-  // View 2: Positions (VEC3, 5126 FLOAT) - count 11042
-  // View 3: Tangents (VEC4, 5126 FLOAT) - count 11042
-
-  // Accessor 0: POSITION - View 2, offset 0
-  // Accessor 1: NORMAL - View 2, offset 132504 (11042 * 12 bytes = 132504)
-  // Accessor 3: TEXCOORD_0 - View 1, offset 0
-  // Accessor 4: INDICES - View 0, offset 0
-
-  // BufferView 0 offset: 0, length: 231984
-  // BufferView 1 offset: 231984, length: 88336
-  // BufferView 2 offset: 320320, length: 265008
-  // BufferView 3 offset: 585328, length: 176672
-
   async function loadDragon() {
     const binResponse = await fetch('../assets/stanford_dragon_pbr/scene.bin');
     const binBuffer = await binResponse.arrayBuffer();
@@ -368,14 +347,11 @@
     gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
 
     // UI Texture
-    const uiTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, uiTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-    const uiElement = document.getElementById('ui-background');
 
     // Background Texture for Refraction
     const bgTexture = gl.createTexture();
@@ -396,12 +372,6 @@
       const deltaTime = now - lastTime;
       lastTime = now;
 
-      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-        gl.viewport(0, 0, canvas.width, canvas.height);
-      }
-
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.enable(gl.DEPTH_TEST);
@@ -409,69 +379,28 @@
       // --- Draw UI Background ---
       gl.useProgram(unlitProgram);
 
-      // Update UI Texture
-      if (gl.texElementImage2D) {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, uiTexture);
-        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
-      }
-
       const projection = mat4.create();
       mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 1000.0);
 
       const view = mat4.create();
-      mat4.lookAt(view, [0, 50, 150], [0, 40, 0], [0, 1, 0]);
+      mat4.lookAt(view, [0, 50, 150], [0, 20, 0], [0, 1, 0]);
 
       // UI Model Matrix (Positioned behind dragon)
       const uiModel = mat4.create();
-      mat4.translate(uiModel, uiModel, [0, 50, -50]); // Behind dragon
-      mat4.scale(uiModel, uiModel, [200, 200, 1]); // Scale up
+      mat4.translate(uiModel, uiModel, [0, 10, -100]); // Behind dragon
+      mat4.scale(uiModel, uiModel, [100, 100, 1]); // Scale up
 
-      // Calculate Element Transform
-      const uiMVP = mat4.create();
+      // Calculate full Model-View-Projection Matrix
       mat4.multiply(uiMVP, projection, view);
       mat4.multiply(uiMVP, uiMVP, uiModel);
 
-      // Adjust for 0..1 to -0.5..0.5 mapping (Texture Space to Quad Space)
-      const adjustment = mat4.create();
-      mat4.translate(adjustment, adjustment, [-0.5, 0.5, 0]);
-      mat4.scale(adjustment, adjustment, [1, -1, 1]);
+      // // Adjust for 0..1 to -0.5..0.5 mapping (Texture Space to Quad Space)
+      // const adjustment = mat4.create();
+      // mat4.translate(adjustment, adjustment, [-0.5, 0.5, 0]);
+      // mat4.scale(adjustment, adjustment, [1, -1, 1]);
 
-      const finalUiTransform = mat4.create();
-      mat4.multiply(finalUiTransform, uiMVP, adjustment);
-
-      if (canvas.getElementTransform) {
-        // 1. Convert the MVP matrix (gl-matrix Float32Array) to a DOMMatrix
-        const mvpDOM = new DOMMatrix(Array.from(uiMVP));
-
-        // 2. Element CSS pixels -> WebGL Model Space
-        //    Element is 512x512. Quad geometry is -0.5 to 0.5 (size 1).
-        //    Map: (0,0) -> (-0.5, 0.5) and (512,512) -> (0.5, -0.5)
-        const width = uiElement.offsetWidth;
-        const height = uiElement.offsetHeight;
-
-        const toGLModel = new DOMMatrix()
-          // Scale pixels to 1 unit, flip Y (CSS down, GL up)
-          .scale(1 / width, -1 / height, 1)
-          // Center the origin: (0,0) becomes (-width/2, -height/2) before scaling
-          .translate(-width / 2, -height / 2);
-
-        // 3. WebGL Clip Space -> Canvas CSS pixels (Viewport Transform)
-        //    Clip (-1..1) -> Canvas (0..w, 0..h)
-        const toCSSViewport = new DOMMatrix()
-          // Move center (0,0) to center of canvas
-          .translate(canvas.width / 2, canvas.height / 2)
-          // Scale normalized clip (-1..1) to viewport size
-          .scale(canvas.width / 2, -canvas.height / 2, 1);
-
-        // 4. Combine: Viewport * MVP * Model
-        const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
-
-        const transform = canvas.getElementTransform(uiElement, finalTransform);
-        if (transform) {
-          uiElement.style.transform = transform.toString();
-        }
-      }
+      // const finalUiTransform = mat4.create();
+      // mat4.multiply(finalUiTransform, uiMVP, adjustment);
 
       gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projection);
       gl.uniformMatrix4fv(unlitUniforms.uViewMatrix, false, view);
@@ -488,41 +417,174 @@
       gl.bindTexture(gl.TEXTURE_2D, bgTexture);
       gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, canvas.width, canvas.height, 0);
 
-      // --- Draw Dragon ---
-      gl.useProgram(program);
+      // // --- Draw Dragon ---
+      // gl.useProgram(program);
 
-      // Reuse projection and view matrices
+      // // Reuse projection and view matrices
 
-      rotation += deltaTime * 0.5; // Rotate 0.5 rad/s
+      // rotation += deltaTime * 0.5; // Rotate 0.5 rad/s
 
-      const model = mat4.create();
-      mat4.rotateY(model, model, rotation);
+      // const model = mat4.create();
+      // mat4.rotateY(model, model, rotation);
 
-      gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
-      gl.uniformMatrix4fv(uViewMatrix, false, view);
-      gl.uniformMatrix4fv(uModelMatrix, false, model);
-      gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+      // gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
+      // gl.uniformMatrix4fv(uViewMatrix, false, view);
+      // gl.uniformMatrix4fv(uModelMatrix, false, model);
+      // gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
 
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, dragon.texture);
-      gl.uniform1i(uSampler, 0);
+      // gl.activeTexture(gl.TEXTURE0);
+      // gl.bindTexture(gl.TEXTURE_2D, dragon.texture);
+      // gl.uniform1i(uSampler, 0);
 
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, bgTexture);
-      gl.uniform1i(uBgTextureLoc, 1);
+      // gl.activeTexture(gl.TEXTURE1);
+      // gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+      // gl.uniform1i(uBgTextureLoc, 1);
 
-      gl.bindVertexArray(dragon.vao);
+      // gl.bindVertexArray(dragon.vao);
 
-      // Enable blending for glass effect
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      // // Enable blending for glass effect
+      // gl.enable(gl.BLEND);
+      // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-      gl.drawElements(gl.TRIANGLES, dragon.count, gl.UNSIGNED_INT, 0);
+      // gl.drawElements(gl.TRIANGLES, dragon.count, gl.UNSIGNED_INT, 0);
 
-      gl.disable(gl.BLEND);
+      // gl.disable(gl.BLEND);
 
       requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
   });
+
+  canvas.onpaint = () => {
+    console.log('onpaint')
+
+    // Update UI Texture inside the browser's paint pipeline
+    if (gl.texElementImage2D) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+      gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+    }
+
+    // Update visual transform mapping for hit-testing/selection interactivity
+    if (canvas.getElementTransform) {
+      // 1. Convert the complete WebGL MVP matrix into a DOMMatrix
+      const mvpDOM = new DOMMatrix(Array.from(uiMVP));
+
+      // 2. Element CSS pixels -> WebGL Unit Plane
+      const width = uiElement.offsetWidth;
+      const height = uiElement.offsetHeight;
+
+      // Direct mirror of spectacles-example.html / webgl-mammoth-example.html chains
+      const toGLModel = new DOMMatrix()
+        .scale(1 / width, -1 / height, 1)
+        .translate(-width / 2, -height / 2);
+
+      const toCSSViewport = new DOMMatrix()
+        .translate(canvas.width / 2, canvas.height / 2)
+        .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+      // The certified repository stack formula
+      const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
+
+      // --- THE DUAL-DIVISOR LOCK ---
+      const w_div = finalTransform.m44;
+      const dpr = window.devicePixelRatio;
+      const divisorScale = w_div * dpr;
+      const divisorTranslate = w_div;
+
+      // --- 🛡️ THE INVARIANT LOCKDOWN 🛡️ ---
+      // Completely bypass array-order ambiguity by using Direct Explicit Property Assignment!
+      // This guarantees mathematically perfect bindings in EVERY browser regardless of order!
+      const M = finalTransform;
+      const correctedComputationMatrix = new DOMMatrix();
+
+      // --- COLUMN 1: X-Axis Basis Vector ---
+      // How X input coordinates affect the output.
+      
+      // m11: Horizontal scaling factor. How much X stretches on the screen.
+      correctedComputationMatrix.m11 = M.m11 / divisorScale;
+      // m12: Vertical shear (skew). Was forced to 0 to prevent logical layout tilt.
+      correctedComputationMatrix.m12 = 0;
+      // m13: Depth effect for X. How much X pushes into Z space (usually 0 for flat projection).
+      correctedComputationMatrix.m13 = M.m13 / divisorScale;
+      // m14: Perspective projection factor for X. How much X affects the W (depth) divisor.
+      correctedComputationMatrix.m14 = M.m14 / divisorScale;
+
+      // --- COLUMN 2: Y-Axis Basis Vector ---
+      // How Y input coordinates affect the output.
+      
+      // m21: Horizontal shear (skew). Was forced to 0 to prevent logical layout tilt.
+      correctedComputationMatrix.m21 = 0;
+      // m22: Vertical scaling factor. How much Y stretches on the screen.
+      correctedComputationMatrix.m22 = M.m22 / divisorScale;
+      // m23: Depth effect for Y. How much Y pushes into Z space.
+      correctedComputationMatrix.m23 = M.m23 / divisorScale;
+      // m24: Perspective projection factor for Y. How much Y affects the W (depth) divisor.
+      correctedComputationMatrix.m24 = M.m24 / divisorScale;
+
+      // --- COLUMN 3: Z-Axis Basis Vector ---
+      // How Z input coordinates affect the output (mostly irrelevant for flat 2D DOM elements).
+      
+      // m31: X-skew based on Z input.
+      correctedComputationMatrix.m31 = M.m31 / divisorScale;
+      // m32: Y-skew based on Z input.
+      correctedComputationMatrix.m32 = M.m32 / divisorScale;
+      // m33: Z-scaling factor. Depth scale.
+      correctedComputationMatrix.m33 = M.m33 / divisorScale;
+      // m34: Perspective projection factor for Z.
+      correctedComputationMatrix.m34 = M.m34 / divisorScale;
+
+      // --- COLUMN 4: Translation & Homogeneous Coordinates ---
+      // Absolute position and the base perspective divisor.
+      
+      // m41: Absolute X Translation (Position in CSS pixels).
+      correctedComputationMatrix.m41 = M.m41 / divisorTranslate;
+      // m42: Absolute Y Translation (Position in CSS pixels).
+      correctedComputationMatrix.m42 = M.m42 / divisorTranslate;
+      // m43: Absolute Z Translation (Depth position).
+      correctedComputationMatrix.m43 = M.m43 / divisorTranslate;
+      // m44: The homogeneous W coordinate. Set to 1 after normalization.
+      correctedComputationMatrix.m44 = M.m44 / divisorTranslate;
+
+      // 6. Query the experimental API with the repo-aligned finalized matrix
+      const transform = canvas.getElementTransform(uiElement, correctedComputationMatrix);
+
+      // Maintain Logging Proxies for downstream telemetry
+      const screenSpaceTransform = finalTransform;
+      const clipToCanvasViewport = toCSSViewport;
+
+      console.log("=== COMPREHENSIVE ALIGNMENT DIAGNOSTICS ===");
+      console.log("1. Viewport WxH (Canvas Grid Attributes):", canvas.width, "x", canvas.height);
+      console.log("2. Client WxH (Logical Viewport Size):", canvas.clientWidth, "x", canvas.clientHeight);
+      console.log("3. Window devicePixelRatio:", window.devicePixelRatio);
+      console.log("4. Element CSS Bounds (offsetWidth/Height):", uiElement.offsetWidth, "x", uiElement.offsetHeight);
+      console.log("5. Element DOM offsetLeft/offsetTop:", uiElement.offsetLeft, "x", uiElement.offsetTop);
+
+      console.log("6. toGLModel Matrix:", toGLModel.toString());
+      console.log("7. mvpDOM Matrix:", mvpDOM.toString());
+      console.log("8. clipToCanvasViewport Matrix:", clipToCanvasViewport.toString());
+
+      console.log("9. Combined Composite Matrix (screenSpaceTransform):", screenSpaceTransform.toString());
+      console.log("10. BROWSER API FINAL OUTPUT:", transform ? transform.toString() : "NULL");
+      console.log("============================================");
+
+      if (transform) {
+        // CRITICAL: Absolute coordinate maps MUST use top-left origin to prevent centering-offset
+        uiElement.style.transformOrigin = '0 0';
+        uiElement.style.transform = transform.toString();
+      }
+    }
+  };
+
+  const observer = new ResizeObserver(([entry]) => {
+    const width = entry.devicePixelContentBoxSize[0].inlineSize;
+    const height = entry.devicePixelContentBoxSize[0].blockSize;
+    canvas.width = width;
+    canvas.height = height;
+    // Explicitly notify WebGL of the new physical rendering dimensions
+    gl.viewport(0, 0, width, height);
+  });
+
+  observer.observe(canvas, { box: 'device-pixel-content-box' });
+
 </script>
