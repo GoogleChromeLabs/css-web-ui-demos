@@ -51,19 +51,19 @@
   <script>
     const ctx = document.getElementById('canvas').getContext('2d');
     canvas.onpaint = () => {
-      const observer = new ResizeObserver(([entry]) => {
-        canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-        canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
         ctx.reset();
         ctx.rotate((15 * Math.PI) / 180); // rotates the context 15 degrees 
         ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio); //moves the context to the right a bit 
         let transform = ctx.drawElementImage(draw_element, 0, 0);
 
         draw_element.style.transform = transform.toString();
+    }
+
+    const observer = new ResizeObserver(([entry]) => {
+        canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+        canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
       });
       observer.observe(canvas, { box: 'device-pixel-content-box', fireOnEveryPaint: true });
-    }
   </script>
 </body>
 </html>
