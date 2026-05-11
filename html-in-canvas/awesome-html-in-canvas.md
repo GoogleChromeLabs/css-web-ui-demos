@@ -19,7 +19,7 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 This is a list of frameworks that have added support for HTML-in-Canvas along with the documentation 
 | Framework | Description | Documentation | Sample Code | 
 | :--- | :--- | :--- | :--- |
-| [Three.js](https://threejs.org/) | JavaScript library used to create and display animated 3D computer graphics with WebGL & WebGPU | [HTMLTexture](goo.gle/HIC-threejs) | [Sample](goo.gle/HIC-threejs-example) |
+| [Three.js](https://threejs.org/) | JavaScript library used to create and display animated 3D computer graphics with WebGL & WebGPU | [HTMLTexture](https://goo.gle/HIC-threejs) | [Sample](https://goo.gle/HIC-threejs-example) |
 | [PlayCanvas](https://playcanvas.com/) | Open source engine and tools for building amazing 3D experiences | [html-texture](https://goo.gle/HIC-playcanvas) | [Sample](https://goo.gle/HIC-playcanvas-example) |
 
 ## Disclaimer
