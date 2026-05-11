@@ -15,6 +15,13 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 | [HTML cloth](https://arrival.space/htmlcanvas) | Customize a form on a hanging cloth inside a game | [Thomas Richter-Trummer](https://github.com/fimbox) | [Source](https://github.com/fimbox/html-in-canvas/blob/main/plugins/html-cloth.mjs) |
 | More | demos | coming | soon... |
 
+## Framework Support 
+This is a list of frameworks that have added support for HTML-in-Canvas along with the documentation 
+| Framework | Description | Documentation | Sample Code | 
+| :--- | :--- | :--- | :--- |
+| [Three.js](https://threejs.org/) | JavaScript library used to create and display animated 3D computer graphics with WebGL & WebGPU | [HTMLTexture](https://goo.gle/HIC-threejs) | [Sample](https://goo.gle/HIC-threejs-example) |
+| [PlayCanvas](https://playcanvas.com/) | Open source engine and tools for building amazing 3D experiences | [html-texture](https://goo.gle/HIC-playcanvas) | [Sample](https://goo.gle/HIC-playcanvas-example) |
+
 ## Disclaimer
 
 **Important note on external content**: The demos linked in the [HTML-in-Canvas demos by the ecosystem](#html-in-canvas-demos-by-the-ecosystem) section are created by third-party developers and are not created, maintained, or supported by Google. Please be aware of the following:
