@@ -438,17 +438,7 @@
         let finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
 
         // Workaround for https://crbug.com/512171941:
-        // Normalize the matrix by its W component (m44) to prevent enormous scale
-        // and translation values in the CSS matrix output.
-        if (finalTransform.m44 !== 0 && finalTransform.m44 !== 1) {
-          const w = finalTransform.m44;
-          finalTransform = new DOMMatrix([
-            finalTransform.m11 / w, finalTransform.m12 / w, finalTransform.m13 / w, finalTransform.m14 / w,
-            finalTransform.m21 / w, finalTransform.m22 / w, finalTransform.m23 / w, finalTransform.m24 / w,
-            finalTransform.m31 / w, finalTransform.m32 / w, finalTransform.m33 / w, finalTransform.m34 / w,
-            finalTransform.m41 / w, finalTransform.m42 / w, finalTransform.m43 / w, 1
-          ]);
-        }
+        finalTransform.is2D = false;
 
         const transform = canvas.getElementTransform(uiElement, finalTransform);
         if (transform) {
