@@ -80,20 +80,15 @@
 <script src="../js/gl-matrix.js"></script>
 
 <script>
-  onpaint = () => {
-    const canvas = document.querySelector('#gl-canvas');
-
-    const observer = new ResizeObserver(([entry]) => {
-      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
-    });
-
-    observer.observe(canvas, { box: 'device-pixel-content-box' });
-  }
-
   const canvas = document.getElementById('gl-canvas');
   const gl = canvas.getContext('webgl2');
+
+  // Size the canvas grid to match the device scale factor to prevent blurriness.
+  const observer = new ResizeObserver(([entry]) => {
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+  });
+  observer.observe(canvas, {box: 'device-pixel-content-box'});
 
   if (!gl) {
     alert('WebGL2 not supported');
@@ -119,9 +114,9 @@
     vec4 viewPos = uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
     gl_Position = uProjectionMatrix * viewPos;
     vTexCoord = aTexCoord;
-    
+
     // Normal in View Space
-    vNormal = mat3(uViewMatrix * uModelMatrix) * aNormal; 
+    vNormal = mat3(uViewMatrix * uModelMatrix) * aNormal;
     vViewPosition = viewPos.xyz;
   }
   `;
@@ -146,16 +141,16 @@
     // Refraction (Screen Space Distortion)
     vec2 screenUV = gl_FragCoord.xy / uResolution;
     vec2 refractionOffset = normal.xy * 0.05; // Distortion strength
-    
+
     // Clamp UV to avoid edge artifacts (optional) or just wrap
     vec4 bgColor = texture(uBackgroundTexture, screenUV + refractionOffset);
-    
+
     // Base Color (Texture)
     vec4 texColor = texture(uSampler, vTexCoord);
-    
+
     // Fresnel Effect
     float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
-    
+
     // Specular Highlight
     vec3 lightDir = normalize(vec3(0.5, 1.0, 0.7));
     vec3 halfVector = normalize(lightDir + viewDir);
@@ -165,7 +160,7 @@
     // Combine: Background (Refracted) + Tint + Specular
     vec3 glassColor = mix(bgColor.rgb, texColor.rgb, 0.3 * texColor.a); // Tint with texture
     vec3 finalColor = glassColor + vec3(specular) + vec3(fresnel * 0.3);
-    
+
     fragColor = vec4(finalColor, 0.9); // Slight transparency for standard blending if enabled
   }
   `;
@@ -245,22 +240,6 @@
   const uViewMatrix = gl.getUniformLocation(program, 'uViewMatrix');
   const uProjectionMatrix = gl.getUniformLocation(program, 'uProjectionMatrix');
   const uSampler = gl.getUniformLocation(program, 'uSampler');
-
-  // Hardcoded generic offsets from scene.gltf analysis
-  // View 0: Indices (SCALAR, 5125 UNSIGNED_INT) - count 57996
-  // View 1: TexCoords (VEC2, 5126 FLOAT) - count 11042
-  // View 2: Positions (VEC3, 5126 FLOAT) - count 11042
-  // View 3: Tangents (VEC4, 5126 FLOAT) - count 11042
-
-  // Accessor 0: POSITION - View 2, offset 0
-  // Accessor 1: NORMAL - View 2, offset 132504 (11042 * 12 bytes = 132504)
-  // Accessor 3: TEXCOORD_0 - View 1, offset 0
-  // Accessor 4: INDICES - View 0, offset 0
-
-  // BufferView 0 offset: 0, length: 231984
-  // BufferView 1 offset: 231984, length: 88336
-  // BufferView 2 offset: 320320, length: 265008
-  // BufferView 3 offset: 585328, length: 176672
 
   async function loadDragon() {
     const binResponse = await fetch('../assets/stanford_dragon_pbr/scene.bin');
@@ -396,11 +375,9 @@
       const deltaTime = now - lastTime;
       lastTime = now;
 
-      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-        gl.viewport(0, 0, canvas.width, canvas.height);
-      }
+      // We rely on the ResizeObserver to update canvas.width/height based on devicePixelContentBoxSize.
+      // Update viewport to match the grid size.
+      gl.viewport(0, 0, canvas.width, canvas.height);
 
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -425,47 +402,53 @@
       // UI Model Matrix (Positioned behind dragon)
       const uiModel = mat4.create();
       mat4.translate(uiModel, uiModel, [0, 50, -50]); // Behind dragon
-      mat4.scale(uiModel, uiModel, [200, 200, 1]); // Scale up
+      mat4.scale(uiModel, uiModel, [100, 100, 100]); // Scale up uniformly
 
       // Calculate Element Transform
       const uiMVP = mat4.create();
       mat4.multiply(uiMVP, projection, view);
       mat4.multiply(uiMVP, uiMVP, uiModel);
 
-      // Adjust for 0..1 to -0.5..0.5 mapping (Texture Space to Quad Space)
-      const adjustment = mat4.create();
-      mat4.translate(adjustment, adjustment, [-0.5, 0.5, 0]);
-      mat4.scale(adjustment, adjustment, [1, -1, 1]);
-
-      const finalUiTransform = mat4.create();
-      mat4.multiply(finalUiTransform, uiMVP, adjustment);
-
       if (canvas.getElementTransform) {
         // 1. Convert the MVP matrix (gl-matrix Float32Array) to a DOMMatrix
         const mvpDOM = new DOMMatrix(Array.from(uiMVP));
 
-        // 2. Element CSS pixels -> WebGL Model Space
-        //    Element is 512x512. Quad geometry is -0.5 to 0.5 (size 1).
-        //    Map: (0,0) -> (-0.5, 0.5) and (512,512) -> (0.5, -0.5)
-        const width = uiElement.offsetWidth;
-        const height = uiElement.offsetHeight;
+        // 2. Element Canvas Grid pixels -> WebGL Model Space
+        //    Element is 512x512 CSS pixels. Map to Grid pixels first.
+        const dprX = canvas.width / canvas.clientWidth;
+        const dprY = canvas.height / canvas.clientHeight;
+        const gridWidth = uiElement.offsetWidth * dprX;
+        const gridHeight = uiElement.offsetHeight * dprY;
 
         const toGLModel = new DOMMatrix()
           // Scale pixels to 1 unit, flip Y (CSS down, GL up)
-          .scale(1 / width, -1 / height, 1)
+          .scale(1 / gridWidth, -1 / gridHeight, 1 / gridHeight)
           // Center the origin: (0,0) becomes (-width/2, -height/2) before scaling
-          .translate(-width / 2, -height / 2);
+          .translate(-gridWidth / 2, -gridHeight / 2);
 
-        // 3. WebGL Clip Space -> Canvas CSS pixels (Viewport Transform)
-        //    Clip (-1..1) -> Canvas (0..w, 0..h)
+        // 3. WebGL Clip Space -> Canvas Grid pixels (Viewport Transform)
+        //    Clip (-1..1) -> Canvas Grid (0..w, 0..h)
         const toCSSViewport = new DOMMatrix()
           // Move center (0,0) to center of canvas
           .translate(canvas.width / 2, canvas.height / 2)
           // Scale normalized clip (-1..1) to viewport size
-          .scale(canvas.width / 2, -canvas.height / 2, 1);
+          .scale(canvas.width / 2, -canvas.height / 2, canvas.height / 2);
 
         // 4. Combine: Viewport * MVP * Model
-        const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
+        let finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
+
+        // Workaround for https://crbug.com/512171941:
+        // Normalize the matrix by its W component (m44) to prevent enormous scale
+        // and translation values in the CSS matrix output.
+        if (finalTransform.m44 !== 0 && finalTransform.m44 !== 1) {
+          const w = finalTransform.m44;
+          finalTransform = new DOMMatrix([
+            finalTransform.m11 / w, finalTransform.m12 / w, finalTransform.m13 / w, finalTransform.m14 / w,
+            finalTransform.m21 / w, finalTransform.m22 / w, finalTransform.m23 / w, finalTransform.m24 / w,
+            finalTransform.m31 / w, finalTransform.m32 / w, finalTransform.m33 / w, finalTransform.m34 / w,
+            finalTransform.m41 / w, finalTransform.m42 / w, finalTransform.m43 / w, 1
+          ]);
+        }
 
         const transform = canvas.getElementTransform(uiElement, finalTransform);
         if (transform) {
