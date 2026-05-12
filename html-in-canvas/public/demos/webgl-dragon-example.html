@@ -437,23 +437,16 @@
         // 4. Combine: Viewport * MVP * Model
         let finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
 
-        // Workaround for https://crbug.com/512171941:
-        // Normalize the matrix by its W component (m44) to prevent enormous scale
-        // and translation values in the CSS matrix output.
-        if (finalTransform.m44 !== 0 && finalTransform.m44 !== 1) {
-          const w = finalTransform.m44;
-          finalTransform = new DOMMatrix([
-            finalTransform.m11 / w, finalTransform.m12 / w, finalTransform.m13 / w, finalTransform.m14 / w,
-            finalTransform.m21 / w, finalTransform.m22 / w, finalTransform.m23 / w, finalTransform.m24 / w,
-            finalTransform.m31 / w, finalTransform.m32 / w, finalTransform.m33 / w, finalTransform.m34 / w,
-            finalTransform.m41 / w, finalTransform.m42 / w, finalTransform.m43 / w, 1
-          ]);
-        }
+        let transform = canvas.getElementTransform(uiElement, finalTransform);
 
-        const transform = canvas.getElementTransform(uiElement, finalTransform);
-        if (transform) {
-          uiElement.style.transform = transform.toString();
-        }
+        // Workaround for Chromium bug https://crbug.com/512171941 where
+        // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+        // assignment below re-initializes the DOMMatrix which corrects is2D to
+        // be false.
+        if (transform.is2D)
+          transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
+
+        uiElement.style.transform = transform.toString();
       }
 
       gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projection);
