@@ -201,7 +201,7 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
         uBackTex: gl.getUniformLocation(program, 'uBackTex')
     };
 
-    const plane = createPlane(PAGE_WIDTH, PAGE_HEIGHT, 60, 60); 
+    const plane = createPlane(PAGE_WIDTH, PAGE_HEIGHT, 60, 60);
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
@@ -234,7 +234,7 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
 
     canvas.addEventListener('pointerdown', e => {
         const xPercent = e.clientX / window.innerWidth;
-        
+
         if (xPercent > 0.5) {
             // Pick the top-most page on the right to flip next
             dragPage = pages.find(p => p.targetProgress === 0.0);
@@ -254,10 +254,10 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
 
     canvas.addEventListener('pointermove', e => {
         if (!isDragging || !dragPage) return;
-        
+
         const deltaX = dragStartX - e.clientX;
         const progressDelta = deltaX / (window.innerWidth * 0.7); // Adjust sensitivity
-        
+
         let newProgress = dragStartProgress + progressDelta;
         dragPage.progress = Math.max(0.001, Math.min(0.999, newProgress));
         // We set targetProgress to current so it doesn't try to snap while dragging
@@ -266,7 +266,7 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
 
     canvas.addEventListener('pointerup', e => {
         if (!isDragging || !dragPage) return;
-        
+
         isDragging = false;
         // Snap back or finish flip based on halfway point
         dragPage.targetProgress = dragPage.progress > 0.5 ? 1.0 : 0.0;
@@ -326,7 +326,7 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
         gl.uniform1f(uniforms.uPageWidth, PAGE_WIDTH);
 
         gl.bindVertexArray(vao);
-        
+
         let topRightIndex = -1;
         for (let i = 0; i < pages.length; i++) {
             if (pages[i].progress <= 0.001) { topRightIndex = i; break; }
@@ -339,14 +339,14 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
         for (let i = 0; i < pages.length; i++) {
             const p = pages[i];
             const t = p.progress;
-            
+
             const zRight = -i * 0.02;
             const zLeft = -(pages.length - 1 - i) * 0.02;
             const zOffset = (1.0 - t) * zRight + t * zLeft;
 
             const model = mat4.create();
             mat4.translate(model, model, [0, 0, zOffset]);
-            mat4.rotateX(model, model, -0.1); 
+            mat4.rotateX(model, model, -0.1);
 
             gl.uniformMatrix4fv(uniforms.uModel, false, model);
             gl.uniform1f(uniforms.uTurnProgress, t);
@@ -371,7 +371,7 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
                 const mapPage = (elId, isFront) => {
                     const el = document.getElementById(elId);
                     if (!el) return;
-                    
+
                     const flatRot = mat4.create();
                     mat4.translate(flatRot, flatRot, [0, 0, zOffset]);
                     mat4.rotateX(flatRot, flatRot, -0.1);
@@ -386,13 +386,22 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
                     mat4.multiply(mvp, mvp, flatRot);
 
                     const finalT = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
-                    const syncT = canvas.getElementTransform(el, finalT);
-                    if (syncT) el.style.transform = syncT.toString();
-                    
+                    let syncT = canvas.getElementTransform(el, finalT);
+
+                    // Workaround for Chromium bug https://crbug.com/512171941 where
+                    // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+                    // assignment below re-initializes the DOMMatrix which corrects is2D to
+                    // be false.
+                    if (syncT.is2D)
+                        syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+
+                    el.style.transform = syncT.toString();
+
+
                     const isFacing = isFront ? (t < 0.5) : (t > 0.5);
                     const isTurning = t > 0.001 && t < 0.999;
                     const isTopActive = (i === topRightIndex || i === topLeftIndex || isTurning);
-                    
+
                     el.style.zIndex = Math.round((zOffset + 5) * 1000 + (isFacing ? 100 : -100));
                     el.style.pointerEvents = (isFacing && isTopActive) ? 'auto' : 'none';
                     el.style.visibility = 'visible';
@@ -403,8 +412,8 @@ export function setupCurlBookRendering(canvas, numTotalPages = 6) {
         }
         requestAnimationFrame(render);
     }
-    
+
     let started = false;
-    canvas.onpaint = () => { if(!started){ started=true; requestAnimationFrame(render); } };
-    setTimeout(() => { if(!started){ started=true; requestAnimationFrame(render); } }, 100);
+    canvas.onpaint = () => { if (!started) { started = true; requestAnimationFrame(render); } };
+    setTimeout(() => { if (!started) { started = true; requestAnimationFrame(render); } }, 100);
 }

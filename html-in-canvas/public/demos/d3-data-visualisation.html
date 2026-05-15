@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+      content="High-performance Canvas Data Visualization built with D3.js math and layout and styled interactively using the HTML-in-Canvas API.">
+  <meta name="keywords" content="HTML in Canvas, layoutsubtree, D3.js, Data Visualization, Canvas API, Interactive Charts, Web Performance">
+  <title>D3.js Visualization Showcase</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-scale-radial@2"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
+      font-family: system-ui, sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 30px 20px 10px;
+      margin: 0;
+      color: var(--md-sys-color-primary);
+      font-size: 3rem;
+      letter-spacing: 2px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--md-sys-color-on-background-variant);
+      opacity: 0.8;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 30px;
+      padding: 0 40px 40px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--md-sys-color-surface-container);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      border-color: var(--md-sys-color-outline);
+      outline: none;
+    }
+
+    .chart-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--md-sys-color-on-surface);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .chart-canvas {
+      width: 100%;
+      height: 300px;
+      display: block;
+      position: relative;
+    }
+
+    /* Subtree Children styling for high accessibility */
+    .chart-canvas > * {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      pointer-events: auto;
+      box-sizing: border-box;
+    }
+
+    /* Interactive elements to overlay on canvas elements */
+    .interactive-label {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 11px;
+      white-space: nowrap;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: transparent;
+      border: none;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .interactive-label:hover,
+    .interactive-label:focus-visible {
+      color: var(--md-sys-color-primary);
+      background: rgba(0, 210, 255, 0.15);
+      outline: none;
+    }
+
+    .bar-segment {
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bar-text {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 9px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+    }
+
+    /* Center element for donut chart */
+    .donut-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: var(--md-sys-color-on-surface);
+      pointer-events: none;
+    }
+
+    .donut-center .val {
+      font-size: 28px;
+      color: var(--md-sys-color-primary);
+    }
+
+    .donut-center .lbl {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      text-transform: uppercase;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 13px;
+      background: var(--md-sys-color-inverse-surface);
+      color: var(--md-sys-color-inverse-on-surface);
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      font-weight: 500;
+    }
+
+    /* Doughnut Slice Tooltip CSS */
+    .donut-slice {
+      position: absolute;
+      display: inline-block;
+      overflow: visible; /* Allow tooltip to overflow the button */
+    }
+
+    .donut-slice .donut-tooltip {
+      visibility: hidden;
+      width: 240px;
+      background-color: rgba(20, 20, 25, 0.95);
+      color: #ffffff;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border-color, var(--md-sys-color-primary));
+      font-size: 11px;
+      font-family: system-ui, -apple-system, sans-serif;
+      white-space: normal;
+      word-wrap: break-word;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      font-weight: bold;
+      
+      /* Position the tooltip text above the button */
+      position: absolute;
+      z-index: 100;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      
+      pointer-events: none; /* Avoid blocking mouse moves */
+    }
+
+    /* Tooltip arrow */
+    .donut-slice .donut-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%; /* Bottom of tooltip */
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--border-color, var(--md-sys-color-primary)) transparent transparent transparent;
+    }
+
+    /* Show tooltip on hover or focus */
+    .donut-slice:hover .donut-tooltip,
+    .donut-slice:focus-visible .donut-tooltip {
+      visibility: visible;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>D3.js Visualization Showcase</h1>
+  <div class="subtitle">D3.js charts rendered with HTML-in-Canvas</div>
+
+  <div class="container" role="main">
+    <!-- Card 1: Grouped Bar Chart -->
+    <div class="card" role="region" aria-label="Grouped Bar Chart">
+      <div class="chart-title">Grouped Bar Chart</div>
+      <canvas id="chart1" class="chart-canvas" layoutsubtree>
+        <!-- Axis Labels -->
+        <span class="interactive-label group-label" data-group="Q1">Q1</span>
+        <span class="interactive-label group-label" data-group="Q2">Q2</span>
+        <span class="interactive-label group-label" data-group="Q3">Q3</span>
+        <span class="interactive-label group-label" data-group="Q4">Q4</span>
+
+        <!-- Interactive hover segments -->
+        <!-- Q1 -->
+        <button class="interactive-label bar-segment" data-group="Q1" data-sub="Prod A" data-val="15">
+          <span class="bar-text">a bit</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q1" data-sub="Prod B" data-val="55">
+          <span class="bar-text">average</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q1" data-sub="Prod C" data-val="65">
+          <span class="bar-text">a lot</span>
+        </button>
+        <!-- Q2 -->
+        <button class="interactive-label bar-segment" data-group="Q2" data-sub="Prod A" data-val="50">
+          <span class="bar-text">average</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q2" data-sub="Prod B" data-val="25">
+          <span class="bar-text">a bit</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q2" data-sub="Prod C" data-val="75">
+          <span class="bar-text">a lot</span>
+        </button>
+        <!-- Q3 -->
+        <button class="interactive-label bar-segment" data-group="Q3" data-sub="Prod A" data-val="85">
+          <span class="bar-text">a lot</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q3" data-sub="Prod B" data-val="65">
+          <span class="bar-text">a lot</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q3" data-sub="Prod C" data-val="20">
+          <span class="bar-text">a bit</span>
+        </button>
+        <!-- Q4 -->
+        <button class="interactive-label bar-segment" data-group="Q4" data-sub="Prod A" data-val="70">
+          <span class="bar-text">a lot</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q4" data-sub="Prod B" data-val="50">
+          <span class="bar-text">average</span>
+        </button>
+        <button class="interactive-label bar-segment" data-group="Q4" data-sub="Prod C" data-val="80">
+          <span class="bar-text">a lot</span>
+        </button>
+      </canvas>
+    </div>
+
+    <!-- Card 2: Donut Chart -->
+    <div class="card" role="region" aria-label="Donut Chart">
+      <div class="chart-title">Donut Chart</div>
+      <canvas id="chart2" class="chart-canvas" layoutsubtree>
+        <!-- Donut Center Element -->
+        <div class="donut-center" style="width: 120px; height: 120px;">
+          <span class="val">100%</span>
+          <span class="lbl">Fruit</span>
+        </div>
+
+        <!-- Slice Interactive Overlays with nested HTML/CSS Tooltips -->
+        <button class="interactive-label donut-slice" data-key="Apple" data-val="35" style="--border-color: #ff00cc;">
+          Apple
+          <span class="donut-tooltip">Apple (35%): Apple is a crisp, sweet and juicy pome fruit.</span>
+        </button>
+        <button class="interactive-label donut-slice" data-key="Blackberry" data-val="25" style="--border-color: #7b6888;">
+          Blackberry
+          <span class="donut-tooltip">Blackberry (25%): Blackberry is a delicious aggregate bramble fruit.</span>
+        </button>
+        <button class="interactive-label donut-slice" data-key="Durian" data-val="20" style="--border-color: #00d2ff;">
+          Durian
+          <span class="donut-tooltip">Durian (20%): Durian is a spiky, highly aromatic tropical fruit.</span>
+        </button>
+        <button class="interactive-label donut-slice" data-key="Cherry" data-val="12" style="--border-color: #ffeb3b;">
+          Cherry
+          <span class="donut-tooltip">Cherry (12%): Cherry is a sweet, bright red summer stone fruit.</span>
+        </button>
+        <button class="interactive-label donut-slice" data-key="Fig" data-val="8" style="--border-color: #4daf4a;">
+          Fig
+          <span class="donut-tooltip">Fig (8%): Fig is a unique, soft and sweet aggregate flower-fruit.</span>
+        </button>
+      </canvas>
+    </div>
+
+    <!-- Card 3: Radial Bar Chart -->
+    <div class="card" role="region" aria-label="Radial Bar Chart">
+      <div class="chart-title">Radial Bar Chart</div>
+      <canvas id="chart3" class="chart-canvas" layoutsubtree>
+        <a class="interactive-label radial-segment" data-country="USA" href="https://en.wikipedia.org/wiki/United_States" target="_blank">USA</a>
+        <a class="interactive-label radial-segment" data-country="China" href="https://en.wikipedia.org/wiki/China" target="_blank">China</a>
+        <a class="interactive-label radial-segment" data-country="India" href="https://en.wikipedia.org/wiki/India" target="_blank">India</a>
+        <a class="interactive-label radial-segment" data-country="Russia" href="https://en.wikipedia.org/wiki/Russia" target="_blank">Russia</a>
+        <a class="interactive-label radial-segment" data-country="Germany" href="https://en.wikipedia.org/wiki/Germany" target="_blank">Germany</a>
+        <a class="interactive-label radial-segment" data-country="Japan" href="https://en.wikipedia.org/wiki/Japan" target="_blank">Japan</a>
+        <a class="interactive-label radial-segment" data-country="UK" href="https://en.wikipedia.org/wiki/United_Kingdom" target="_blank">UK</a>
+      </canvas>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+    const tooltip = d3.select("#tooltip");
+
+    // Global layout parameters
+    const margin = { top: 20, right: 25, bottom: 45, left: 55 };
+    let animationProgress = 0;
+
+    // Ease function
+    function easeOutCubic(x) {
+      return 1 - Math.pow(1 - x, 3);
+    }
+
+    // Rounded rect utility
+    function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.fillStyle = fillStyle;
+      ctx.fill();
+    }
+
+    // Base Canvas setup utility with DPR resize observer
+    function initCanvasChart(canvasId, buildDom, onPaint) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+
+      // Build interactive DOM elements inside the canvas
+      buildDom(canvas);
+
+      canvas.onpaint = () => {
+        const dpr = window.devicePixelRatio || 1;
+        const logicalWidth = canvas.clientWidth;
+        const logicalHeight = canvas.clientHeight;
+        
+        ctx.reset();
+        onPaint(canvas, ctx, logicalWidth, logicalHeight, dpr);
+      };
+
+      const observer = new ResizeObserver(([entry]) => {
+        const box = entry.devicePixelContentBoxSize[0];
+        canvas.width = box.inlineSize;
+        canvas.height = box.blockSize;
+        canvas.requestPaint();
+      });
+      observer.observe(canvas, { box: "device-pixel-content-box" });
+    }
+
+    // Unified tooltip handler
+    function bindTooltipEvents(element, getHtml) {
+      element.addEventListener("mouseenter", (e) => {
+        tooltip.style("opacity", 1)
+          .html(getHtml())
+          .style("left", (e.pageX + 15) + "px")
+          .style("top", (e.pageY - 35) + "px");
+      });
+      element.addEventListener("mousemove", (e) => {
+        tooltip.style("left", (e.pageX + 15) + "px")
+          .style("top", (e.pageY - 35) + "px");
+      });
+      element.addEventListener("mouseleave", () => {
+        tooltip.style("opacity", 0);
+      });
+      element.addEventListener("focus", (e) => {
+        const rect = e.target.getBoundingClientRect();
+        tooltip.style("opacity", 1)
+          .html(getHtml())
+          .style("left", (window.scrollX + rect.left + rect.width/2) + "px")
+          .style("top", (window.scrollY + rect.top - 40) + "px");
+      });
+      element.addEventListener("blur", () => {
+        tooltip.style("opacity", 0);
+      });
+    }
+
+    // ----------------------------------------------------
+    // Chart 1: Grouped Bar Chart
+    // ----------------------------------------------------
+    {
+      const groups = ["Q1", "Q2", "Q3", "Q4"];
+      const subgroups = ["Prod A", "Prod B", "Prod C"];
+      const data = [
+        { group: "Q1", "Prod A": 15, "Prod B": 55, "Prod C": 65 },
+        { group: "Q2", "Prod A": 50, "Prod B": 25, "Prod C": 75 },
+        { group: "Q3", "Prod A": 85, "Prod B": 65, "Prod C": 20 },
+        { group: "Q4", "Prod A": 70, "Prod B": 50, "Prod C": 80 }
+      ];
+
+      const colorMap = {
+        "Prod A": "#ff00cc",
+        "Prod B": "#7b6888",
+        "Prod C": "#00d2ff"
+      };
+
+      const buildDom = (canvas) => {
+        data.forEach(g => {
+          subgroups.forEach(sub => {
+            const segment = canvas.querySelector(`.bar-segment[data-group="${g.group}"][data-sub="${sub}"]`);
+            if (segment) {
+              bindTooltipEvents(segment, () => `${g.group} - ${sub}: ${g[sub]}`);
+            }
+          });
+        });
+      };
+
+      const onPaint = (canvas, ctx, width, height, dpr) => {
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+
+        const x0 = d3.scaleBand().domain(groups).range([0, chartWidth]).padding(0.25);
+        const x1 = d3.scaleBand().domain(subgroups).range([0, x0.bandwidth()]).padding(0.08);
+        const y = d3.scaleLinear().domain([0, 100]).range([chartHeight, 0]);
+
+        // 1. Background Grid
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+        [25, 50, 75, 100].forEach(val => {
+          const yPos = margin.top + y(val);
+          ctx.beginPath();
+          ctx.moveTo(margin.left, yPos);
+          ctx.lineTo(margin.left + chartWidth, yPos);
+          ctx.stroke();
+        });
+
+        // 2. Draw Bars & Sync Overlays
+        data.forEach(g => {
+          subgroups.forEach(sub => {
+            const val = g[sub] * easeOutCubic(animationProgress);
+            const barW = x1.bandwidth();
+            const barH = chartHeight - y(val);
+            const barX = margin.left + x0(g.group) + x1(sub);
+            const barY = margin.top + y(val);
+
+            // Draw rounded bar
+            drawRoundedRect(ctx, barX, barY, barW, barH, 4, colorMap[sub]);
+
+            // Find & sync corresponding DOM button overlay
+            const segment = canvas.querySelector(`.bar-segment[data-group="${g.group}"][data-sub="${sub}"]`);
+            if (segment) {
+              segment.style.width = `${barW}px`;
+              segment.style.height = `${Math.max(barH, 1)}px`;
+              const transform = ctx.drawElementImage(segment, barX, barY);
+              segment.style.transform = transform.toString();
+            }
+          });
+        });
+
+        // 3. Draw axes
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.beginPath();
+        ctx.moveTo(margin.left, margin.top);
+        ctx.lineTo(margin.left, margin.top + chartHeight);
+        ctx.lineTo(margin.left + chartWidth, margin.top + chartHeight);
+        ctx.stroke();
+
+        // 4. Sync group labels
+        canvas.querySelectorAll(".group-label").forEach(lbl => {
+          const g = lbl.dataset.group;
+          const xPos = margin.left + x0(g) + x0.bandwidth() / 2 - 10;
+          const yPos = margin.top + chartHeight + 8;
+          const transform = ctx.drawElementImage(lbl, xPos, yPos);
+          lbl.style.transform = transform.toString();
+        });
+      };
+
+      initCanvasChart("chart1", buildDom, onPaint);
+    }
+
+    // ----------------------------------------------------
+    // Chart 2: Donut Chart
+    // ----------------------------------------------------
+    {
+      const data = { Apple: 35, Blackberry: 25, Durian: 20, Cherry: 12, Fig: 8 };
+      const colorMap = {
+        Apple: "#ff00cc",
+        Blackberry: "#7b6888",
+        Durian: "#00d2ff",
+        Cherry: "#ffeb3b",
+        Fig: "#4daf4a"
+      };
+
+      const buildDom = (canvas) => {
+        // Slice Interactive Overlays
+        Object.keys(data).forEach(key => {
+          const slice = canvas.querySelector(`.donut-slice[data-key="${key}"]`);
+          if (slice) {
+            // Minimal repaint triggers on hover/focus for frame synchronization
+            slice.addEventListener("mouseenter", () => canvas.requestPaint());
+            slice.addEventListener("mouseleave", () => canvas.requestPaint());
+            slice.addEventListener("focus", () => canvas.requestPaint());
+            slice.addEventListener("blur", () => canvas.requestPaint());
+          }
+        });
+      };
+
+      const onPaint = (canvas, ctx, width, height, dpr) => {
+        const radius = Math.min(width, height) / 2 - 25;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const pie = d3.pie().value(d => d[1]).sort(null);
+        const dataReady = pie(Object.entries(data));
+        const arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius * 0.85);
+
+        // 1. Render Slices on Canvas
+        dataReady.forEach(d => {
+          const currentStart = d.startAngle * easeOutCubic(animationProgress);
+          const currentEnd = d.endAngle * easeOutCubic(animationProgress);
+
+          ctx.beginPath();
+          // Inner arc, outer arc combo to draw wedge path
+          ctx.arc(centerX, centerY, radius * 0.85, currentStart - Math.PI/2, currentEnd - Math.PI/2);
+          ctx.arc(centerX, centerY, radius * 0.55, currentEnd - Math.PI/2, currentStart - Math.PI/2, true);
+          ctx.closePath();
+
+          ctx.fillStyle = colorMap[d.data[0]];
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(18, 18, 18, 0.5)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // 2. Align DOM overlays at centroid
+          const slice = canvas.querySelector(`.donut-slice[data-key="${d.data[0]}"]`);
+          if (slice) {
+            const [cX, cY] = arc.centroid(d);
+            const xPos = centerX + cX - slice.offsetWidth / 2;
+            const yPos = centerY + cY - slice.offsetHeight / 2;
+            const transform = ctx.drawElementImage(slice, xPos, yPos);
+            slice.style.transform = transform.toString();
+          }
+        });
+
+        // 3. Align central display block
+        const center = canvas.querySelector(".donut-center");
+        if (center) {
+          const cX = centerX - center.offsetWidth / 2;
+          const cY = centerY - center.offsetHeight / 2;
+          const transform = ctx.drawElementImage(center, cX, cY);
+          center.style.transform = transform.toString();
+        }
+      };
+
+      initCanvasChart("chart2", buildDom, onPaint);
+    }
+
+    // ----------------------------------------------------
+    // Chart 3: Radial Bar Chart
+    // ----------------------------------------------------
+    {
+      const data = [
+        { Country: "USA", Value: 92 },
+        { Country: "China", Value: 75 },
+        { Country: "India", Value: 64 },
+        { Country: "Russia", Value: 52 },
+        { Country: "Germany", Value: 44 },
+        { Country: "Japan", Value: 35 },
+        { Country: "UK", Value: 24 }
+      ];
+
+      const buildDom = (canvas) => {
+        data.forEach(d => {
+          const segment = canvas.querySelector(`.radial-segment[data-country="${d.Country}"]`);
+          if (segment) {
+            bindTooltipEvents(segment, () => `${d.Country}: ${d.Value}`);
+          }
+        });
+      };
+
+      const onPaint = (canvas, ctx, width, height, dpr) => {
+        const innerRadius = 45;
+        const outerRadius = Math.min(width, height) / 2 - 20;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const x = d3.scaleBand().range([0, 2 * Math.PI]).domain(data.map(d => d.Country));
+        const y = d3.scaleRadial().range([innerRadius, outerRadius]).domain([0, 100]);
+
+        data.forEach(d => {
+          const val = d.Value * easeOutCubic(animationProgress);
+          const startAngle = x(d.Country) - Math.PI / 2;
+          const endAngle = startAngle + x.bandwidth();
+          const innerR = innerRadius;
+          const outerR = y(val);
+
+          // Draw curved radial segment
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, outerR, startAngle, endAngle);
+          ctx.arc(centerX, centerY, innerR, endAngle, startAngle, true);
+          ctx.closePath();
+
+          ctx.fillStyle = "rgba(105, 179, 162, 0.85)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(18, 18, 18, 0.3)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Align DOM Interactive overlay at end of the radial bar
+          const segment = canvas.querySelector(`.radial-segment[data-country="${d.Country}"]`);
+          if (segment) {
+            const midAngle = startAngle + x.bandwidth() / 2;
+            const radiusAtVal = outerR + 10;
+            const cX = centerX + Math.cos(midAngle) * radiusAtVal;
+            const cY = centerY + Math.sin(midAngle) * radiusAtVal;
+
+            segment.textContent = d.Country;
+            const transform = ctx.drawElementImage(segment, cX - segment.offsetWidth/2, cY - segment.offsetHeight/2);
+            segment.style.transform = transform.toString();
+          }
+        });
+
+        // Central helper circle
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.stroke();
+      };
+
+      initCanvasChart("chart3", buildDom, onPaint);
+    }
+
+    // ----------------------------------------------------
+    // Animation loop
+    // ----------------------------------------------------
+    function runAnimation() {
+      const startTime = performance.now();
+      const duration = 1200; // 1.2s
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        animationProgress = Math.max(0.0, Math.min(elapsed / duration, 1.0));
+
+        // Repaint all canvases
+        document.querySelectorAll(".chart-canvas").forEach(canvas => {
+          canvas.requestPaint();
+        });
+
+        if (animationProgress < 1.0) {
+          requestAnimationFrame(animate);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    runAnimation();
+  </script>
+</body>
+
+</html>

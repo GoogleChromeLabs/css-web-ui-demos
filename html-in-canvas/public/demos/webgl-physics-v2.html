@@ -7,7 +7,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+    <meta http-equiv="origin-trial"
+        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
@@ -222,6 +223,11 @@
         <button class="ball google-red" tabindex="-1"><md-ripple></md-ripple></button>
         <md-filled-tonal-button class="physics-item">MAGIC 🪄</md-filled-tonal-button>
         <button class="ball google-yellow" tabindex="-1"><md-ripple></md-ripple></button>
+        <md-filled-tonal-button id="btn-freeze" class="physics-item"
+            style="--md-filled-tonal-button-container-color: #b3e5fc!important; --md-filled-tonal-button-hover-container-color:#b3e5fc!important">
+            FREEZE!
+        </md-filled-tonal-button>
+
     </canvas>
 
     <script src="../js/gl-matrix.js"></script>
@@ -271,6 +277,10 @@
                 setTimeout(() => physics.add(newEl, true), 60);
             }
             addTurn++;
+        });
+
+        document.getElementById('btn-freeze').addEventListener('click', () => {
+            const isFrozen = physics.toggleFreeze();
         });
     </script>
 </body>

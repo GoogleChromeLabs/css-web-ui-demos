@@ -476,8 +476,10 @@ export function setupPhysicsRendering(canvas, containerId) {
             .translate(canvas.width / 2, canvas.height / 2)
             .scale(canvas.width / 2, -canvas.height / 2, 1);
 
-        for (const p of elements) p.update(dt);
-        resolveCollisions(elements);
+        if (!pEngine.isFrozen) {
+            for (const p of elements) p.update(dt);
+            resolveCollisions(elements);
+        }
 
         for (const p of elements) {
             const model = p.getMatrix();
@@ -522,6 +524,7 @@ export function setupPhysicsRendering(canvas, containerId) {
 
     let spawnTimeouts = [];
     const pEngine = {
+        isFrozen: false,
         spawn: () => {
             spawnTimeouts.forEach(clearTimeout);
             spawnTimeouts = [];
@@ -538,6 +541,10 @@ export function setupPhysicsRendering(canvas, containerId) {
             const pe = new PhysicsElement(domEl, isCircle);
             elements.push(pe);
             pe.reset();
+        },
+        toggleFreeze: () => {
+            pEngine.isFrozen = !pEngine.isFrozen;
+            return pEngine.isFrozen;
         }
     };
 

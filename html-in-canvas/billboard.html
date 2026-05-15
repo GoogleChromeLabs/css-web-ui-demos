@@ -7,16 +7,15 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="origin-trial"
-        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+    <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
         content="Interactive 3D Billboard demo using HTML-in-Canvas (layoutsubtree) and WebGL to render accessible DOM elements on a rotating 3D surface.">
     <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL, 3D Billboard, Accessibility, DOM in Canvas">
     <title>3D Interactive Billboard (HTML-in-Canvas)</title>
-    <link rel="stylesheet" href="../css/theme.css">
-    <script type="module" src="../js/material-web-bundle.js"></script>
+    <link rel="stylesheet" href="css/theme.css">
+    <script type="module" src="js/material-web-bundle.js"></script>
     <style>
         ::selection {
             color: black;
@@ -255,6 +254,18 @@
 
     <canvas id="gl-canvas" layoutsubtree>
         <!-- Live Gemini Scribble Integrated via JS Refresh -->
+         <section>
+        <?start name="gallery">
+        Loading…
+        <?end>
+        </section>
+
+        <template for="gallery">
+        Actual
+        <strong>gallery</strong>
+        content
+        </template>
+
         <form id="billboard-content">
             <div class="badge">Gemini Note Taking</div>
 
@@ -472,7 +483,7 @@
         let screenMesh = null;
         let billboardBounds = null;
 
-        loader.load('./../assets/Billboard.glb', (gltf) => {
+        loader.load('./assets/Billboard.glb', (gltf) => {
             const model = gltf.scene;
 
             model.rotation.y = 5.4;
@@ -621,14 +632,7 @@
                     .multiply(toDOM(screenMesh.matrixWorld))
                     .multiply(localTransform);
 
-                let syncT = canvas.getElementTransform(billboardContent, mvp);
-                // Workaround for Chromium bug https://crbug.com/512171941 where
-                // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
-                // assignment below re-initializes the DOMMatrix which corrects is2D to
-                // be false.
-                if (syncT.is2D)
-                    syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
-
+                const syncT = canvas.getElementTransform(billboardContent, mvp);
                 if (syncT) {
                     billboardContent.style.transformOrigin = '0 0';
                     billboardContent.style.transform = syncT.toString();
