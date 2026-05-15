@@ -343,9 +343,17 @@ export function setupBookRendering(canvas, numTotalPages = 6) {
 
                 const frontEl = document.getElementById(p.frontId);
                 if (frontEl) {
-                    const finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront))).multiply(toGLModel);
+                    let finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront))).multiply(toGLModel);
                     const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
-                    if (tFront) frontEl.style.transform = tFront.toString();
+                    
+                    // Workaround for Chromium bug https://crbug.com/512171941 where
+                    // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+                    // assignment below re-initializes the DOMMatrix which corrects is2D to
+                    // be false.
+                    if (tFront.is2D) {
+                        tFront = DOMMatrix.fromFloat64Array(tFront.toFloat64Array());
+                    }
+                    frontEl.style.transform = tFront.toString();
                     frontEl.style.zIndex = Math.round(zBase + (isFrontVisible ? 10 : -10));
                     frontEl.style.pointerEvents = (isFrontVisible && isTopActive) ? 'auto' : 'none';
                 }

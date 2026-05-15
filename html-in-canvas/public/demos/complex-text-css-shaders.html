@@ -3,6 +3,10 @@
  Copyright 2026 Google LLC
  SPDX-License-Identifier: Apache-2.0
 -->
+<!--
+ This demo shows that CSS filters work when applied to HTML-in-Canvas.
+ For more complex filters, it's recommended to use WebGL/WebGPU shaders that execute directly on the GPU and allow for low-level control of the vertex manipulation and fragment sampling, and therefore are more performant and flexible.
+-->
 
 <html lang="en">
 
@@ -11,9 +15,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Experimenting with CSS Shaders, filters, and backdrops applied to HTML content rendered inside a canvas using the layoutsubtree API.">
-    <meta name="keywords" content="HTML in Canvas, layoutsubtree, CSS Shaders, WebGL Filters, Backdrop Filter">
-    <title>CSS Shaders & Filters (HTML-in-Canvas)</title>
+        content="Experimenting with CSS filters applied to HTML-in-canvas.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, CSS Filters">
+    <title>CSS Filters (HTML-in-Canvas)</title>
   <link rel="stylesheet" href="../css/theme.css">
   <script type="module" src="../js/material-web-bundle.js"></script>
 </head>
