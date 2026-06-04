@@ -488,7 +488,13 @@
             if (!element) return;
 
             gl.bindTexture(gl.TEXTURE_2D, tex);
-            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+            // This if block is used to ensure older browser support before the breaking update in Chromium 150
+            // See https://github.com/WICG/html-in-canvas/pull/128/changes
+            if (gl.texElementImage2D.length === 3) {
+                gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, element);
+            } else {
+                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+            }
         }
 
         function createShader(gl, type, source) {

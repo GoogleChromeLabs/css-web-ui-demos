@@ -209,7 +209,13 @@ class PhysicsElement {
             if (gl.texElementImage2D) {
                 try {
                     gl.bindTexture(gl.TEXTURE_2D, this.tex);
+                // This if block is used to ensure older browser support before the breaking update in Chromium 150
+                // See https://github.com/WICG/html-in-canvas/pull/128/changes
+                if (gl.texElementImage2D.length === 3) {
+                    gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
+                } else {
                     gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                }
                 } catch {}
             }
             return;
@@ -286,7 +292,13 @@ class PhysicsElement {
         if (gl.texElementImage2D) {
             try {
                 gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                // This if block is used to ensure older browser support before the breaking update in Chromium 150
+                // See https://github.com/WICG/html-in-canvas/pull/128/changes
+                if (gl.texElementImage2D.length === 3) {
+                    gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
+                } else {
+                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                }
             } catch {}
         }
     }

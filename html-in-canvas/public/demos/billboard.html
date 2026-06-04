@@ -580,7 +580,13 @@
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
                 try {
-                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, billboardContent);
+                    // This if block is used to ensure older browser support before the breaking update in Chromium 150
+                    // See https://github.com/WICG/html-in-canvas/pull/128/changes
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, billboardContent);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, billboardContent);
+                    }
                 } catch (err) {
                     if (window.debugLogErr === undefined) {
                         console.error('texElementImage2D failed:', err);

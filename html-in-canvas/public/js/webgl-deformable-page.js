@@ -174,7 +174,13 @@ export function setupDeformableRendering(canvas, domId) {
         const el = document.getElementById(domId);
         if (!el) return;
         gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+        // This if block is used to ensure older browser support before the breaking update in Chromium 150
+        // See https://github.com/WICG/html-in-canvas/pull/128/changes
+        if (gl.texElementImage2D.length === 3) {
+            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
+        } else {
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+        }
     }
 
     const projection = mat4.create();

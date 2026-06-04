@@ -107,22 +107,26 @@ if (uiElement) {
     if (device.queue.copyElementImageToTexture) {
       console.log("copyElementImageToTexture method supported")
       try {
-        device.queue.copyElementImageToTexture(
-          uiElement,
-          200,
-          200,
-          { texture: targetTexture }
-        );
-        console.log("copyElementImageToTexture method executed successfully")
-      } catch (err1) {
-        try {
+        // This if block is used to ensure older browser support before the WebGPU signature update
+        if (device.queue.copyElementImageToTexture.length === 2) {
+          const sourceDict = { source: uiElement };
+          const destDict = {
+            destination: { texture: targetTexture },
+            width: 200,
+            height: 200
+          };
+          device.queue.copyElementImageToTexture(sourceDict, destDict);
+        } else {
           device.queue.copyElementImageToTexture(
             uiElement,
+            200,
+            200,
             { texture: targetTexture }
           );
-        } catch (err2) {
-          console.error("Failed to copy element image to texture:", err2);
         }
+        console.log("copyElementImageToTexture method executed successfully")
+      } catch (err) {
+        console.error("Failed to copy element image to texture:", err);
       }
     }
 

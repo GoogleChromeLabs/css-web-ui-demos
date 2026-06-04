@@ -52,7 +52,13 @@ export function updatePageTextureFromDOM(gl, tex, domId) {
     if (!element) return;
 
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+    // This if block is used to ensure older browser support before the breaking update in Chromium 150
+    // See https://github.com/WICG/html-in-canvas/pull/128/changes
+    if (gl.texElementImage2D.length === 3) {
+        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, element);
+    } else {
+        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+    }
 }
 
 export function createShader(gl, type, source) {
@@ -344,7 +350,7 @@ export function setupBookRendering(canvas, numTotalPages = 6) {
                 const frontEl = document.getElementById(p.frontId);
                 if (frontEl) {
                     let finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront))).multiply(toGLModel);
-                    const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
+                    let tFront = canvas.getElementTransform(frontEl, finalTransformFront);
                     
                     // Workaround for Chromium bug https://crbug.com/512171941 where
                     // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
