@@ -174,7 +174,13 @@ export function setupDeformableRendering(canvas, domId) {
         const el = document.getElementById(domId);
         if (!el) return;
         gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+        // This if block is used to ensure older browser support before the breaking update in Chromium 150
+        // See https://github.com/WICG/html-in-canvas/pull/128/changes
+        if (gl.texElementImage2D.length === 3) {
+            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
+        } else {
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+        }
     }
 
     const projection = mat4.create();
@@ -193,7 +199,7 @@ export function setupDeformableRendering(canvas, domId) {
 
         gl.useProgram(program);
         mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100);
-        
+
         gl.uniformMatrix4fv(uniforms.uProj, false, projection);
         gl.uniformMatrix4fv(uniforms.uView, false, view);
         gl.uniform1i(uniforms.uMode, mode);
@@ -214,14 +220,21 @@ export function setupDeformableRendering(canvas, domId) {
             const el = document.getElementById(domId);
             const toGLModel = new DOMMatrix().scale(PAGE_WIDTH / 800, -PAGE_HEIGHT / 1100, 1).translate(-400, -550);
             const toCSSViewport = new DOMMatrix().translate(canvas.width / 2, canvas.height / 2).scale(canvas.width / 2, -canvas.height / 2, 1);
-            
+
             const mvp = mat4.create();
             mat4.mul(mvp, projection, view);
             mat4.mul(mvp, mvp, model);
-            
+
             const finalT = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
-            const syncT = canvas.getElementTransform(el, finalT);
-            if (syncT) el.style.transform = syncT.toString();
+            let syncT = canvas.getElementTransform(el, finalT);
+            // Workaround for Chromium bug https://crbug.com/512171941 where
+            // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+            // assignment below re-initializes the DOMMatrix which corrects is2D to
+            // be false.
+            if (syncT.is2D) {
+                syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+            }
+            el.style.transform = syncT.toString();
         }
 
         requestAnimationFrame(render);

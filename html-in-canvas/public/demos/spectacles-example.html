@@ -7,13 +7,13 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+    <meta http-equiv="origin-trial"
+        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Interactive 3D Spectacles model using HTML-in-Canvas and Raw WebGL.">
+    <meta name="description" content="Interactive 3D Spectacles model using HTML-in-Canvas and Raw WebGL.">
     <title>Spectacles - Raw WebGL Experience</title>
-    
+
     <link rel="stylesheet" href="../css/theme.css">
     <script src="../js/gl-matrix.js"></script>
 
@@ -55,7 +55,7 @@
             align-items: center;
             justify-content: space-between;
             font-family: 'Courier New', Courier, monospace;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             pointer-events: auto;
         }
 
@@ -73,17 +73,37 @@
             text-align: center;
             width: 100%;
             text-indent: 15px;
-            color: rgba(0,0,0,0.6);
+            color: rgba(0, 0, 0, 0.6);
             position: relative;
         }
 
-        .level-1 { font-size: 90px; }
-        .level-2 { font-size: 60px; }
-        .level-3 { font-size: 40px; }
-        .level-4 { font-size: 30px; }
-        .level-5 { font-size: 20px; }
-        .level-6 { font-size: 15px; }
-        .level-7 { font-size: 10px; }
+        .level-1 {
+            font-size: 90px;
+        }
+
+        .level-2 {
+            font-size: 60px;
+        }
+
+        .level-3 {
+            font-size: 40px;
+        }
+
+        .level-4 {
+            font-size: 30px;
+        }
+
+        .level-5 {
+            font-size: 20px;
+        }
+
+        .level-6 {
+            font-size: 15px;
+        }
+
+        .level-7 {
+            font-size: 10px;
+        }
 
         .chart-color-bars {
             display: flex;
@@ -96,8 +116,13 @@
             flex: 1;
         }
 
-        .color-bar.green { background: #00aa00; }
-        .color-bar.red { background: #ff0000; }
+        .color-bar.green {
+            background: #00aa00;
+        }
+
+        .color-bar.red {
+            background: #ff0000;
+        }
     </style>
 </head>
 
@@ -121,7 +146,8 @@
         </div>
 
         <!-- HD Chart for Glass Effect (Scaled down in CSS but full res for texture) -->
-        <div id="eyesight-chart-hd" style="position: absolute; top: 0; left: 0; width: 400px; height: 600px; transform: scale(0.1); transform-origin: top left; opacity: 0.01; background: #ffffff; color: #000000; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; font-family: 'Courier New', Courier, monospace; pointer-events: none;">
+        <div id="eyesight-chart-hd"
+            style="position: absolute; top: 0; left: 0; width: 400px; height: 600px; transform: scale(0.1); transform-origin: top left; opacity: 0.01; background: #ffffff; color: #000000; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; font-family: 'Courier New', Courier, monospace; pointer-events: none;">
             <div style="font-size: 12px; letter-spacing: 5px; font-weight: bold; color: #666;">SNELLEN SCALE</div>
             <div style="font-size: 90px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">E</div>
             <div style="font-size: 60px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">F P</div>
@@ -129,7 +155,8 @@
             <div style="font-size: 30px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">L P E D</div>
             <div style="font-size: 20px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">P E C F D</div>
             <div style="font-size: 15px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">E D F C Z P</div>
-            <div style="font-size: 10px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">F E L O P Z D</div>
+            <div style="font-size: 10px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">F E L O P Z D
+            </div>
             <div style="display: flex; width: 80%; height: 8px;">
                 <div style="flex: 1; background: #00aa00;"></div>
                 <div style="flex: 1; background: #ff0000;"></div>
@@ -138,19 +165,24 @@
     </canvas>
 
     <!-- Content Menu in Top Right Corner -->
-    <div id="content-menu" style="position: absolute; top: 20px; right: 20px; width: 380px; background: rgba(15, 23, 42, 0.9); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; font-family: 'Inter', sans-serif;">
-        
+    <div id="content-menu"
+        style="position: absolute; top: 20px; right: 20px; width: 380px; background: rgba(15, 23, 42, 0.9); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; font-family: 'Inter', sans-serif;">
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <span style="color: #fff; font-size: 18px; font-weight: 700;">HTML-in-Canvas Demo</span>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <span style="color: #94a3b8; font-size: 12px;">Read something else:</span>
-                <button id="prev-content" style="background: #ca8a04; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">&lt;</button>
-                <button id="next-content" style="background: #ca8a04; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">&gt;</button>
+                <button id="prev-content"
+                    style="background: #ca8a04; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">&lt;</button>
+                <button id="next-content"
+                    style="background: #ca8a04; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">&gt;</button>
             </div>
         </div>
-        
+
         <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0;">
-            This is an HTML in canvas demo, the scene that is rendered on this page is a canvas, but the great thing about it is that it has a real DOM inside it! Canvas enables the great visual effects. But unlike regular canvas, it's fully interactive! Try translating, copy-pasting, saving or clicking the elements.
+            This is an HTML in canvas demo, the scene that is rendered on this page is a canvas, but the great thing
+            about it is that it has a real DOM inside it! Canvas enables the great visual effects. But unlike regular
+            canvas, it's fully interactive! Try translating, copy-pasting, saving or clicking the elements.
         </p>
     </div>
 
@@ -476,7 +508,7 @@
                 <div style="flex: 1; background: #00aa00;"></div>
                 <div style="flex: 1; background: #ff0000;"></div>
             </div>`,
-            
+
             // Content 1: Musical Ad
             `<div style="font-family: 'Inter', sans-serif; text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;">
                 <div style="font-size: 14px; color: #ca8a04; font-weight: bold; letter-spacing: 2px;">EXCLUSIVE PREMIERE</div>
@@ -489,7 +521,7 @@
                 <div style="font-size: 12px; color: #64748b; font-style: italic;">"A triumph of stagecraft!" - The Times</div>
                 <button id="book-tickets-btn" style="background: #1e1b4b; color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; font-size: 14px; margin-top: 15px; cursor: pointer; width: 100%;">BOOK TICKETS NOW</button>
             </div>`,
-            
+
             // Content 2: Underground Map
             `<div style="font-family: 'Inter', sans-serif; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 15px;">
                 <div style="font-size: 18px; font-weight: bold; color: #1e1b4b; text-align: center;">CENTRAL NETWORK</div>
@@ -513,7 +545,7 @@
                 </div>
                 <div style="font-size: 12px; color: #64748b; text-align: center;">Zone 1 Travel Map</div>
             </div>`,
-            
+
             // Content 3: German Translation & Advantages
             `<div style="font-family: 'Inter', sans-serif; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; background: #ffffff; color: #1e1b4b;">
                 <div style="font-size: 14px; color: #ca8a04; font-weight: bold; letter-spacing: 2px;">NEUE TECHNOLOGIE</div>
@@ -573,16 +605,16 @@
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
-            
+
             // Spectacles are always at the center of the screen
             const dx = mouseX - canvas.width / 2;
             const dy = mouseY - canvas.height / 2;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            
+
             // Base radius at zoomScale = 1.0 is roughly 25% of the screen dimension
             const baseRadius = Math.min(canvas.width, canvas.height) * 0.25;
             const radius = baseRadius * zoomScale;
-            
+
             if (dist < radius) {
                 isDragging = true;
                 lastMouseX = e.clientX;
@@ -599,7 +631,7 @@
 
             rotY += deltaX * 0.01;
             rotX += deltaY * 0.01;
-            rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+            rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotX));
         });
 
         window.addEventListener('mouseup', () => {
@@ -643,15 +675,25 @@
                 if (gl.texElementImage2D) {
                     gl.activeTexture(gl.TEXTURE0);
                     gl.bindTexture(gl.TEXTURE_2D, uiTexture);
-                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
-                    
+                    // This if block is used to ensure older browser support before the breaking update in Chromium 150
+                    // See https://github.com/WICG/html-in-canvas/pull/128/changes
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, uiElement);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+                    }
+
                     gl.bindTexture(gl.TEXTURE_2D, hdTexture);
-                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, hdElement);
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, hdElement);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, hdElement);
+                    }
                 }
 
                 const uiModel = mat4.create();
                 // Position UI in 3D space (Corner, Tilted)
-                mat4.translate(uiModel, uiModel, [-2.5, 0.5, -4]); 
+                mat4.translate(uiModel, uiModel, [-2.5, 0.5, -4]);
                 mat4.rotateY(uiModel, uiModel, 35 * Math.PI / 180); // Tilt
                 mat4.scale(uiModel, uiModel, [2.4, 3.6, 1]);
 
@@ -685,10 +727,17 @@
 
                     const finalTransform = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
 
-                    const transform = canvas.getElementTransform(uiElement, finalTransform);
-                    if (transform) {
-                        uiElement.style.transform = transform.toString();
-                    }
+                    let transform = canvas.getElementTransform(uiElement, finalTransform);
+                    
+                    // Workaround for Chromium bug https://crbug.com/512171941 where
+                    // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+                    // assignment below re-initializes the DOMMatrix which corrects is2D to
+                    // be false.
+                    if (transform.is2D)
+                        transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
+
+                    uiElement.style.transform = transform.toString();
+
                 }
 
                 // --- Draw Spectacles ---
@@ -699,7 +748,7 @@
                 mat4.rotateX(modelMat, modelMat, rotX);
                 // The model is very small in the GLTF file, so we scale it up!
                 const baseScale = 15;
-                mat4.scale(modelMat, modelMat, [baseScale * zoomScale, baseScale * zoomScale, baseScale * zoomScale]); 
+                mat4.scale(modelMat, modelMat, [baseScale * zoomScale, baseScale * zoomScale, baseScale * zoomScale]);
 
                 gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
                 gl.uniformMatrix4fv(uViewMatrix, false, view);
@@ -715,15 +764,15 @@
                 gl.enable(gl.BLEND);
                 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                 gl.uniform1i(uIsGlass, 1);
-                
+
                 // Bind HD Texture for vision support effect!
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, hdTexture);
                 gl.uniform1i(uTexture, 0);
-                
+
                 // Pass Inverse Chart Matrix
                 gl.uniformMatrix4fv(uInverseChartModelMatrix, false, inverseUiModel);
-                
+
                 gl.bindVertexArray(model.glass.vao);
                 gl.drawElements(gl.TRIANGLES, model.glass.count, gl.UNSIGNED_SHORT, 0);
                 gl.disable(gl.BLEND);

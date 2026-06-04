@@ -371,7 +371,13 @@
       if (gl.texElementImage2D) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, uiTexture);
-        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+        // This if block is used to ensure older browser support before the breaking update in Chromium 150
+        // See https://github.com/WICG/html-in-canvas/pull/128/changes
+        if (gl.texElementImage2D.length === 3) {
+          gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, uiElement);
+        } else {
+          gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+        }
       }
 
       const projection = mat4.create();
@@ -412,7 +418,15 @@
 
         const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
 
-        const transform = canvas.getElementTransform(uiElement, finalTransform);
+        let transform = canvas.getElementTransform(uiElement, finalTransform);
+        
+        // Workaround for Chromium bug https://crbug.com/512171941 where
+        // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+        // assignment below re-initializes the DOMMatrix which corrects is2D to
+        // be false.
+        if (transform.is2D)
+          transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
+        
         if (transform) {
           uiElement.style.transform = transform.toString();
         }

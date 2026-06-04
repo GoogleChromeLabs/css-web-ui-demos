@@ -193,7 +193,13 @@ export function setupPhysicsRendering(canvas, containerId) {
                 if (gl.texElementImage2D) {
                     try {
                         gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                        // This if block is used to ensure older browser support before the breaking update in Chromium 150
+                        // See https://github.com/WICG/html-in-canvas/pull/128/changes
+                        if (gl.texElementImage2D.length === 3) {
+                            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
+                        } else {
+                            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                        }
                     } catch {}
                 }
                 return;
@@ -279,7 +285,13 @@ export function setupPhysicsRendering(canvas, containerId) {
             if (gl.texElementImage2D) {
                 try {
                     gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                    // This if block is used to ensure older browser support before the breaking update in Chromium 150
+                    // See https://github.com/WICG/html-in-canvas/pull/128/changes
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                    }
                 } catch {}
             }
         }
@@ -476,8 +488,10 @@ export function setupPhysicsRendering(canvas, containerId) {
             .translate(canvas.width / 2, canvas.height / 2)
             .scale(canvas.width / 2, -canvas.height / 2, 1);
 
-        for (const p of elements) p.update(dt);
-        resolveCollisions(elements);
+        if (!pEngine.isFrozen) {
+            for (const p of elements) p.update(dt);
+            resolveCollisions(elements);
+        }
 
         for (const p of elements) {
             const model = p.getMatrix();
@@ -522,6 +536,7 @@ export function setupPhysicsRendering(canvas, containerId) {
 
     let spawnTimeouts = [];
     const pEngine = {
+        isFrozen: false,
         spawn: () => {
             spawnTimeouts.forEach(clearTimeout);
             spawnTimeouts = [];
@@ -538,6 +553,10 @@ export function setupPhysicsRendering(canvas, containerId) {
             const pe = new PhysicsElement(domEl, isCircle);
             elements.push(pe);
             pe.reset();
+        },
+        toggleFreeze: () => {
+            pEngine.isFrozen = !pEngine.isFrozen;
+            return pEngine.isFrozen;
         }
     };
 

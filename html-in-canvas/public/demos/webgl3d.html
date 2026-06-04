@@ -87,7 +87,13 @@
       gl.bindTexture(gl.TEXTURE_2D, tex);
 
       // Initialize texture
-      gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, child);
+      // This if block is used to ensure older browser support before the breaking update in Chromium 150
+      // See https://github.com/WICG/html-in-canvas/pull/128/changes
+      if (gl.texElementImage2D.length === 3) {
+        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, child);
+      } else {
+        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, child);
+      }
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // Changed to Linear for better 3D look
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 

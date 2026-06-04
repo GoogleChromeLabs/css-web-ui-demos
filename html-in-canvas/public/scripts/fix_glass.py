@@ -112,7 +112,13 @@ render_loop_repl = """  // -- Render Loop --
     // Update UI Texture every frame if API exists
     if (gl.texElementImage2D) {
       gl.bindTexture(gl.TEXTURE_2D, bgTexture);
-      gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiContainer);
+      // This if block is used to ensure older browser support before the breaking update in Chromium 150
+      // See https://github.com/WICG/html-in-canvas/pull/128/changes
+      if (gl.texElementImage2D.length === 3) {
+        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, uiContainer);
+      } else {
+        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiContainer);
+      }
     }
 
     gl.clearColor(0,0,0,1);
