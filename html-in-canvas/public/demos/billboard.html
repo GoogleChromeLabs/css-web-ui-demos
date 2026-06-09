@@ -14,7 +14,7 @@
     <meta name="description"
         content="Interactive 3D Billboard demo using HTML-in-Canvas (layoutsubtree) and WebGL to render accessible DOM elements on a rotating 3D surface.">
     <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL, 3D Billboard, Accessibility, DOM in Canvas">
-    <title>3D Interactive Billboard (HTML-in-Canvas)</title>
+    <title>3D Interactive Billboard (HIC Native HTML-in-Canvas)</title>
     <link rel="stylesheet" href="../css/theme.css">
     <script type="module" src="../js/material-web-bundle.js"></script>
     <style>
@@ -118,7 +118,7 @@
             top: -20px;
             left: 20%;
             transform: translateX(-50%);
-            offset-path: path("M50 189.848C51.3891 188.229 54.1743 185.437 57.5493 182.878C60.6378 180.537 64.3936 175.455 67.5593 171.825C69.9607 169.071 73.7195 167.287 75.9358 164.844C78.1522 162.401 80.6999 159.846 83.4956 158.209C86.5117 156.443 89.0764 155.183 95.2332 155.292C98.7001 155.352 98.6256 160.516 99.6727 163.312C100.829 166.398 103.735 168.432 105.142 170.991C106.562 173.573 107.002 176.571 108.744 179.252C111.342 183.251 119.79 180.313 122.586 178.802C125.291 177.339 128.167 176.125 131.078 174.613C134.218 172.983 137.241 172.634 141.196 172.282C144.546 171.983 149.094 171.001 156.633 170.422C170.08 169.388 180.059 170.533 183.989 170.882C197.924 172.12 200.763 169.382 203.559 168.097C204.574 167.631 205.627 166.956 206.72 166.141M206.72 166.141C209.606 163.988 212.769 160.854 216.232 157.986C220.5 154.451 224.259 153.327 227.408 151.348C230.939 149.128 232.65 147.275 233.117 145.882C234.083 143.006 228.911 138.364 226 136.5C222.652 134.357 219 133.309 216.232 131.321C213 129 209 126.445 204.746 126.445C200.769 126.445 197.538 129.104 194.505 131.321C191.512 133.508 190.083 136.783 188.914 139.694C187.375 143.526 189.134 147.952 190.533 150.747C192.098 153.873 196.324 158.171 200.299 161.567C202.75 163.66 204.751 164.99 206.72 166.141ZM206.72 166.141C207.933 166.85 209.134 167.491 210.421 168.202C213.844 170.092 216.818 172.858 221.003 174.599C225.386 176.424 227.987 178.205 233.795 180.533C236.126 181.234 237.766 181.702 239.274 182.051C240.091 182.17 245.551 184.198 246.5 183.5M237.5 182C239.119 182.23 248.216 183.091 251.724 184.955C254.583 186.474 263.754 187.056 275.897 184.044C281.509 182.652 286.148 181.709 292.074 180.316C303.871 177.544 308.261 174.728 311.637 173.797C314.551 172.865 317.336 171.706 319.776 170.544C320.833 170.073 321.524 169.842 322.236 169.605C329.615 169.605 382.166 176.352 387.649 176.942C393.332 177.554 401.265 177.986 409.854 178.108C414.144 178.169 417.32 176.366 420.695 175.434C423.719 174.599 426.394 172.415 431.507 167.77C434.446 165.1 438.722 163.118 441.755 160.2C445.025 157.054 448.739 154.259 450.246 154.026C451.053 153.9 451.984 154.252 452.689 154.717C455.454 156.537 456.647 160.06 458.511 163.435C460.183 166.463 462.232 169.135 464.211 171.815C466.111 174.389 484.876 174.035 494.809 171.372C498.036 170.507 497.371 165.672 498.3 161.945C500.052 154.908 513.175 169.372 517.834 171.815C522.888 174.465 528.769 175.654 540.723 176.244C547.616 176.827 552.279 176.366 554.021 175.553C554.841 175.201 555.532 174.97 557.64 174.035L591.684 176.698C597.907 176.698 610.116 176.698 622.694 176");
+            offset-path: path("M50 189.848C51.3891 188.229 54.1743 185.437 57.5493 182.878C60.6378 180.537 64.3936 175.455 67.5593 171.825C69.9607 169.071 73.7195 167.287 75.9358 164.844C78.1522 162.401 80.6999 159.846 83.4956 158.209C86.5117 156.443 89.0764 155.183 95.2332 155.292C98.7001 155.352 98.6256 160.516 99.6727 163.312C100.829 166.398 103.735 168.432 105.142 170.991C106.562 173.573 107.002 176.571 108.744 179.252C111.342 183.251 119.79 180.313 122.586 178.802C125.291 177.339 128.167 176.125 131.078 174.613C134.218 172.983 137.241 172.634 141.196 172.282C144.546 171.983 149.094 171.001 156.633 170.422C170.08 169.388 180.059 170.533 183.989 170.882C197.924 172.12 200.763 169.382 203.559 168.097C207.254 166.399 211.457 161.94 216.232 157.986C220.5 154.451 224.259 153.327 227.408 151.348C230.939 149.128 232.65 147.275 233.117 145.882C234.083 143.006 228.911 138.364 226 136.5C222.652 134.357 219 133.309 216.232 131.321C213 129 209 126.445 204.746 126.445C200.769 126.445 197.538 129.104 194.505 131.321C191.512 133.508 190.083 136.783 188.914 139.694C187.375 143.526 189.134 147.952 190.533 150.747C192.098 153.873 196.324 158.171 200.299 161.567C204.259 164.95 207.046 166.338 210.421 168.202C213.844 170.092 216.818 172.858 221.003 174.599C225.386 176.424 227.987 178.205 233.795 180.533C236.126 181.234 237.766 181.702 239.274 182.051C240.091 182.17 245.551 184.198 246.5 183.5M237.5 182C239.119 182.23 248.216 183.091 251.724 184.955C254.583 186.474 263.754 187.056 275.897 184.044C281.509 182.652 286.148 181.709 292.074 180.316C303.871 177.544 308.261 174.728 311.637 173.797C314.551 172.865 317.336 171.706 319.776 170.544C320.833 170.073 321.524 169.842 322.236 169.605C329.615 169.605 382.166 176.352 387.649 176.942C393.332 177.554 401.265 177.986 409.854 178.108C414.144 178.169 417.32 176.366 420.695 175.434C423.719 174.599 426.394 172.415 431.507 167.77C434.446 165.1 438.722 163.118 441.755 160.2C445.025 157.054 448.739 154.259 450.246 154.026C451.053 153.9 451.984 154.252 452.689 154.717C455.454 156.537 456.647 160.06 458.511 163.435C460.183 166.463 462.232 169.135 464.211 171.815C466.111 174.389 484.876 174.035 494.809 171.372C498.036 170.507 497.371 165.672 498.3 161.945C500.052 154.908 513.175 169.372 517.834 171.815C522.888 174.465 528.769 175.654 540.723 176.244C547.616 176.827 552.279 176.366 554.021 175.553C554.841 175.201 555.532 174.97 557.64 174.035L591.684 176.698C597.907 176.698 610.116 176.698 622.694 176");
             offset-distance: 0%;
             offset-rotate: 0deg;
         }
@@ -250,7 +250,7 @@
 <body>
     <div class="debug-info">
         Interactive 3D Billboard<br>
-        HTMl-in-Canvas WebGL Content
+        HIC Native HTML-in-Canvas Content
     </div>
 
     <canvas id="gl-canvas" layoutsubtree>
@@ -379,7 +379,6 @@
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-
         controls.target.set(0, 10, 0);
         controls.update();
 
@@ -542,7 +541,6 @@
             requestAnimationFrame(animate);
             controls.update();
 
-
             // 🎬 Intro Camera Animation
             if (!introFinished) {
                 const elapsed = performance.now() - introStartTime;
@@ -595,48 +593,70 @@
                 }
             }
 
-            // 2. Interactivity Synchronization
+            // 2. Interactivity Synchronization (Native HIC getElementTransform)
             if (canvas.getElementTransform && screenMesh) {
                 // Ensure camera and screen matrices are fresh before projection
                 camera.updateMatrixWorld();
                 camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
                 screenMesh.updateMatrixWorld();
 
+                // Viewport size in physical pixels for getElementTransform
                 const viewportW = canvas.width;
                 const viewportH = canvas.height;
 
-                // Convert Three.js matrices (column-major) to DOMMatrix
-                const toDOM = (m) => new DOMMatrix(m.elements);
+                // 1. Viewport Matrix
+                const viewportMatrix = new THREE.Matrix4().set(
+                    viewportW / 2, 0, 0, viewportW / 2,
+                    0, -viewportH / 2, 0, viewportH / 2,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1
+                );
 
-                // Precise geometry bounds
+                // 2. Local Mapping Matrix: DOM (0,0)-(elemW,elemH) -> Mesh local coords
+                const elemW = billboardContent.offsetWidth;
+                const elemH = billboardContent.offsetHeight;
+
                 const box = screenMesh.geometry.boundingBox;
-                const width = box.max.x - box.min.x;
-                const height = box.max.y - box.min.y;
+                const meshW = box.max.x - box.min.x;
+                const meshH = box.max.y - box.min.y;
 
-                // Local mapping: DOM (0,0) -> Mesh (min.x, max.y)
-                const localTransform = new DOMMatrix()
-                    .translate(box.min.x, box.max.y, 0)
-                    .scale(width / 1024, -height / 576, 1);
+                const localMatrix = new THREE.Matrix4().set(
+                    meshW / elemW, 0, 0, box.min.x,
+                    0, -meshH / elemH, 0, box.max.y,
+                    0, 0, 1, box.max.z,
+                    0, 0, 0, 1
+                );
 
-                // Viewport * Projection * View * Model * Local
-                const mvp = new DOMMatrix()
-                    .translate(viewportW / 2, viewportH / 2)
-                    .scale(viewportW / 2, -viewportH / 2, 1)
-                    .multiply(toDOM(camera.projectionMatrix))
-                    .multiply(toDOM(camera.matrixWorldInverse))
-                    .multiply(toDOM(screenMesh.matrixWorld))
-                    .multiply(localTransform);
+                // 3. Combined MVP Matrix: Viewport * Projection * View * Model * Local
+                const mvpMatrix = new THREE.Matrix4();
+                mvpMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                mvpMatrix.multiply(screenMesh.matrixWorld);
+                mvpMatrix.multiply(localMatrix);
+                mvpMatrix.premultiply(viewportMatrix);
 
-                let syncT = canvas.getElementTransform(billboardContent, mvp);
+                // 4. Position at canvas origin so the CSS matrix3d maps correctly (matching Three.js)
+                billboardContent.style.position = 'absolute';
+                billboardContent.style.left = '0';
+                billboardContent.style.top = '0';
+                billboardContent.style.transformOrigin = '0 0';
+
+                // 5. Get the CSS transform from canvas.getElementTransform
+                let syncT = canvas.getElementTransform(billboardContent, new DOMMatrix(mvpMatrix.elements));
+
                 // Workaround for Chromium bug https://crbug.com/512171941 where
                 // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
                 // assignment below re-initializes the DOMMatrix which corrects is2D to
                 // be false.
-                if (syncT.is2D)
+                if (syncT && syncT.is2D)
                     syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
 
                 if (syncT) {
-                    billboardContent.style.transformOrigin = '0 0';
+                    // WORKAROUND for high-DPI screens
+                    // Programmatically adjust the size x2 screens 
+                    const dpr = window.devicePixelRatio || 1;
+                    if (dpr !== 1) {
+                        syncT = syncT.scale(1 / dpr, 1 / dpr, 1);
+                    }
                     billboardContent.style.transform = syncT.toString();
                     billboardContent.style.zIndex = 10;
                     billboardContent.style.pointerEvents = 'auto';
