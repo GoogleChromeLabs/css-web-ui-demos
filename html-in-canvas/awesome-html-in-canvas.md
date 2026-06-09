@@ -13,6 +13,7 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 | [Wobble Buttons](https://x.com/wesbos/status/2041974552478052507) | Interactive ripple-effect buttons | [Wes Bos](https://github.com/wesbos) | [Source](https://github.com/wesbos/hot-tips/blob/main/html-in-canvas/demos/wicg/ripple-buttons.html) |
 | [Compiz Web](https://compiz-web.vercel.app/) | Shader-driven web page transitions demo | [Max Leiter](https://github.com/MaxLeiter) | [Source](https://github.com/MaxLeiter/compiz-web) |
 | [HTML cloth](https://arrival.space/htmlcanvas) | Customize a form on a hanging cloth inside a game | [Thomas Richter-Trummer](https://github.com/fimbox) | [Source](https://github.com/fimbox/html-in-canvas/blob/main/plugins/html-cloth.mjs) |
+| [PixiJS HTML Laser](https://pixijs-html-in-canvas.vercel.app) | Interactive landing page that shatters and heals over time | [Zyie](https://github.com/Zyie) | [Source](https://github.com/Zyie/pixijs-html-in-canvas) |
 | More | demos | coming | soon... |
 
 ## Framework Support 
@@ -21,6 +22,7 @@ This is a list of frameworks that have added support for HTML-in-Canvas along wi
 | :--- | :--- | :--- | :--- |
 | [Three.js](https://threejs.org/) | JavaScript library used to create and display animated 3D computer graphics with WebGL & WebGPU | [HTMLTexture](https://goo.gle/HIC-threejs) | [Sample](https://goo.gle/HIC-threejs-example) |
 | [PlayCanvas](https://playcanvas.com/) | Open source engine and tools for building amazing 3D experiences | [html-texture](https://goo.gle/HIC-playcanvas) | [Sample](https://goo.gle/HIC-playcanvas-example) |
+| [PixiJS](https://pixijs.com/) | Fast, lightweight 2D rendering library for WebGL & WebGPU | [HTMLSource](https://pixijs.download/release/docs/rendering.HTMLSource.html) | [Sample](https://pixijs-html-in-canvas.vercel.app/) |
 
 ## Disclaimer
 
