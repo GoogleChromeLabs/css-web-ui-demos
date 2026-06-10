@@ -2,6 +2,15 @@
 <!--
  Copyright 2026 Google LLC
  SPDX-License-Identifier: Apache-2.0
+
+ This demo illustrates a hybrid integration of Three.js (for applying the texture) and the native browser 
+ HTML-in-Canvas API for applying the CSS transform to the HTML element.
+ 
+ HOW IT AFFECTS CSS TRANSFORM APPLICATION:
+ Instead of relying on Three.js's internal rendering of HTML textures, this demo calculates the full 
+ Model-View-Projection (MVP) matrix manually and passes it to the browser's native `canvas.getElementTransform()`. 
+ This is done for demondtration purpose only, and in ThreeJS you can update the transform with InteractionManager().update()
+
 -->
 
 <html lang="en">
@@ -14,8 +23,9 @@
     <meta name="description"
         content="Interactive 3D Billboard demo using HTML-in-Canvas (layoutsubtree) and WebGL to render accessible DOM elements on a rotating 3D surface.">
     <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL, 3D Billboard, Accessibility, DOM in Canvas">
-    <title>3D Interactive Billboard (HIC Native HTML-in-Canvas)</title>
+    <title>3D Interactive Billboard (HIC Native HTML-in-Canvas - mat4)</title>
     <link rel="stylesheet" href="../css/theme.css">
+    <script src="../js/gl-matrix.js"></script>
     <script type="module" src="../js/material-web-bundle.js"></script>
     <style>
         ::selection {
@@ -230,6 +240,26 @@
             letter-spacing: 1px;
         }
 
+        button.badge {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-property: background-color, color, transform, box-shadow;
+        }
+
+        button.badge:hover {
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button.badge:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
         .debug-info {
             position: absolute;
             top: 24px;
@@ -250,13 +280,13 @@
 <body>
     <div class="debug-info">
         Interactive 3D Billboard<br>
-        HIC Native HTML-in-Canvas Content
+        HTML-in-Canvas: THree.js + HTML-in-Canvas API
     </div>
 
     <canvas id="gl-canvas" layoutsubtree>
         <!-- Live Gemini Scribble Integrated via JS Refresh -->
-        <form id="billboard-content">
-            <div class="badge">Gemini Note Taking</div>
+        <form id="billboard-content" onsubmit="event.preventDefault();">
+            <button class="badge" type="button">I'm a button. Click me!</button>
 
             <div id="scribble-container" class="is-animated">
                 <figure>
@@ -328,7 +358,7 @@
                                 fill="#FDFDFE" />
                         </g>
                     </svg>
-                    <figcaption>Google Meet Scribble Effect</figcaption>
+                    <figcaption>That's an SVG animation in canvas!</figcaption>
                 </figure>
             </div>
 
@@ -352,8 +382,19 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
+                window.handleButtonClick = function (event) {
+                    alert("You've just clicked a fully interactive button that's a child element of canvas. You can now build fully interactive canvas!");
+                };
+
         const canvas = document.getElementById('gl-canvas');
         const billboardContent = document.getElementById('billboard-content');
+
+                // Use event delegation on the form to handle pointerdown
+                billboardContent.addEventListener('pointerdown', function (event) {
+                    if (event.target.closest('.badge')) {
+                        window.handleButtonClick(event);
+                    }
+                });
 
         // Three.js Scene Setup (High Quality)
         const renderer = new THREE.WebGLRenderer({
@@ -604,12 +645,15 @@
                 const viewportW = canvas.width;
                 const viewportH = canvas.height;
 
+                // Note: This demo uses the gl-matrix 'mat4' library for demonstrating raw matrix math.
+                // You can use any matrix math library of your choice, e.g. THREE.Matrix4.
+                
                 // 1. Viewport Matrix
-                const viewportMatrix = new THREE.Matrix4().set(
-                    viewportW / 2, 0, 0, viewportW / 2,
-                    0, -viewportH / 2, 0, viewportH / 2,
+                const viewportMatrix = mat4.fromValues(
+                    viewportW / 2, 0, 0, 0,
+                    0, -viewportH / 2, 0, 0,
                     0, 0, 1, 0,
-                    0, 0, 0, 1
+                    viewportW / 2, viewportH / 2, 0, 1
                 );
 
                 // 2. Local Mapping Matrix: DOM (0,0)-(elemW,elemH) -> Mesh local coords
@@ -620,19 +664,33 @@
                 const meshW = box.max.x - box.min.x;
                 const meshH = box.max.y - box.min.y;
 
-                const localMatrix = new THREE.Matrix4().set(
-                    meshW / elemW, 0, 0, box.min.x,
-                    0, -meshH / elemH, 0, box.max.y,
-                    0, 0, 1, box.max.z,
-                    0, 0, 0, 1
+                const localMatrix = mat4.fromValues(
+                    meshW / elemW, 0, 0, 0,
+                    0, -meshH / elemH, 0, 0,
+                    0, 0, 1, 0,
+                    box.min.x, box.max.y, box.max.z, 1
                 );
 
                 // 3. Combined MVP Matrix: Viewport * Projection * View * Model * Local
-                const mvpMatrix = new THREE.Matrix4();
-                mvpMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-                mvpMatrix.multiply(screenMesh.matrixWorld);
-                mvpMatrix.multiply(localMatrix);
-                mvpMatrix.premultiply(viewportMatrix);
+                const mvpMatrix = mat4.create();
+
+                // mvp = projection * view
+                mat4.multiply(mvpMatrix, camera.projectionMatrix.elements, camera.matrixWorldInverse.elements);
+
+                // mvp = mvp * model
+                mat4.multiply(mvpMatrix, mvpMatrix, screenMesh.matrixWorld.elements);
+
+                // mvp = mvp * local
+                mat4.multiply(mvpMatrix, mvpMatrix, localMatrix);
+
+                // mvp = viewport * mvp
+                mat4.multiply(mvpMatrix, viewportMatrix, mvpMatrix);
+
+                // Because ThreeJS sets up a matrix that already includes DPR to account for high DPI screens,
+                // And the code is using the browser native getElementTransform() for demo purposes,
+                // We need to make sure we don't apply DPR twice:
+                const dpr = window.devicePixelRatio || 1;
+                mat4.scale(mvpMatrix, mvpMatrix, [1 / dpr, 1 / dpr, 1]);
 
                 // 4. Position at canvas origin so the CSS matrix3d maps correctly (matching Three.js)
                 billboardContent.style.position = 'absolute';
@@ -641,22 +699,17 @@
                 billboardContent.style.transformOrigin = '0 0';
 
                 // 5. Get the CSS transform from canvas.getElementTransform
-                let syncT = canvas.getElementTransform(billboardContent, new DOMMatrix(mvpMatrix.elements));
+                let syncT = canvas.getElementTransform(billboardContent, new DOMMatrix(Array.from(mvpMatrix)));
 
                 // Workaround for Chromium bug https://crbug.com/512171941 where
                 // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
                 // assignment below re-initializes the DOMMatrix which corrects is2D to
                 // be false.
-                if (syncT && syncT.is2D)
+                if (syncT && syncT.is2D) {
                     syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+                }
 
                 if (syncT) {
-                    // WORKAROUND for high-DPI screens
-                    // Programmatically adjust the size x2 screens 
-                    const dpr = window.devicePixelRatio || 1;
-                    if (dpr !== 1) {
-                        syncT = syncT.scale(1 / dpr, 1 / dpr, 1);
-                    }
                     billboardContent.style.transform = syncT.toString();
                     billboardContent.style.zIndex = 10;
                     billboardContent.style.pointerEvents = 'auto';
