@@ -7,15 +7,16 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+    <meta http-equiv="origin-trial"
+        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Interactive 3D Billboard demo using HTML-in-Canvas (layoutsubtree) and WebGL to render accessible DOM elements on a rotating 3D surface.">
-    <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL, 3D Billboard, Accessibility, DOM in Canvas">
-    <title>3D Interactive Billboard (HTML-in-Canvas)</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <script type="module" src="js/material-web-bundle.js"></script>
+        content="Interactive 3D Billboard demo using HTML-in-Canvas (layoutsubtree) and Three.js to render accessible DOM elements on a rotating 3D surface.">
+    <meta name="keywords" content="HTML in Canvas, layoutsubtree, WebGL, Three.js, 3D Billboard, Accessibility, DOM in Canvas">
+    <title>3D Interactive Billboard (Three.js HTML-in-Canvas)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <script type="module" src="../js/material-web-bundle.js"></script>
     <style>
         ::selection {
             color: black;
@@ -249,23 +250,11 @@
 <body>
     <div class="debug-info">
         Interactive 3D Billboard<br>
-        HTMl-in-Canvas WebGL Content
+        Three.js HTML-in-Canvas Content
     </div>
 
     <canvas id="gl-canvas" layoutsubtree>
         <!-- Live Gemini Scribble Integrated via JS Refresh -->
-         <section>
-        <?start name="gallery">
-        Loading…
-        <?end>
-        </section>
-
-        <template for="gallery">
-        Actual
-        <strong>gallery</strong>
-        content
-        </template>
-
         <form id="billboard-content">
             <div class="badge">Gemini Note Taking</div>
 
@@ -362,6 +351,11 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+        import { InteractionManager } from 'three/addons/interaction/InteractionManager.js';
+
+        if ( ! ( 'requestPaint' in HTMLCanvasElement.prototype ) ) {
+            installHtmlInCanvasPolyfill();
+        }
 
         const canvas = document.getElementById('gl-canvas');
         const billboardContent = document.getElementById('billboard-content');
@@ -390,7 +384,6 @@
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-
         controls.target.set(0, 10, 0);
         controls.update();
 
@@ -440,38 +433,17 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Texture Setup
-        const billboardTexture = new THREE.Texture();
-        billboardTexture.format = THREE.RGBAFormat;
-        billboardTexture.type = THREE.UnsignedByteType;
-        billboardTexture.internalFormat = 'RGBA8';
-        billboardTexture.minFilter = THREE.LinearFilter;
-        billboardTexture.magFilter = THREE.LinearFilter;
-        billboardTexture.generateMipmaps = false;
-        billboardTexture.colorSpace = THREE.SRGBColorSpace;
-
-        // "Raw WebGL" Hijack: Initialize the texture manually to avoid the 'immutable' 
-        // texStorage2D path used by WebGL2-aware renderers like Three.js.
-        const gl = renderer.getContext();
-        const webglTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
-
-        // Explicitly allocate storage with texImage2D (NOT texStorage2D)
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 576, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-        // Map the raw GL texture to the Three.js texture object
-        renderer.properties.get(billboardTexture).__webglTexture = webglTexture;
-        renderer.properties.get(billboardTexture).__version = billboardTexture.version;
+        // --- HTML Texture Setup (Simplifying with THREE.HTMLTexture) ---
+        const billboardTexture = new THREE.HTMLTexture(billboardContent);
 
         const screenMaterial = new THREE.MeshBasicMaterial({
             map: billboardTexture,
             transparent: false
         });
+
+        // --- Interaction Manager Setup (Handles all HTML alignment calculations) ---
+        const interactions = new InteractionManager();
+        interactions.connect(renderer, camera);
 
         // Load Billboard Model
         const dracoLoader = new DRACOLoader();
@@ -483,7 +455,7 @@
         let screenMesh = null;
         let billboardBounds = null;
 
-        loader.load('./assets/Billboard.glb', (gltf) => {
+        loader.load('./../assets/Billboard.glb', (gltf) => {
             const model = gltf.scene;
 
             model.rotation.y = 5.4;
@@ -506,6 +478,9 @@
                             width: box.max.x - box.min.x,
                             height: box.max.y - box.min.y
                         };
+
+                        // Register screen mesh for CSS 3D transforms & hit-testing
+                        interactions.add(screenMesh);
                     }
                 }
             });
@@ -526,6 +501,9 @@
                     width: box.max.x - box.min.x,
                     height: box.max.y - box.min.y
                 };
+
+                // Register screen mesh for CSS 3D transforms & hit-testing
+                interactions.add(screenMesh);
             }
         });
 
@@ -552,7 +530,6 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-
 
             // 🎬 Intro Camera Animation
             if (!introFinished) {
@@ -581,71 +558,8 @@
                 restartAnimations();
             }
 
-            // 1. Update Texture from HTML Element (Every Frame)
-            const gl = renderer.getContext();
-            const textureProperties = renderer.properties.get(billboardTexture);
-
-            if (textureProperties && textureProperties.__webglTexture && gl.texElementImage2D) {
-                const webglTexture = textureProperties.__webglTexture;
-                gl.bindTexture(gl.TEXTURE_2D, webglTexture);
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-                try {
-                    // This if block is used to ensure older browser support before the breaking update in Chromium 150
-                    // See https://github.com/WICG/html-in-canvas/pull/128/changes
-                    if (gl.texElementImage2D.length === 3) {
-                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, billboardContent);
-                    } else {
-                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, billboardContent);
-                    }
-                } catch (err) {
-                    if (window.debugLogErr === undefined) {
-                        console.error('texElementImage2D failed:', err);
-                        window.debugLogErr = true;
-                    }
-                }
-            }
-
-            // 2. Interactivity Synchronization
-            if (canvas.getElementTransform && screenMesh) {
-                // Ensure camera and screen matrices are fresh before projection
-                camera.updateMatrixWorld();
-                camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
-                screenMesh.updateMatrixWorld();
-
-                const viewportW = canvas.width;
-                const viewportH = canvas.height;
-
-                // Convert Three.js matrices (column-major) to DOMMatrix
-                const toDOM = (m) => new DOMMatrix(m.elements);
-
-                // Precise geometry bounds
-                const box = screenMesh.geometry.boundingBox;
-                const width = box.max.x - box.min.x;
-                const height = box.max.y - box.min.y;
-
-                // Local mapping: DOM (0,0) -> Mesh (min.x, max.y)
-                const localTransform = new DOMMatrix()
-                    .translate(box.min.x, box.max.y, 0)
-                    .scale(width / 1024, -height / 576, 1);
-
-                // Viewport * Projection * View * Model * Local
-                const mvp = new DOMMatrix()
-                    .translate(viewportW / 2, viewportH / 2)
-                    .scale(viewportW / 2, -viewportH / 2, 1)
-                    .multiply(toDOM(camera.projectionMatrix))
-                    .multiply(toDOM(camera.matrixWorldInverse))
-                    .multiply(toDOM(screenMesh.matrixWorld))
-                    .multiply(localTransform);
-
-                const syncT = canvas.getElementTransform(billboardContent, mvp);
-                if (syncT) {
-                    billboardContent.style.transformOrigin = '0 0';
-                    billboardContent.style.transform = syncT.toString();
-                    billboardContent.style.zIndex = 10;
-                    billboardContent.style.pointerEvents = 'auto';
-                }
-            }
+            // 1. Update HTML-in-Canvas texture & alignment automatically
+            interactions.update();
 
             renderer.render(scene, camera);
         }
