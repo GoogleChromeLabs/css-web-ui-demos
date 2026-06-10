@@ -230,6 +230,26 @@
             letter-spacing: 1px;
         }
 
+        button.badge {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-property: background-color, color, transform, box-shadow;
+        }
+
+        button.badge:hover {
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        button.badge:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
         .debug-info {
             position: absolute;
             top: 24px;
@@ -250,13 +270,13 @@
 <body>
     <div class="debug-info">
         Interactive 3D Billboard<br>
-        Three.js HTML-in-Canvas Content
+        HTML-in-Canvas with Three.js 
     </div>
 
     <canvas id="gl-canvas" layoutsubtree>
         <!-- Live Gemini Scribble Integrated via JS Refresh -->
-        <form id="billboard-content">
-            <div class="badge">Gemini Note Taking</div>
+        <form id="billboard-content" onsubmit="event.preventDefault();">
+            <button class="badge" type="button">I'm a button. Click me!</button>
 
             <div id="scribble-container" class="is-animated">
                 <figure>
@@ -328,7 +348,7 @@
                                 fill="#FDFDFE" />
                         </g>
                     </svg>
-                    <figcaption>Google Meet Scribble Effect</figcaption>
+                    <figcaption>That's an SVG animation in canvas!</figcaption>
                 </figure>
             </div>
 
@@ -357,8 +377,19 @@
             installHtmlInCanvasPolyfill();
         }
 
+            window.handleButtonClick = function (event) {
+                alert("You've just clicked a fully interactive button that's a child element of canvas. You can now build fully interactive canvas!");
+            };
+
         const canvas = document.getElementById('gl-canvas');
         const billboardContent = document.getElementById('billboard-content');
+
+            // // Use event delegation on the form to handle pointerdown and log targets for diagnostics
+            billboardContent.addEventListener('pointerdown', function (event) {
+                if (event.target.closest('.badge')) {
+                    window.handleButtonClick(event);
+                }
+            });
 
         // Three.js Scene Setup (High Quality)
         const renderer = new THREE.WebGLRenderer({
@@ -466,6 +497,9 @@
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = false;
+
+                    // Disable raycasting on GLB meshes so they don't occlude the fallback screenMesh
+                    child.raycast = () => { };
 
                     if (child.name.toLowerCase().includes('screen') || child.name.toLowerCase().includes('display')) {
                         screenMesh = child;
