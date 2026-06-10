@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+        content="High-quality complex text and video rendering using HTML-in-Canvas. Demonstrates how to handle layout and drawing of rich typography and video inside a canvas.">
+  <meta name="keywords" content="HTML in Canvas, layoutsubtree, Typography, Rendering, Canvas Text, Video in Canvas">
+  <title>Complex Video & Text (HTML-in-Canvas)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+</head>
+
+<body>
+  <style>
+    canvas {
+      border: 1px solid blue;
+      width: 600px;
+      height: 600px;
+      background-color: #f5f5f7;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    body {
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #e5e5ea;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    #container {
+      display: flex;
+      flex-direction: row;
+      gap: 50px;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #86868b;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    #outside-video {
+      width: 200px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid rgba(0,0,0,0.1);
+      background-color: #000;
+    }
+
+
+    #inside-video {
+      width: 200px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid rgba(0,0,0,0.1);
+      background-color: #000;
+    }
+  </style>
+
+  <div id="container">
+    <div class="panel">
+      <div class="panel-title">Inside Canvas (Rotated 15° & Formatted)</div>
+      <canvas id="canvas" width="638" height="800" layoutsubtree>
+        <div id="draw_element" style="width: 250px; font-size: 16px; line-height: 1.5;">
+          <div class="panel" style="margin-bottom: 15px;">
+            <div class="panel-title" style="font-size: 11px;">Inside Canvas VIDEO!</div>
+            <video id="inside-video" src="../assets/demo-video.mp4" autoplay loop muted playsinline controls></video>
+          </div>
+          Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
+          <br>I'm multi-line, <b>formatted</b>,
+          rotated text with emoji (&#128512;), RTL text
+          <span dir=rtl>من فارسی صحبت میکنم</span>,
+          vertical text,
+        </div>
+      </canvas>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Outside Canvas (Standard HTML DOM)</div>
+      <video id="outside-video" src="../assets/demo-video.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const draw_element = document.getElementById('draw_element');
+    const video1 = document.getElementById('inside-video');
+    const video2 = document.getElementById('demo-video');
+
+    canvas.onpaint = () => {
+        ctx.reset();
+
+        // 1. Get physical dimensions of canvas and DOM element
+        const canvasW = canvas.width;
+        const canvasH = canvas.height;
+        const elemW = draw_element.offsetWidth * devicePixelRatio;
+        const elemH = draw_element.offsetHeight * devicePixelRatio;
+
+        // 2. Perform rotation and centering transforms
+        ctx.translate(canvasW / 2, canvasH / 2); // Move origin to canvas center
+        ctx.rotate((15 * Math.PI) / 180);         // Rotate around center
+        ctx.translate(-elemW / 2, -elemH / 2);   // Offset by half of element size
+
+        // 3. Draw the element
+        let transform = ctx.drawElementImage(draw_element, 0, 0);
+
+        draw_element.style.transform = transform.toString();
+    }
+
+    // High-performance RAF loop to trigger canvas paints in sync with the video frames
+    function renderLoop() {
+        const isPlaying = (video1 && !video1.paused && !video1.ended) || 
+                          (video2 && !video2.paused && !video2.ended);
+        if (isPlaying) {
+            canvas.requestPaint();
+        }
+        requestAnimationFrame(renderLoop);
+    }
+
+    // Start the loop as soon as either video plays
+    if (video1) {
+        video1.addEventListener('play', () => requestAnimationFrame(renderLoop));
+    }
+    if (video2) {
+        video2.addEventListener('play', () => requestAnimationFrame(renderLoop));
+    }
+
+    // Fallback start in case play event already fired
+    if ((video1 && !video1.paused) || (video2 && !video2.paused)) {
+        requestAnimationFrame(renderLoop);
+    }
+
+    const observer = new ResizeObserver(([entry]) => {
+        canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+        canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+      });
+      observer.observe(canvas, { box: 'device-pixel-content-box', fireOnEveryPaint: true });
+  </script>
+</body>
+</html>
