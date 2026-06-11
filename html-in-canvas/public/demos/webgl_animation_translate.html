@@ -7,13 +7,15 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="origin-trial" content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+    <meta http-equiv="origin-trial"
+        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="3D Tokyo micro-neighborhood with occlusion-aware labels and multi-language support (EN, JP, ES) using the experimental HTML-in-Canvas API.">
-    <meta name="keywords" content="HTML in Canvas, layoutsubtree, Littlest Tokyo, Three.js, Selective Occlusion, Translation">
-    <title>Tokyo 3D Labels (HTML-in-Canvas)</title>
+        content="Performance-optimized 3D Tokyo micro-neighborhood with selective, event-driven HIC texture uploads and native GPU occlusion.">
+    <meta name="keywords"
+        content="HTML in Canvas, layoutsubtree, Littlest Tokyo, Three.js, Selective Occlusion, Performance Optimization">
+    <title>Tokyo 3D Labels (Performance Optimized - HTML-in-Canvas)</title>
     <link rel="stylesheet" href="../css/theme.css">
     <script type="module" src="../js/material-web-bundle.js"></script>
     <style>
@@ -25,29 +27,34 @@
             font-size: 14px;
             line-height: 1.5;
             overscroll-behavior: none;
+            overflow: hidden;
         }
 
-        a {
-            color: var(--md-sys-color-on-primary);
-            text-decoration: none;
-            font-weight: 500;
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
         }
 
-        a:hover {
-            text-decoration: underline;
+        #gl-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
 
         #info {
             position: absolute;
-            top: 24px;
+            bottom: 24px; /* Repositioned to bottom middle */
             left: 50%;
             transform: translateX(-50%);
             width: fit-content;
             max-width: 90%;
-            padding: 16px 24px;
+            padding: 8px 16px; /* Made more compact */
             box-sizing: border-box;
             text-align: center;
             color: var(--md-sys-color-surface);
+            font-size: 11px; /* Made text smaller */
+            line-height: 1.4;
             user-select: none;
             pointer-events: none;
             z-index: 10;
@@ -58,30 +65,6 @@
         input,
         select {
             pointer-events: auto;
-        }
-
-        #container {
-            display: block;
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        /* Overlay canvas for HTML-in-Canvas labels */
-        #label-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: auto;
-            /* Allow click-through to labels */
-            z-index: 5;
-
-            & ::selection {
-                background-color: rgba(255, 220, 0, 0.6);
-                color: #000;
-            }
         }
 
         #controls {
@@ -108,11 +91,9 @@
             letter-spacing: 0.5px;
         }
 
-        /* Label chip styling - MD3 inspired, Static */
+        /* Label chip styling - Exact original 1x styles from webgl_animation_translate */
         .label {
             position: absolute;
-            top: 0;
-            left: 0;
             display: inline-flex;
             flex-direction: column;
             align-items: flex-start;
@@ -120,7 +101,7 @@
             background: var(--md-sys-color-secondary-container) !important;
             border: 1px solid var(--md-sys-color-outline-variant);
             border-radius: 12px;
-            color: var(--md-sys-color-on-secondary-container);
+            color: rgb(27, 26, 26);
             font-size: 15px;
             font-weight: 600;
             white-space: nowrap;
@@ -128,33 +109,50 @@
             user-select: text;
             transform-origin: 0 0;
             box-shadow: var(--md-sys-elevation-level2);
-            opacity: 1;
+            pointer-events: auto;
         }
 
-        /* The "Pin" at the 3D point - More visible */
-        .pin {
+        /* Pure CSS Pin indicator centered at the bottom of the label - Exact original 1x dimensions */
+        .label::after {
+            content: '';
             position: absolute;
-            width: 14px;
-            height: 14px;
+            bottom: -10px;
+            left: 50%;
+            transform: translate(-50%, 50%);
+            width: 8px;
+            height: 8px;
             background: var(--md-sys-color-primary);
             border: 2px solid #fff;
             border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .label .sub {
             font-size: 11px;
             opacity: 0.8;
             font-weight: 400;
-            color: var(--md-sys-color-on-secondary-container);
+            color: rgb(27, 26, 26);
         }
     </style>
 </head>
 
 <body>
 
-    <div id="container"></div>
+    <div id="container">
+        <!-- Single WebGL canvas containing all interactive HTML labels -->
+        <canvas id="gl-canvas" layoutsubtree>
+            <!-- Authentic Tokyo Signs - Defaulting to Japanese (JP) -->
+            <div class="label" id="lbl-panda">興 <span class="sub">Panda Cafe</span></div>
+            <div class="label" id="lbl-fish">おいしい魚 <span class="sub">Seafood Place</span></div>
+            <div class="label" id="lbl-sushi">寿司 <span class="sub">Sushi Shop</span></div>
+            <div class="label" id="lbl-geisha">芸者 <span class="sub">Theme Restaurant</span></div>
+            <div class="label" id="lbl-barber">理容室 <span class="sub">Barbershop</span></div>
+            <div class="label" id="lbl-ocean">水族館 <span class="sub">Aquarium</span></div>
+            <div class="label" id="lbl-mountain">駅 <span class="sub">Train Station</span></div>
+            <div class="label" id="lbl-egg">卵料理 <span class="sub">Egg Dishes</span></div>
+            <div class="label" id="lbl-sushiking">寿司王 <span class="sub">Sushi King</span></div>
+        </canvas>
+    </div>
 
     <div id="controls">
         <h1>Translation Settings</h1>
@@ -183,27 +181,11 @@
     </div>
 
     <div id="info">
-        <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - animation - keyframes<br />
+        <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - animation - keyframes -
+        optimized<br />
         Model: <a href="https://artstation.com/artwork/1AGwX" target="_blank" rel="noopener">Littlest Tokyo</a> by
         <a href="https://artstation.com/glenatron" target="_blank" rel="noopener">Glen Fox</a>, CC Attribution.
     </div>
-
-    <!-- Transparent overlay canvas with layoutsubtree for HTML labels -->
-    <canvas id="label-canvas" layoutsubtree>
-        <!-- The Pin (reused or one per label) -->
-        <div class="pin" id="pin-element"></div>
-
-        <!-- Authentic Tokyo Signs - Defaulting to Japanese (JP) -->
-        <div class="label" id="lbl-panda">興 <span class="sub">Panda Cafe</span></div>
-        <div class="label" id="lbl-fish">おいしい魚 <span class="sub">Seafood Place</span></div>
-        <div class="label" id="lbl-sushi">寿司 <span class="sub">Sushi Shop</span></div>
-        <div class="label" id="lbl-geisha">芸者 <span class="sub">Theme Restaurant</span></div>
-        <div class="label" id="lbl-barber">理容室 <span class="sub">Barbershop</span></div>
-        <div class="label" id="lbl-ocean">水族館 <span class="sub">Aquarium</span></div>
-        <div class="label" id="lbl-mountain">駅 <span class="sub">Train Station</span></div>
-        <div class="label" id="lbl-egg">卵料理 <span class="sub">Egg Dishes</span></div>
-        <div class="label" id="lbl-sushiking">寿司王 <span class="sub">Sushi King</span></div>
-    </canvas>
 
     <script type="importmap">
         {
@@ -215,6 +197,36 @@
     </script>
 
     <script type="module">
+        // --- Ultimate WebGL HIC Signature & Type Compatibility Patch ---
+        const originalTexElementImage2D = WebGL2RenderingContext.prototype.texElementImage2D;
+        if (originalTexElementImage2D) {
+            WebGL2RenderingContext.prototype.texElementImage2D = function (...args) {
+                // 1. Resolve Three.js wrapped image objects (e.g. texture.image = { element: DOMElement })
+                let element = args[args.length - 1];
+                if (element && typeof element === 'object' && !(element instanceof Element)) {
+                    if (element.element instanceof Element) {
+                        args[args.length - 1] = element.element;
+                        element = element.element;
+                    }
+                }
+
+                // 2. Resolve Chromium 150+ 3-argument vs 6-argument signature mismatch
+                if (originalTexElementImage2D.length === 3 && args.length > 3) {
+                    const target = args[0];
+                    let internalformat = args[2]; // gl.RGBA8 or gl.RGBA
+
+                    // Map unsized gl.RGBA (6408) to sized gl.RGBA8 (32856) for Chromium 150+ compliance
+                    if (internalformat === 6408) {
+                        internalformat = 32856;
+                    }
+
+                    const elem = args[args.length - 1];
+                    return originalTexElementImage2D.call(this, target, internalformat, elem);
+                }
+
+                return originalTexElementImage2D.apply(this, args);
+            };
+        }
 
         import * as THREE from 'three';
 
@@ -225,15 +237,14 @@
 
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+        import { InteractionManager } from 'three/addons/interaction/InteractionManager.js';
 
         let mixer, model;
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
         const timer = new THREE.Timer();
-
         timer.connect(document);
+
         const container = document.getElementById('container');
+        const canvas = document.getElementById('gl-canvas');
 
         const stats = new Stats();
         stats.dom.style.top = '0px';
@@ -241,28 +252,22 @@
         stats.dom.style.left = 'auto'; // Clear default left: 0
         container.appendChild(stats.dom);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        // Initialize WebGLRenderer with our existing canvas
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        container.appendChild(renderer.domElement);
 
-        // Move label canvas inside container so it stacks on top
-        const labelCanvas = document.getElementById('label-canvas');
-        container.appendChild(labelCanvas);
-        const labelCtx = labelCanvas.getContext('2d');
-        const pinElement = document.getElementById('pin-element');
         const scene = new THREE.Scene();
 
         // Sky
         const sky = new Sky();
-
-        const uniforms = sky.material.uniforms;
-        uniforms['turbidity'].value = 0;
-        uniforms['rayleigh'].value = 3;
-        uniforms['mieDirectionalG'].value = 0.7;
-        uniforms['cloudElevation'].value = 1;
-        uniforms['sunPosition'].value.set(- 0.8, 0.19, 0.56);
+        const skyUniforms = sky.material.uniforms;
+        skyUniforms['turbidity'].value = 0;
+        skyUniforms['rayleigh'].value = 3;
+        skyUniforms['mieDirectionalG'].value = 0.7;
+        skyUniforms['cloudElevation'].value = 1;
+        skyUniforms['sunPosition'].value.set(- 0.8, 0.19, 0.56);
 
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         const environment = pmremGenerator.fromScene(sky).texture;
@@ -272,14 +277,17 @@
         const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 100);
         camera.position.set(5, 2, 8);
 
-        const controls = new OrbitControls(camera, labelCanvas);
+        const controls = new OrbitControls(camera, canvas);
         controls.enableDamping = true;
         controls.target.set(0, 0.7, 0);
         controls.update();
 
+        // Initialize HIC InteractionManager
+        const interactions = new InteractionManager();
+        interactions.connect(renderer, camera);
+
         // ─── HTML-in-Canvas Label System ─────────────────────────────────────────
-        // The model is placed at position (1, 1, 0) with scale 0.01.
-        // All world positions below are in Three.js world space.
+        // All world positions are in Three.js world space.
         const LABELS = [
             { id: 'lbl-panda', world: new THREE.Vector3(1.5, 2.8, -1.0) },
             { id: 'lbl-fish', world: new THREE.Vector3(1.1, 1.8, 0.8) },
@@ -290,11 +298,95 @@
             { id: 'lbl-mountain', world: new THREE.Vector3(1.5, 1.5, -3.0) },
             { id: 'lbl-egg', world: new THREE.Vector3(1.0, 2.5, 1.2) },
             { id: 'lbl-sushiking', world: new THREE.Vector3(-0.5, 2.0, -2.0) },
-        ].map(l => ({
-            ...l,
-            el: document.getElementById(l.id),
-            px: 0, py: 0, offscreen: true, labelOccluded: true
-        }));
+        ];
+
+        const labelMeshes = [];
+        const labelLines = []; // List to hold ribbon meshes for billboarding
+
+        // Helper to generate a sharp, repeating dashed texture procedurally
+        function createDashedTexture(height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 1, 16); // 50% white, 50% transparent
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            // Repeat 8 times per world unit for a beautiful, dense dash spacing
+            texture.repeat.set(1, height * 8);
+            texture.minFilter = THREE.NearestFilter;
+            texture.magFilter = THREE.NearestFilter;
+            return texture;
+        }
+
+        // Setup the Label Planes, Textures, and Connector Lines in 3D Space
+        LABELS.forEach((lbl) => {
+            const el = document.getElementById(lbl.id);
+
+            // 1. Get the actual CSS aspect ratio of this specific label
+            const cssWidth = el.offsetWidth || 150;
+            const cssHeight = el.offsetHeight || 50;
+            const aspect = cssWidth / cssHeight;
+
+            // 2. Create the HTMLTexture wrapping the DOM element
+            const texture = new THREE.HTMLTexture(el);
+            texture.colorSpace = THREE.SRGBColorSpace; // <-- CRITICAL: Prevents color shifting in sRGB renderer!
+
+            // 3. Create a 3D Plane Mesh with a matching aspect ratio!
+            // We lock the height at 0.35 and compute the width dynamically.
+            const meshHeight = 0.35;
+            const meshWidth = meshHeight * aspect;
+            const geometry = new THREE.PlaneGeometry(meshWidth, meshHeight);
+            
+            const material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthWrite: false, // prevents z-fighting and ensures clean transparent overlay sorting!
+                toneMapped: false  // PRESERVES RAW CSS COLORS PERFECTLY (bypasses WebGL color space shifting)
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.copy(lbl.world);
+
+            scene.add(mesh);
+            labelMeshes.push(mesh);
+
+            // Store the original metadata, aspect ratio, and language scale factor
+            mesh.userData.lbl = lbl;
+            mesh.userData.originalAspect = aspect;
+            mesh.userData.langScaleX = 1.0; // Initialize language horizontal scale factor
+
+            // 4. Register with InteractionManager for automatic HIC overlay & click-routing
+            interactions.add(mesh);
+
+            // 4. Create a 3D Dashed Line ribbon from the label to the ground (y = -1)
+            // Using a thin plane mesh bypasses WebGL's driver-level 1px line limit,
+            // allowing us to render beautiful, thick, and highly visible dashed lines!
+            const ribbonHeight = lbl.world.y + 1.0;
+            const ribbonWidth = 0.015; // Beautiful thick dashed line width
+            const ribbonGeometry = new THREE.PlaneGeometry(ribbonWidth, ribbonHeight);
+            ribbonGeometry.translate(0, -ribbonHeight / 2, 0); // Move origin to top center!
+
+            const lineTex = createDashedTexture(ribbonHeight);
+            const ribbonMaterial = new THREE.MeshBasicMaterial({
+                map: lineTex,
+                transparent: true,
+                opacity: 0.75, // Highly visible bright white!
+                toneMapped: false,
+                side: THREE.DoubleSide
+            });
+            const line = new THREE.Mesh(ribbonGeometry, ribbonMaterial);
+            // Position the top of the line exactly at the label's world position (the pin!)
+            // This synchronizes the pivot points of the label and the line, preventing any rotation misalignment!
+            line.position.copy(lbl.world);
+            scene.add(line);
+
+            // Keep reference to the line on the mesh so we can toggle visibility together
+            mesh.userData.line = line;
+            labelLines.push(line);
+        });
 
         const TRANSLATIONS = {
             en: {
@@ -336,77 +428,44 @@
         langSelect.addEventListener('change', (e) => {
             const lang = e.target.value;
             const data = TRANSLATIONS[lang];
+            
+            // 1. Update all DOM elements
             LABELS.forEach(lbl => {
+                const el = document.getElementById(lbl.id);
                 const trans = data[lbl.id];
-                // Update elements with a clean innerHTML or append logic
-                lbl.el.innerHTML = `${trans.main} <span class="sub">${trans.sub}</span>`;
+                el.innerHTML = `${trans.main} <span class="sub">${trans.sub}</span>`;
             });
-            labelCanvas.requestPaint();
+
+            // 2. Force a browser layout reflow so offsetWidth is updated immediately
+            canvas.offsetHeight;
+
+            // 3. Update the 3D mesh scale factors to match the new aspect ratios!
+            labelMeshes.forEach((mesh) => {
+                const lbl = mesh.userData.lbl;
+                const el = document.getElementById(lbl.id);
+                
+                const newAspect = el.offsetWidth / el.offsetHeight;
+                const originalAspect = mesh.userData.originalAspect;
+                
+                // Store the language scale factor (applied in the paint loop combined with distance)
+                mesh.userData.langScaleX = newAspect / originalAspect;
+            });
+
+            canvas.requestPaint();
         });
 
         let labelsVisible = true;
         const toggleCheckbox = document.getElementById('toggle-labels');
         toggleCheckbox.addEventListener('change', (e) => {
             labelsVisible = e.target.checked;
-            labelCanvas.requestPaint();
-        });
-
-        // Sync label canvas size with renderer
-        function syncLabelCanvasSize() {
-            labelCanvas.width = Math.floor(window.innerWidth * window.devicePixelRatio);
-            labelCanvas.height = Math.floor(window.innerHeight * window.devicePixelRatio);
-        }
-        syncLabelCanvasSize();
-
-        // Project a 3D world position → 2D DOMMatrix for getElementTransform
-        function updateLabels() {
-            const canvasW = labelCanvas.width;
-            const canvasH = labelCanvas.height;
-
-            LABELS.forEach((lbl) => {
-                const { el, world } = lbl;
-                // Project from world space → NDC (x,y in [-1,1], z in [-1,1])
-                const ndc = world.clone().project(camera);
-
-                // Basic frustum clipping
-                lbl.offscreen = ndc.z > 1 || Math.abs(ndc.x) > 1.3 || Math.abs(ndc.y) > 1.3;
-
-                // ─── Occlusion Check via Raycaster (Only for the label itself) ───
-                let isOccluded = false;
-                if (!lbl.offscreen && model) {
-                    mouse.x = ndc.x;
-                    mouse.y = ndc.y;
-                    raycaster.setFromCamera(mouse, camera);
-
-                    const intersects = raycaster.intersectObject(model, true);
-                    if (intersects.length > 0) {
-                        const distToHit = intersects[0].distance;
-                        const distToLabel = world.distanceTo(camera.position);
-                        if (distToHit < (distToLabel - 0.1)) {
-                            isOccluded = true;
-                        }
-                    }
+            labelMeshes.forEach((mesh) => {
+                mesh.visible = labelsVisible;
+                if (mesh.userData.line) {
+                    mesh.userData.line.visible = labelsVisible;
                 }
-
-                lbl.labelOccluded = isOccluded;
-                // Only show labels if toggle is on
-                el.style.opacity = (lbl.offscreen || lbl.labelOccluded || !labelsVisible) ? '0' : '1';
-                el.style.pointerEvents = (lbl.offscreen || lbl.labelOccluded || !labelsVisible) ? 'none' : 'auto';
-
-                if (lbl.offscreen) return;
-
-                // Convert NDC to canvas physical pixel coordinates
-                lbl.px = (ndc.x + 1) * 0.5 * canvasW;
-                lbl.py = (-ndc.y + 1) * 0.5 * canvasH;
-
-                // Project "Ground" position (y=-2 in scene space for depth)
-                const groundWorld = new THREE.Vector3(world.x, -1, world.z);
-                const groundNdc = groundWorld.project(camera);
-                lbl.groundPx = (groundNdc.x + 1) * 0.5 * canvasW;
-                lbl.groundPy = (-groundNdc.y + 1) * 0.5 * canvasH;
             });
-        }
-        // ─────────────────────────────────────────────────────────────────────────
+            canvas.requestPaint();
+        });
 
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
@@ -414,7 +473,6 @@
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
         loader.load('./../assets/LittlestTokyo.glb', function (gltf) {
-
             model = gltf.scene;
             model.position.set(1, 1, 0);
             model.scale.set(0.01, 0.01, 0.01);
@@ -423,89 +481,114 @@
             mixer = new THREE.AnimationMixer(model);
             mixer.clipAction(gltf.animations[0]).play();
 
-            renderer.setAnimationLoop(animate);
-
+            // Start the high-performance rendering loop
+            requestAnimationFrame(raf);
         }, undefined, function (e) {
-
             console.error(e);
-
         });
 
-        window.onresize = function () {
-            camera.aspect = window.innerWidth / window.innerHeight;
+        // Size the canvas grid to match the device scale factor to prevent any blurriness
+        const observer = new ResizeObserver(([entry]) => {
+            let width, height;
+            if (entry.devicePixelContentBoxSize) {
+                width = entry.devicePixelContentBoxSize[0].inlineSize;
+                height = entry.devicePixelContentBoxSize[0].blockSize;
+            } else {
+                // Fallback for browsers that don't support devicePixelContentBoxSize yet
+                width = Math.round(entry.contentRect.width * window.devicePixelRatio);
+                height = Math.round(entry.contentRect.height * window.devicePixelRatio);
+            }
+
+            camera.aspect = width / height;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            syncLabelCanvasSize();
-        };
 
-        function animate() {
+            // Set drawing buffer size matching physical pixels, without overwriting CSS layout styles
+            renderer.setSize(width, height, false);
 
-            timer.update();
+            canvas.requestPaint();
+        });
+        observer.observe(canvas, { box: 'device-pixel-content-box' });
 
-            const delta = timer.getDelta();
-
-            if (mixer) mixer.update(delta);
-
-            controls.update();
-
-            stats.update();
-
-            renderer.render(scene, camera);
-
-            // Sync HTML labels to 3D positions every frame
-            updateLabels();
-
-            labelCanvas.requestPaint();
+        // High-performance RAF loop: simply schedules a canvas paint every frame
+        function raf() {
+            canvas.requestPaint();
+            requestAnimationFrame(raf);
         }
 
-        labelCanvas.onpaint = () => {
-            labelCtx.reset();
+        let isFirstPaint = true;
 
-            if (!labelsVisible) return;
+        // ─── Native HTML-in-Canvas Paint Handler (Driven by browser compositor) ───
+        canvas.onpaint = (event) => {
+            const changed = event.changedElements || [];
+            const gl = renderer.getContext();
 
-            LABELS.forEach(({ el, px, py, groundPx, groundPy, offscreen, labelOccluded }) => {
-                if (offscreen) return;
+            // 1. Update Animations, Physics & Controls
+            timer.update();
+            const delta = timer.getDelta();
+            if (mixer) mixer.update(delta);
+            controls.update();
+            stats.update();
 
-                try {
-                    // 1. Draw a "Ground Line" from the floor to the pin
-                    labelCtx.beginPath();
-                    labelCtx.moveTo(groundPx, groundPy);
-                    labelCtx.lineTo(px, py);
-                    labelCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                    labelCtx.setLineDash([5, 5]); // Dashed line
-                    labelCtx.lineWidth = 1 * window.devicePixelRatio;
-                    labelCtx.stroke();
-                    labelCtx.setLineDash([]); // Reset dash
+            // 2. Performance-Optimized HIC Texture Update:
+            // We ONLY upload the texture via texElementImage2D if the element (or its children) has changed!
+            // If just rotating the camera, changed is empty, so we skip all uploads entirely, saving massive bandwidth.
+            labelMeshes.forEach((mesh) => {
+                const lbl = mesh.userData.lbl;
+                const el = document.getElementById(lbl.id);
 
-                    // 2. Draw the label chip (Occlusion aware)
-                    if (!labelOccluded) {
-                        // Position ABOVE the pin, horizontally centered
-                        const labelW = el.offsetWidth * window.devicePixelRatio;
-                        const labelH = el.offsetHeight * window.devicePixelRatio;
-                        const labelYOffset = 2 * window.devicePixelRatio; // Gap/Overlap
+                // Upload on first paint, or if the element (or descendants) has actually changed
+                const hasChanged = isFirstPaint || changed.some(c => el === c || el.contains(c));
 
-                        const drawX = px - labelW / 2;
-                        const drawY = py - labelH + (labelYOffset * 1); // Allow small overlap so pin is on bottom edge
+                if (hasChanged) {
+                    const textureProperties = renderer.properties.get(mesh.material.map);
+                    if (textureProperties && textureProperties.__webglTexture && gl.texElementImage2D) {
+                        const webglTexture = textureProperties.__webglTexture;
+                        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-                        const matrix = new DOMMatrix().translate(drawX, drawY);
-                        labelCtx.drawElementImage(el, drawX, drawY);
-
-                        // 3. Synchronize the DOM element's position for hit-testing/interaction
-                        if (labelCanvas.getElementTransform) {
-                            el.style.transform = labelCanvas.getElementTransform(el, matrix).toString();
-                            el.style.transformOrigin = '0 0';
+                        try {
+                            if (gl.texElementImage2D.length === 3) {
+                                gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
+                            } else {
+                                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+                            }
+                        } catch (err) {
+                            console.error('texElementImage2D failed:', err);
                         }
                     }
-
-                    // 4. Draw a small "Pin" point (Center it on px, py) - Drawn LAST to be on top in Z-index
-                    const pinSize = 14 * window.devicePixelRatio;
-                    labelCtx.drawElementImage(pinElement, px - pinSize / 2, py - pinSize / 2);
-                } catch (e) {
-                    // Snapshot might not be ready on first frames
                 }
             });
-        };
 
+            // 3. Billboard all label meshes and scale them based on camera distance
+            // to maintain a perfect, constant screen size (matching the original 2D overlay)!
+            labelMeshes.forEach((mesh) => {
+                mesh.quaternion.copy(camera.quaternion);
+
+                const dist = camera.position.distanceTo(mesh.userData.lbl.world);
+                const scale = dist * 0.125; // 0.125 matches the original 1x label size at default zoom!
+                
+                // Combine distance scaling with the dynamic language horizontal scale
+                mesh.scale.x = scale * (mesh.userData.langScaleX || 1.0);
+                mesh.scale.y = scale;
+                mesh.scale.z = 1;
+
+                // Dynamically offset the Y position so the bottom center (the pin) remains locked at the world anchor!
+                // This keeps the WebGL pixels and the HIC DOM hit-testing elements 100% perfectly aligned.
+                const meshHeight = 0.35;
+                mesh.position.y = mesh.userData.lbl.world.y + (meshHeight * scale) / 2;
+            });
+
+            // 3.5. Billboard all dashed connector lines to face the camera perfectly
+            labelLines.forEach((line) => {
+                line.quaternion.copy(camera.quaternion);
+            });
+
+            // 4. Update HIC InteractionManager for click-routing and positioning
+            interactions.update();
+
+            // 5. Render the 3D Scene
+            renderer.render(scene, camera);
+        };
     </script>
 
 </body>
