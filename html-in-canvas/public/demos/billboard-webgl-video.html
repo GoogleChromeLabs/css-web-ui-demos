@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta http-equiv="origin-trial"
+        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive 3D Billboard demo built using raw WebGL 2 and gl-matrix, showing high-performance HTML-in-Canvas rendering without Three.js.">
+    <meta name="keywords"
+        content="HTML in Canvas, layoutsubtree, WebGL 2, 3D Billboard, Accessibility, DOM in Canvas, gl-matrix">
+    <title>3D Interactive Billboard (HIC Native HTML-in-Canvas - Raw WebGL 2)</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <script src="../js/gl-matrix.js"></script>
+    <script type="module" src="../js/material-web-bundle.js"></script>
+    <style>
+        ::selection {
+            color: black;
+            background-color: yellow;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #8DB8F9;
+            color: var(--md-sys-color-on-background);
+            font-family: 'Inter', system-ui, sans-serif;
+            user-select: none;
+        }
+
+        #gl-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #billboard-content {
+            width: 1024px;
+            height: 576px;
+            background-color: #0a0a0f;
+            color: #fff;
+            padding: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #scribble-container {
+            width: 100%;
+            height: 400px;
+            display: grid;
+            place-items: center;
+            position: relative;
+        }
+
+        .line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+
+        .is-animated .line {
+            animation-name: drawLine, fadeDown;
+            animation-duration: 4s, 4s;
+            animation-timing-function: linear, linear;
+            animation-fill-mode: forwards, forwards;
+        }
+
+        .line1 {
+            animation-delay: 0s, 3.6s;
+        }
+
+        .line2 {
+            animation-delay: 1.4s, 3.6s;
+        }
+
+        .line3 {
+            animation-delay: 1.85s, 3.6s;
+        }
+
+        .line4 {
+            animation-delay: 2.85s, 3.6s;
+        }
+
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes fadeDown {
+            0% {
+                opacity: 1;
+                translate: 0 0px;
+                filter: brightness(1) grayscale(0);
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                translate: 0 40px;
+                filter: brightness(2) grayscale(1);
+            }
+        }
+
+        .pen {
+            position: absolute;
+            top: -20px;
+            left: 20%;
+            transform: translateX(-50%);
+            offset-path: path("M50 189.848C51.3891 188.229 54.1743 185.437 57.5493 182.878C60.6378 180.537 64.3936 175.455 67.5593 171.825C69.9607 169.071 73.7195 167.287 75.9358 164.844C78.1522 162.401 80.6999 159.846 83.4956 158.209C86.5117 156.443 89.0764 155.183 95.2332 155.292C98.7001 155.352 98.6256 160.516 99.6727 163.312C100.829 166.398 103.735 168.432 105.142 170.991C106.562 173.573 107.002 176.571 108.744 179.252C111.342 183.251 119.79 180.313 122.586 178.802C125.291 177.339 128.167 176.125 131.078 174.613C134.218 172.983 137.241 172.634 141.196 172.282C144.546 171.983 149.094 171.001 156.633 170.422C170.08 169.388 180.059 170.533 183.989 170.882C197.924 172.12 200.763 169.382 203.559 168.097C207.254 166.399 211.457 161.94 216.232 157.986C220.5 154.451 224.259 153.327 227.408 151.348C230.939 149.128 232.65 147.275 233.117 145.882C234.083 143.006 228.911 138.364 226 136.5C222.652 134.357 219 133.309 216.232 131.321C213 129 209 126.445 204.746 126.445C200.769 126.445 197.538 129.104 194.505 131.321C191.512 133.508 190.083 136.783 188.914 139.694C187.375 143.526 189.134 147.952 190.533 150.747C192.098 153.873 196.324 158.171 200.299 161.567C204.259 164.95 207.046 166.338 210.421 168.202C213.844 170.092 216.818 172.858 221.003 174.599C225.386 176.424 227.987 178.205 233.795 180.533C236.126 181.234 237.766 181.702 239.274 182.051C240.091 182.17 245.551 184.198 246.5 183.5M237.5 182C239.119 182.23 248.216 183.091 251.724 184.955C254.583 186.474 263.754 187.056 275.897 184.044C281.509 182.652 286.148 181.709 292.074 180.316C303.871 177.544 308.261 174.728 311.637 173.797C314.551 172.865 317.336 171.706 319.776 170.544C320.833 170.073 321.524 169.842 322.236 169.605C329.615 169.605 382.166 176.352 387.649 176.942C393.332 177.554 401.265 177.986 409.854 178.108C414.144 178.169 417.32 176.366 420.695 175.434C423.719 174.599 426.394 172.415 431.507 167.77C434.446 165.1 438.722 163.118 441.755 160.2C445.025 157.054 448.739 154.259 450.246 154.026C451.053 153.9 451.984 154.252 452.689 154.717C455.454 156.537 456.647 160.06 458.511 163.435C460.183 166.463 462.232 169.135 464.211 171.815C466.111 174.389 484.876 174.035 494.809 171.372C498.036 170.507 497.371 165.672 498.3 161.945C500.052 154.908 513.175 169.372 517.834 171.815C522.888 174.465 528.769 175.654 540.723 176.244C547.616 176.827 552.279 176.366 554.021 175.553C554.841 175.201 555.532 174.97 557.64 174.035L591.684 176.698C597.907 176.698 610.116 176.698 622.694 176");
+            offset-distance: 0%;
+            offset-rotate: 0deg;
+        }
+
+        .is-animated .pen {
+            animation-name: movePenAlongPath, fadeOut;
+            animation-duration: 3s, 3s;
+            animation-timing-function: linear, linear;
+            animation-fill-mode: forwards, forwards;
+        }
+
+        @keyframes movePenAlongPath {
+            to {
+                offset-distance: 100%;
+            }
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .gemini1 {
+            transform-origin: 0;
+        }
+
+        .is-animated .gemini1 {
+            animation-name: move;
+            animation-duration: 1.2s;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        .gemini2 {
+            opacity: 0;
+            translate: 0px 40px;
+            transform-origin: 0;
+        }
+
+        .is-animated .gemini2 {
+            animation-name: appear, move;
+            animation-duration: 0.6s, 1.2s;
+            animation-delay: 0.2s, 0.2s;
+            animation-timing-function: linear, linear;
+            animation-fill-mode: forwards, forwards;
+        }
+
+        @keyframes move {
+            from {
+                scale: 1;
+            }
+
+            to {
+                scale: 0;
+            }
+        }
+
+        @keyframes appear {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .badge {
+            background: #4285f4;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 44px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            opacity: 1.0;
+            max-width: 650px;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .badge {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        button.badge {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-property: background-color, color, transform, box-shadow;
+        }
+
+        button.badge:hover {
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button.badge:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .debug-info {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: #fff;
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-family: inherit;
+            border: 2px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        #video-container {
+            width: 100%;
+            height: 350px;
+            display: grid;
+            place-items: center;
+            position: relative;
+        }
+
+        #video-container video {
+            width: 716px;
+            height: 350px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            object-fit: cover;
+            background-color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="debug-info">
+        Interactive 3D Billboard<br>
+        HTML-in-Canvas with WebGL
+    </div>
+
+    <canvas id="gl-canvas" layoutsubtree>
+        <!-- Live Gemini Scribble Integrated via JS Refresh -->
+        <form id="billboard-content" onsubmit="event.preventDefault();">
+            <button class="badge" type="button">I'm a button. Click me!</button>
+            <div id="video-container">
+                <video id="billboard-video" src="../assets/demo-video.mp4" autoplay loop muted playsinline controls></video>
+            </div>
+            <h1>HTML-in-Canvas Video Player</h1>
+        </form>
+
+            
+        </form>
+    </canvas>
+
+    <script type="module">
+        window.handleButtonClick = function (event) {
+            alert("You've just clicked a fully interactive button that's a child element of canvas. You can now build fully interactive canvas!");
+        };
+
+        // --- WebGL 2 Scene and Setup ---
+        const canvas = document.getElementById('gl-canvas');
+        const billboardContent = document.getElementById('billboard-content');
+
+        // Use event delegation on the form to handle pointerdown
+        billboardContent.addEventListener('pointerdown', function (event) {
+            if (event.target.closest('.badge')) {
+                window.handleButtonClick(event);
+            }
+        });
+
+        const gl = canvas.getContext('webgl2');
+
+        if (!gl) {
+            alert('WebGL 2 not supported by this browser.');
+            throw new Error('WebGL 2 not supported');
+        }
+
+        // Support High-DPI screen resizing
+        const observer = new ResizeObserver(([entry]) => {
+            canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+            canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+        });
+        observer.observe(canvas, { box: 'device-pixel-content-box' });
+
+        // --- SHADER SOURCES ---
+
+        // 1. Universal Lit Shader (for GLB Billboard Stand meshes)
+        const litVsSource = `#version 300 es
+        layout(location = 0) in vec3 aPosition;
+        layout(location = 1) in vec3 aNormal;
+        layout(location = 2) in vec2 aTexCoord;
+
+        uniform mat4 uModelMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+
+        out vec3 vNormal;
+        out vec3 vPosition;
+        out vec2 vTexCoord;
+        out vec3 vLocalPos;
+
+        void main() {
+            vec4 worldPos = uModelMatrix * vec4(aPosition, 1.0);
+            gl_Position = uProjectionMatrix * uViewMatrix * worldPos;
+            
+            vNormal = mat3(uModelMatrix) * aNormal;
+            vPosition = worldPos.xyz;
+            vTexCoord = aTexCoord;
+            vLocalPos = aPosition;
+        }`;
+
+        const litFsSource = `#version 300 es
+        precision highp float;
+
+        in vec3 vNormal;
+        in vec3 vPosition;
+        in vec2 vTexCoord;
+        in vec3 vLocalPos;
+
+        uniform vec3 uCameraPos;
+        uniform vec4 uBaseColor;
+        uniform bool uUseTexture;
+        uniform sampler2D uSampler;
+        uniform vec3 uEmissive;
+        uniform bool uIsLightCone;
+        uniform mat4 uModelMatrix;
+
+        out vec4 fragColor;
+
+        void main() {
+            vec3 normal;
+            if (uIsLightCone) {
+                // Mathematically compute a perfectly smooth normal for a Y-axis cylinder/cone
+                vec3 smoothLocalNormal = normalize(vec3(vLocalPos.x, 0.0, vLocalPos.z));
+                normal = normalize(mat3(uModelMatrix) * smoothLocalNormal);
+            } else {
+                normal = normalize(vNormal);
+            }
+
+            vec3 viewDir = normalize(uCameraPos - vPosition);
+            
+            // Lighting Setup (Matching Three.js Ambient + Directional lights)
+            vec3 ambientColor = vec3(0.18, 0.18, 0.22); // Soft ambient fill
+            vec3 lightDir = normalize(vec3(20.0, 40.0, 20.0)); // Main directional light
+            vec3 lightColor = vec3(1.0, 1.0, 1.0) * 1.6; // High intensity sun
+            
+            // Diffuse (Lambertian)
+            float diffuseIntensity = max(dot(normal, lightDir), 0.0);
+            vec3 diffuse = diffuseIntensity * lightColor;
+            
+            // Specular (Blinn-Phong)
+            vec3 halfVector = normalize(lightDir + viewDir);
+            float specularIntensity = pow(max(dot(normal, halfVector), 0.0), 32.0);
+            vec3 specular = specularIntensity * vec3(1.0, 1.0, 1.0) * 0.35;
+            
+            // Base color selection
+            vec4 color = uBaseColor;
+            if (uUseTexture) {
+                color *= texture(uSampler, vTexCoord);
+            }
+            
+            vec3 finalColor;
+            float finalAlpha = color.a;
+            
+            if (uIsLightCone) {
+                // Volumetric soft edge falloff (steeper exponent for smoother borders)
+                float NdotV = abs(dot(normal, viewDir));
+                float falloff = pow(NdotV, 4.0); 
+                
+                // Scale the glow intensity to make it extremely soft, natural and highly transparent
+                float glowIntensity = 0.08; 
+                
+                vec3 glow = uEmissive * falloff * glowIntensity;
+                vec3 diffuseAmbient = (ambientColor + diffuse) * color.rgb * color.a * falloff;
+                
+                finalColor = diffuseAmbient + glow;
+                finalAlpha = color.a * falloff * glowIntensity;
+            } else {
+                // Premultiply diffuse/ambient by alpha, add specular and emissive directly (additive glow!)
+                vec3 diffuseAmbient = (ambientColor + diffuse) * color.rgb * color.a;
+                finalColor = diffuseAmbient + specular * color.a + uEmissive;
+            }
+            
+            // Simple Gamma Correction
+            finalColor = pow(finalColor, vec3(1.0 / 2.2));
+            
+            fragColor = vec4(finalColor, finalAlpha);
+        }`;
+
+        // 2. Unlit Texture Shader (for the Screen Quad)
+        const unlitVsSource = `#version 300 es
+        layout(location = 0) in vec3 aPosition;
+        layout(location = 1) in vec2 aTexCoord;
+
+        uniform mat4 uModelMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+
+        out vec2 vTexCoord;
+
+        void main() {
+            gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+            vTexCoord = aTexCoord;
+        }`;
+
+        const unlitFsSource = `#version 300 es
+        precision highp float;
+
+        in vec2 vTexCoord;
+        uniform sampler2D uSampler;
+
+        out vec4 fragColor;
+
+        void main() {
+            fragColor = texture(uSampler, vTexCoord);
+        }`;
+
+        // 3. Unlit Grid Shader
+        const gridVsSource = `#version 300 es
+        layout(location = 0) in vec3 aPosition;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+
+        void main() {
+            gl_Position = uProjectionMatrix * uViewMatrix * vec4(aPosition, 1.0);
+        }`;
+
+        const gridFsSource = `#version 300 es
+        precision highp float;
+        uniform vec4 uColor;
+        out vec4 fragColor;
+        void main() {
+            fragColor = uColor;
+        }`;
+
+        // --- SHADER COMPILATION HELPERS ---
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation failed:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vsSource, fsSource) {
+            const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vs);
+            gl.attachShader(prog, fs);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                console.error('Program linking failed:', gl.getProgramInfoLog(prog));
+                return null;
+            }
+            return prog;
+        }
+
+        // Compile Programs
+        const litProgram = createProgram(gl, litVsSource, litFsSource);
+        const unlitProgram = createProgram(gl, unlitVsSource, unlitFsSource);
+        const gridProgram = createProgram(gl, gridVsSource, gridFsSource);
+
+        // Uniform Locations for Lit Program
+        const litUniforms = {
+            uModelMatrix: gl.getUniformLocation(litProgram, 'uModelMatrix'),
+            uViewMatrix: gl.getUniformLocation(litProgram, 'uViewMatrix'),
+            uProjectionMatrix: gl.getUniformLocation(litProgram, 'uProjectionMatrix'),
+            uCameraPos: gl.getUniformLocation(litProgram, 'uCameraPos'),
+            uBaseColor: gl.getUniformLocation(litProgram, 'uBaseColor'),
+            uUseTexture: gl.getUniformLocation(litProgram, 'uUseTexture'),
+            uSampler: gl.getUniformLocation(litProgram, 'uSampler'),
+            uEmissive: gl.getUniformLocation(litProgram, 'uEmissive'),
+            uIsLightCone: gl.getUniformLocation(litProgram, 'uIsLightCone')
+        };
+
+        // Uniform Locations for Unlit Program
+        const unlitUniforms = {
+            uModelMatrix: gl.getUniformLocation(unlitProgram, 'uModelMatrix'),
+            uViewMatrix: gl.getUniformLocation(unlitProgram, 'uViewMatrix'),
+            uProjectionMatrix: gl.getUniformLocation(unlitProgram, 'uProjectionMatrix'),
+            uSampler: gl.getUniformLocation(unlitProgram, 'uSampler')
+        };
+
+        // Uniform Locations for Grid Program
+        const gridUniforms = {
+            uViewMatrix: gl.getUniformLocation(gridProgram, 'uViewMatrix'),
+            uProjectionMatrix: gl.getUniformLocation(gridProgram, 'uProjectionMatrix'),
+            uColor: gl.getUniformLocation(gridProgram, 'uColor')
+        };
+
+        // --- GEOMETRY DATA EXTRACTION (GLB PARSER) ---
+        function getAccessorData(json, bin, accessorIndex) {
+            if (accessorIndex === undefined) return null;
+            const accessor = json.accessors[accessorIndex];
+            const bufferView = json.bufferViews[accessor.bufferView];
+            const byteOffset = (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
+
+            let TypedArrayConstructor;
+            let numComponents;
+
+            switch (accessor.type) {
+                case 'SCALAR': numComponents = 1; break;
+                case 'VEC2': numComponents = 2; break;
+                case 'VEC3': numComponents = 3; break;
+                case 'VEC4': numComponents = 4; break;
+                default: throw new Error('Unsupported type: ' + accessor.type);
+            }
+
+            switch (accessor.componentType) {
+                case 5126: TypedArrayConstructor = Float32Array; break;
+                case 5123: TypedArrayConstructor = Uint16Array; break;
+                case 5125: TypedArrayConstructor = Uint32Array; break;
+                case 5121: TypedArrayConstructor = Uint8Array; break;
+                default: throw new Error('Unsupported component type: ' + accessor.componentType);
+            }
+
+            return new TypedArrayConstructor(bin, byteOffset, accessor.count * numComponents);
+        }
+
+        // Recursively compute the scene graph world matrices
+        function computeWorldMatrices(json, nodeIndex, parentMatrix, nodeWorldMatrices) {
+            const node = json.nodes[nodeIndex];
+            const localMatrix = mat4.create();
+
+            if (node.matrix) {
+                mat4.copy(localMatrix, node.matrix);
+            } else {
+                const t = node.translation || [0, 0, 0];
+                const r = node.rotation || [0, 0, 0, 1]; // quaternion
+                const s = node.scale || [1, 1, 1];
+                mat4.fromRotationTranslationScale(localMatrix, r, t, s);
+            }
+
+            const worldMatrix = mat4.create();
+            mat4.multiply(worldMatrix, parentMatrix, localMatrix);
+            nodeWorldMatrices[nodeIndex] = worldMatrix;
+
+            if (node.children) {
+                for (const childIndex of node.children) {
+                    computeWorldMatrices(json, childIndex, worldMatrix, nodeWorldMatrices);
+                }
+            }
+        }
+
+        // Set up VAO and VBO buffers for a glTF primitive
+        function setupPrimitiveBuffers(gl, primitive) {
+            const vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            // Positions (Location 0)
+            const posBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, primitive.positions, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            // Normals (Location 1)
+            let normBuffer = null;
+            if (primitive.normals) {
+                normBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, primitive.normals, gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(1);
+                gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+            }
+
+            // UVs (Location 2)
+            let uvBuffer = null;
+            if (primitive.uvs) {
+                uvBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, primitive.uvs, gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(2);
+                gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+            }
+
+            // Indices
+            let indexBuffer = null;
+            let indexCount = 0;
+            if (primitive.indices) {
+                indexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, primitive.indices, gl.STATIC_DRAW);
+                indexCount = primitive.indices.length;
+            } else {
+                indexCount = primitive.positions.length / 3;
+            }
+
+            gl.bindVertexArray(null);
+
+            return {
+                vao,
+                indexCount,
+                hasIndices: !!primitive.indices,
+                indexType: primitive.indexType
+            };
+        }
+
+        // Loading indicator element
+        const loadingEl = document.createElement('div');
+        loadingEl.style.position = 'absolute';
+        loadingEl.style.top = '50%';
+        loadingEl.style.left = '50%';
+        loadingEl.style.transform = 'translate(-50%, -50%)';
+        loadingEl.style.color = '#fff';
+        loadingEl.style.fontSize = '24px';
+        loadingEl.style.zIndex = '1000';
+        loadingEl.innerText = 'Loading 3D Scene (Raw WebGL)...';
+        document.body.appendChild(loadingEl);
+
+        let opaqueMeshInstances = [];
+        let transparentMeshInstances = [];
+        let embeddedTexture = null;
+
+        // Load and Parse the GLB Model
+        async function loadGLBModel() {
+            const response = await fetch('./../assets/Billboard.glb');
+            const arrayBuffer = await response.arrayBuffer();
+            const view = new DataView(arrayBuffer);
+
+            // Parse Header
+            const magic = view.getUint32(0, true);
+            if (magic !== 0x46546C67) throw new Error("Invalid GLB magic number");
+
+            const totalLength = view.getUint32(8, true);
+
+            // Parse Chunks
+            let offset = 12;
+            let json = null;
+            let bin = null;
+
+            while (offset < totalLength) {
+                const chunkLength = view.getUint32(offset, true);
+                const chunkType = view.getUint32(offset + 4, true);
+                const dataOffset = offset + 8;
+
+                if (chunkType === 0x4E4F534A) { // JSON chunk
+                    const jsonText = new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer, dataOffset, chunkLength));
+                    json = JSON.parse(jsonText);
+                } else if (chunkType === 0x004E4942) { // BIN chunk
+                    bin = arrayBuffer.slice(dataOffset, dataOffset + chunkLength);
+                }
+
+                offset += 8 + chunkLength;
+            }
+
+            // Load Embedded Texture (if present)
+            if (json.images && json.images.length > 0) {
+                const imageDef = json.images[0];
+                const bufferView = json.bufferViews[imageDef.bufferView];
+                const imageBytes = new Uint8Array(bin, bufferView.byteOffset || 0, bufferView.byteLength);
+
+                const blob = new Blob([imageBytes], { type: imageDef.mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+
+                embeddedTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, embeddedTexture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([100, 100, 100, 255]));
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+                const img = new Image();
+                img.onload = () => {
+                    gl.bindTexture(gl.TEXTURE_2D, embeddedTexture);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); // glTF textures are typically pre-oriented
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+                    gl.generateMipmap(gl.TEXTURE_2D);
+                    URL.revokeObjectURL(blobUrl);
+                };
+                img.src = blobUrl;
+            }
+
+            // Compute World Matrices
+            const nodeWorldMatrices = {};
+            const baseModelMatrix = mat4.create();
+            // Rotate the entire billboard stand by Y = 5.4 to match the Three.js composition
+            mat4.fromRotation(baseModelMatrix, 5.4, [0, 1, 0]);
+
+            const defaultScene = json.scenes[json.scene || 0];
+            for (const rootNodeIndex of defaultScene.nodes) {
+                computeWorldMatrices(json, rootNodeIndex, baseModelMatrix, nodeWorldMatrices);
+            }
+
+            // Create VAOs and gather instances for the billboard stand
+            json.nodes.forEach((node, nodeIndex) => {
+                if (node.mesh === undefined) return;
+
+                const mesh = json.meshes[node.mesh];
+                const worldMatrix = nodeWorldMatrices[nodeIndex];
+
+                mesh.primitives.forEach(prim => {
+                    const primitiveData = {
+                        positions: getAccessorData(json, bin, prim.attributes.POSITION),
+                        normals: getAccessorData(json, bin, prim.attributes.NORMAL),
+                        uvs: getAccessorData(json, bin, prim.attributes.TEXCOORD_0),
+                        indices: getAccessorData(json, bin, prim.indices),
+                        indexType: prim.indices !== undefined ? json.accessors[prim.indices].componentType : null
+                    };
+
+                    const buffers = setupPrimitiveBuffers(gl, primitiveData);
+
+                    // Material resolution
+                    let baseColor = [0.1, 0.1, 0.1, 1.0]; // default dark charcoal
+                    let useTexture = false;
+                    let emissive = [0.0, 0.0, 0.0];
+
+                    if (prim.material !== undefined) {
+                        const mat = json.materials[prim.material];
+                        if (mat.pbrMetallicRoughness) {
+                            if (mat.pbrMetallicRoughness.baseColorFactor) {
+                                baseColor = mat.pbrMetallicRoughness.baseColorFactor;
+                            }
+                            if (mat.pbrMetallicRoughness.baseColorTexture) {
+                                useTexture = true;
+                            }
+                        }
+                        if (mat.emissiveFactor) {
+                            emissive = mat.emissiveFactor;
+                        }
+                    }
+
+                    const instance = {
+                        vao: buffers.vao,
+                        indexCount: buffers.indexCount,
+                        hasIndices: buffers.hasIndices,
+                        indexType: buffers.indexType,
+                        worldMatrix: worldMatrix,
+                        material: {
+                            baseColor,
+                            useTexture,
+                            emissive
+                        }
+                    };
+
+                    if (baseColor[3] < 1.0) {
+                        transparentMeshInstances.push(instance);
+                    } else {
+                        opaqueMeshInstances.push(instance);
+                    }
+                });
+            });
+
+            loadingEl.remove();
+        }
+
+        // --- SCREEN QUAD SETUP (Programmatic Fallback matching Three.js) ---
+        const screenVao = gl.createVertexArray();
+        gl.bindVertexArray(screenVao);
+
+        // Bounding box matches PlaneGeometry(6.9, 3) centered
+        const screenPositions = new Float32Array([
+            -3.45, 1.5, 0.0,
+            3.45, 1.5, 0.0,
+            -3.45, -1.5, 0.0,
+            3.45, -1.5, 0.0,
+        ]);
+        const screenPosBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenPosBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, screenPositions, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+        const screenUvs = new Float32Array([
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+        ]);
+        const screenUvBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenUvBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, screenUvs, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+
+        const screenIndices = new Uint16Array([
+            0, 2, 1,
+            1, 2, 3
+        ]);
+        const screenIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, screenIndexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, screenIndices, gl.STATIC_DRAW);
+        gl.bindVertexArray(null);
+
+        // Create HTML-in-Canvas WebGL Texture
+        const screenTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, screenTexture);
+        // Pre-allocate storage
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 576, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        // Position the Screen Quad in world coordinates exactly matching Three.js
+        const screenModelMatrix = mat4.create();
+        mat4.translate(screenModelMatrix, screenModelMatrix, [0, 15, 0]);
+        mat4.rotateY(screenModelMatrix, screenModelMatrix, 0.69);
+        mat4.scale(screenModelMatrix, screenModelMatrix, [2.67, 2.67, 2.67]);
+
+        // --- GROUND GRID HELPER (Draws lines directly on Y=0) ---
+        function generateGridVertices(size, divisions) {
+            const vertices = [];
+            const step = size / divisions;
+            const halfSize = size / 2;
+            for (let i = 0; i <= divisions; i++) {
+                const coord = -halfSize + i * step;
+                // X lines
+                vertices.push(coord, 0, -halfSize, coord, 0, halfSize);
+                // Z lines
+                vertices.push(-halfSize, 0, coord, halfSize, 0, coord);
+            }
+            return new Float32Array(vertices);
+        }
+
+        const gridVertices = generateGridVertices(100, 20);
+        const gridVao = gl.createVertexArray();
+        gl.bindVertexArray(gridVao);
+        const gridBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, gridBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, gridVertices, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.bindVertexArray(null);
+
+        // --- CAMERA AND ORBIT CONTROLS (Spherical coordinates) ---
+        let theta = 0.519;  // horizontal angle (radians)
+        let phi = 0.244;    // vertical angle (radians)
+        let radius = 166.13; // camera distance
+        const target = [0, 10, 0]; // Orbit camera center
+
+        let isDragging = false;
+        let prevMousePos = { x: 0, y: 0 };
+
+        // Mouse Drag to Orbit
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            prevMousePos = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - prevMousePos.x;
+            const dy = e.clientY - prevMousePos.y;
+
+            theta -= dx * 0.005;
+            phi = Math.max(0.01, Math.min(Math.PI / 2 - 0.01, phi - dy * 0.005)); // clamp to avoid flipping
+
+            prevMousePos = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Mouse Scroll to Zoom
+        window.addEventListener('wheel', (e) => {
+            radius = Math.max(15, Math.min(250, radius + e.deltaY * 0.15));
+        }, { passive: true });
+
+        // --- PERIODIC SVG SCRIBBLE ANIMATION ---
+        const scribbleContainer = document.getElementById('scribble-container');
+        let lastRestartTime = performance.now();
+        const animationCycleDuration = 5500;
+
+        function restartAnimations() {
+            if (scribbleContainer) {
+                scribbleContainer.classList.remove('is-animated');
+                void scribbleContainer.offsetHeight; // Force reflow
+                scribbleContainer.classList.add('is-animated');
+            }
+            lastRestartTime = performance.now();
+        }
+
+        // --- CINEMATIC INTRO ANIMATION VALUES ---
+        const introStartTime = performance.now();
+        const introDuration = 2200; // ms
+        let introFinished = false;
+
+        // Spherical paths
+        const startRadius = 166.13, endRadius = 41.23;
+        const startPhi = 0.244, endPhi = 0.097;
+        const startTheta = 0.519, endTheta = 0.82;
+
+        // Start periodic interval
+        setInterval(restartAnimations, 5500);
+
+        // --- MAIN RENDER AND SYNC LOOP ---
+        function render() {
+            requestAnimationFrame(render);
+
+            // Adjust WebGL viewport & size
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clearColor(0, 0, 0, 0); // Transparent canvas, lets body background show through
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); // Premultiplied alpha blending
+
+            // 1. Cinematic Camera Entry Animation
+            if (!introFinished) {
+                const elapsed = performance.now() - introStartTime;
+                const t = Math.min(elapsed / introDuration, 1.0);
+                const ease = 1.0 - Math.pow(1.0 - t, 3); // easeOutCubic
+
+                radius = startRadius + (endRadius - startRadius) * ease;
+                phi = startPhi + (endPhi - startPhi) * ease;
+                theta = startTheta + (endTheta - startTheta) * ease;
+
+                if (t >= 1.0) introFinished = true;
+            }
+
+            // Calculate Camera Position
+            const camX = target[0] + radius * Math.sin(theta) * Math.cos(phi);
+            const camY = target[1] + radius * Math.sin(phi);
+            const camZ = target[2] + radius * Math.cos(theta) * Math.cos(phi);
+            const cameraPosition = [camX, camY, camZ];
+
+            // 2. View and Projection Matrices
+            const viewMatrix = mat4.create();
+            mat4.lookAt(viewMatrix, cameraPosition, target, [0, 1, 0]);
+
+            const projectionMatrix = mat4.create();
+            mat4.perspective(projectionMatrix, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 1000.0);
+
+            // 3. Render Ground Grid Helper
+            gl.useProgram(gridProgram);
+            gl.uniformMatrix4fv(gridUniforms.uViewMatrix, false, viewMatrix);
+            gl.uniformMatrix4fv(gridUniforms.uProjectionMatrix, false, projectionMatrix);
+            gl.uniform4f(gridUniforms.uColor, 0.2, 0.4, 0.8, 0.15); // soft blue-tinted grid
+            gl.bindVertexArray(gridVao);
+            gl.drawArrays(gl.LINES, 0, gridVertices.length / 3);
+            gl.bindVertexArray(null);
+
+            // 4. Render Opaque Billboard Stand (GLB meshes)
+            gl.useProgram(litProgram);
+            gl.uniformMatrix4fv(litUniforms.uViewMatrix, false, viewMatrix);
+            gl.uniformMatrix4fv(litUniforms.uProjectionMatrix, false, projectionMatrix);
+            gl.uniform3fv(litUniforms.uCameraPos, cameraPosition);
+
+            opaqueMeshInstances.forEach(instance => {
+                gl.uniformMatrix4fv(litUniforms.uModelMatrix, false, instance.worldMatrix);
+                gl.uniform4fv(litUniforms.uBaseColor, instance.material.baseColor);
+                gl.uniform1i(litUniforms.uUseTexture, instance.material.useTexture ? 1 : 0);
+                gl.uniform3fv(litUniforms.uEmissive, instance.material.emissive);
+                gl.uniform1i(litUniforms.uIsLightCone, 0);
+
+                if (instance.material.useTexture && embeddedTexture) {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, embeddedTexture);
+                    gl.uniform1i(litUniforms.uSampler, 0);
+                }
+
+                gl.bindVertexArray(instance.vao);
+                if (instance.hasIndices) {
+                    gl.drawElements(gl.TRIANGLES, instance.indexCount, instance.indexType || gl.UNSIGNED_SHORT, 0);
+                } else {
+                    gl.drawArrays(gl.TRIANGLES, 0, instance.indexCount);
+                }
+            });
+
+            // 5. Update HTML-in-Canvas texture from DOM element (Every Frame)
+            if (gl.texElementImage2D) {
+                gl.bindTexture(gl.TEXTURE_2D, screenTexture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // Flip Y for DOM coordinate matching
+                try {
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, billboardContent);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, billboardContent);
+                    }
+                } catch (err) {
+                    if (window.debugLogErr === undefined) {
+                        console.error('texElementImage2D failed:', err);
+                        window.debugLogErr = true;
+                    }
+                }
+            }
+
+            // 6. Render Screen Quad (Fallback Plane)
+            gl.useProgram(unlitProgram);
+            gl.uniformMatrix4fv(unlitUniforms.uModelMatrix, false, screenModelMatrix);
+            gl.uniformMatrix4fv(unlitUniforms.uViewMatrix, false, viewMatrix);
+            gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projectionMatrix);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, screenTexture);
+            gl.uniform1i(unlitUniforms.uSampler, 0);
+
+            gl.bindVertexArray(screenVao);
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+            gl.bindVertexArray(null);
+
+            // 7. Render Transparent Billboard Stand (GLB meshes - e.g. glowing light cones)
+            gl.useProgram(litProgram); // Re-bind lit program for stand meshes
+            gl.depthMask(false); // Disable depth writing for transparent overlay pass
+
+            transparentMeshInstances.forEach(instance => {
+                gl.uniformMatrix4fv(litUniforms.uModelMatrix, false, instance.worldMatrix);
+                gl.uniform4fv(litUniforms.uBaseColor, instance.material.baseColor);
+                gl.uniform1i(litUniforms.uUseTexture, instance.material.useTexture ? 1 : 0);
+                gl.uniform3fv(litUniforms.uEmissive, instance.material.emissive);
+                gl.uniform1i(litUniforms.uIsLightCone, 1);
+
+                gl.bindVertexArray(instance.vao);
+                if (instance.hasIndices) {
+                    gl.drawElements(gl.TRIANGLES, instance.indexCount, instance.indexType || gl.UNSIGNED_SHORT, 0);
+                } else {
+                    gl.drawArrays(gl.TRIANGLES, 0, instance.indexCount);
+                }
+            });
+
+            gl.depthMask(true); // Re-enable depth writing
+            gl.bindVertexArray(null);
+
+            // 7. Interactive Synchronization via canvas.getElementTransform
+            if (canvas.getElementTransform) {
+                // Viewport matrix (pixels)
+                const viewportW = canvas.width;
+                const viewportH = canvas.height;
+
+                const viewportMatrix = mat4.fromValues(
+                    viewportW / 2, 0, 0, 0,
+                    0, -viewportH / 2, 0, 0,
+                    0, 0, 1, 0,
+                    viewportW / 2, viewportH / 2, 0, 1
+                );
+
+                // Local mapping matrix for PlaneGeometry(6.9, 3) centered
+                const elemW = billboardContent.offsetWidth;
+                const elemH = billboardContent.offsetHeight;
+
+                // Centered quad box: min = -3.45, max = 3.45; min = -1.5, max = 1.5
+                const localMatrix = mat4.fromValues(
+                    6.9 / elemW, 0, 0, 0,
+                    0, -3.0 / elemH, 0, 0,
+                    0, 0, 1, 0,
+                    -3.45, 1.5, 0.0, 1
+                );
+
+                // Combined MVP: Viewport * Projection * View * Model * Local
+                const mvpMatrix = mat4.create();
+                mat4.multiply(mvpMatrix, projectionMatrix, viewMatrix);
+                mat4.multiply(mvpMatrix, mvpMatrix, screenModelMatrix);
+                mat4.multiply(mvpMatrix, mvpMatrix, localMatrix);
+                mat4.multiply(mvpMatrix, viewportMatrix, mvpMatrix);
+
+                // Apply device pixel ratio scaling
+                const dpr = window.devicePixelRatio || 1;
+                mat4.scale(mvpMatrix, mvpMatrix, [1 / dpr, 1 / dpr, 1]);
+
+                // Position DOM at canvas origin for native matrix3d overlay
+                billboardContent.style.position = 'absolute';
+                billboardContent.style.left = '0';
+                billboardContent.style.top = '0';
+                billboardContent.style.transformOrigin = '0 0';
+
+                let syncT = canvas.getElementTransform(billboardContent, new DOMMatrix(Array.from(mvpMatrix)));
+
+                // Chromium bug workaround for incorrect is2D reporting
+                if (syncT && syncT.is2D) {
+                    syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+                }
+
+                if (syncT) {
+                    billboardContent.style.transform = syncT.toString();
+                    billboardContent.style.zIndex = 10;
+                    billboardContent.style.pointerEvents = 'auto';
+                }
+            }
+        }
+
+        // Initialize and Start
+        loadGLBModel().then(() => {
+            requestAnimationFrame(render);
+        });
+
+        // Trigger first paint
+        restartAnimations();
+    </script>
+</body>
+
+</html>
