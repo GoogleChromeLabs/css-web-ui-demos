@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixiJS HTML-in-Canvas Demo</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <!-- Load PixiJS and the HTML-in-Canvas package as global UMD scripts -->
+  <script src="https://unpkg.com/pixi.js@8.19.0/dist/pixi.min.js"></script>
+  <script src="https://unpkg.com/pixi.js@8.19.0/dist/packages/html-source.js"></script>
+
+  <!-- Import map wrapping UMD globals as ES Modules using data URIs -->
+  <script type="importmap">
+    {
+      "imports": {
+        "pixi.js": "data:text/javascript,const { Application, Sprite, Texture } = window.PIXI; export { Application, Sprite, Texture };",
+        "pixi.js/html-source": "data:text/javascript,export const HTMLSource = window.PIXI.HTMLSource;"
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1b 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #pixi-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* The HTML element that will be rendered as a texture inside the PixiJS canvas */
+    #html-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 450px;
+      padding: 32px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #ff007f;
+      box-shadow: 0 0 0 4px rgba(255, 0, 127, 0.15);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(255, 0, 127, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(255, 0, 127, 0.35);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(255, 0, 127, 0.2);
+    }
+
+    /* Warning Banner if browser doesn't support the API */
+    #api-warning {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 75, 75, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 16px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(255, 75, 75, 0.3);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      text-align: center;
+      max-width: 90%;
+      display: none;
+    }
+
+    #api-warning h2 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    #api-warning p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="api-warning">
+    <h2>HTML-in-Canvas Not Supported</h2>
+    <p>This demo requires a browser with HTML-in-Canvas support (e.g. Chrome 150+ with the "Experimental Web Platform
+      Features" flag enabled).</p>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    // --- WebGL 2 Compatibility Patch for Chromium 150+ HTML-in-Canvas ---
+    // PixiJS HTMLSource (as of v8.19.0) still uses the legacy 6-argument texElementImage2D signature.
+    // Chromium 150+ strictly implements the finalized 3-argument signature.
+    // This prototype patch intercepts legacy 6-argument calls on the fly and rewrites them.
+    (function () {
+      const gl = WebGL2RenderingContext.prototype;
+      if (!gl || !gl.texElementImage2D) return;
+
+      const originalTexElementImage2D = gl.texElementImage2D;
+      // Only apply the patch if the browser uses the latest 3-argument signature
+      if (originalTexElementImage2D.length === 3) {
+        gl.texElementImage2D = function (target, ...args) {
+          // Intercept legacy 6-argument signature: (target, level, internalformat, format, type, source)
+          if (args.length > 2) {
+            const level = args[0];
+            const internalFormat = args[1];
+            const format = args[2];
+            const type = args[3];
+            const source = args[4];
+
+            // Map unsized gl.RGBA to sized gl.RGBA8 for modern WebGL compliance
+            let sizedFormat = internalFormat;
+            if (internalFormat === this.RGBA) {
+              sizedFormat = this.RGBA8;
+            }
+
+            // Call native 3-argument signature: (target, internalformat, source)
+            return originalTexElementImage2D.call(this, target, sizedFormat, source);
+          }
+
+          // Standard 3-argument signature
+          return originalTexElementImage2D.apply(this, [target, ...args]);
+        };
+      }
+    })();
+    // ---------------------------------------------------------------------
+
+  </script>
+
+  <script type="module">
+    import { Application, Sprite } from 'pixi.js';
+    import { HTMLSource } from 'pixi.js/html-source';
+
+    async function initDemo() {
+      // 1. Check for browser HTML-in-Canvas support
+      if (!('requestPaint' in HTMLCanvasElement.prototype)) {
+        document.getElementById('api-warning').style.display = 'block';
+      }
+
+      // 2. Initialize PixiJS Application
+      const app = new Application();
+      await app.init({
+        resizeTo: window,
+        antialias: true,
+        backgroundAlpha: 0, // Keep transparent to see background gradient
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+        hello: true
+      });
+
+      const container = document.getElementById('canvas-container');
+      container.appendChild(app.canvas);
+
+      // 3. Create the HTML element dynamically and append to the Pixi canvas (must be a direct child)
+      const form = document.createElement('form');
+      form.id = 'html-card';
+      form.onsubmit = (event) => event.preventDefault();
+      form.innerHTML = `
+        <h1>PixiJS + HTML-in-Canvas</h1>
+        <p>This card is a real, interactive HTML element rendered on the GPU inside PixiJS! Try typing or clicking the
+          button below.</p>
+        <input type="text" placeholder="Type something here..." id="card-input">
+        <button type="button" id="card-btn">Trigger Alert!</button>
+      `;
+      app.canvas.appendChild(form);
+
+      // 4. Set up the interactive alert
+      const btn = form.querySelector('#card-btn');
+      const input = form.querySelector('#card-input');
+
+      btn.addEventListener('click', () => {
+        const val = input.value.trim();
+        alert(val ? `You typed: "${val}"` : "Hello from the interactive PixiJS HTML texture!");
+      });
+
+      // 5. Create the HTMLSource texture/sprite
+      const sprite = Sprite.from(new HTMLSource({ resource: form, autoUpdate: true }));
+
+      // 6. Center the sprite and add it to the stage
+      sprite.anchor.set(0.5);
+      sprite.x = app.screen.width / 2;
+      sprite.y = app.screen.height / 2;
+
+      app.stage.addChild(sprite);
+
+      // 7. Add a rotation and scale animation and sync the DOM transform for HTML-in-Canvas interaction
+      app.ticker.add((ticker) => {
+        // Slow continuous rotation
+        sprite.rotation += 0.003 * ticker.deltaTime;
+
+        // Gentle heartbeat scale effect
+        const scale = 1 + Math.sin(ticker.lastTime * 0.0015) * 0.06;
+        sprite.scale.set(scale);
+
+        // Sync DOM transform using getElementTransform for interactive inputs
+        if (app.canvas.getElementTransform) {
+          const width = form.offsetWidth;
+          const height = form.offsetHeight;
+
+          // Translate the top-left element coordinates to match the sprite's centered anchor (0.5)
+          const anchorTranslation = new DOMMatrix().translate(-width / 2, -height / 2);
+
+          // Get the sprite's world transform matrix and scale by DPR to match physical canvas coordinates
+          const dpr = window.devicePixelRatio || 1;
+          const wt = sprite.worldTransform;
+          const wtMatrix = new DOMMatrix([
+            wt.a * dpr,
+            wt.b * dpr,
+            wt.c * dpr,
+            wt.d * dpr,
+            wt.tx * dpr,
+            wt.ty * dpr
+          ]);
+
+          // Combine matrices
+          const finalTransform = wtMatrix.multiply(anchorTranslation);
+
+          // Scale by 1/dpr to prevent double-scaling on high-DPI screens
+          finalTransform.scaleSelf(1 / dpr, 1 / dpr, 1);
+
+          // Position element at top-left of canvas with 0 0 transform-origin for getElementTransform mapping
+          form.style.position = 'absolute';
+          form.style.left = '0';
+          form.style.top = '0';
+          form.style.transformOrigin = '0 0';
+
+          let syncT = app.canvas.getElementTransform(form, finalTransform);
+
+          if (syncT) {
+            form.style.transform = syncT.toString();
+          }
+        }
+      });
+
+      // Handle window resizing to keep the sprite centered
+      window.addEventListener('resize', () => {
+        sprite.x = app.screen.width / 2;
+        sprite.y = app.screen.height / 2;
+      });
+    }
+
+    // Start the initialization
+    initDemo().catch(console.error);
+  </script>
+</body>
+
+</html>
