@@ -186,21 +186,31 @@
                     }
                 }
 
-                // 2. Resolve Chromium 150+ 3-argument vs 6-argument signature mismatch
-                if (originalTexElementImage2D.length === 3 && args.length > 3) {
+                // 2. Workaround: as of r184, ThreeJS enforces RGB8 in texElementImage2D:
+                // https://github.com/mrdoob/three.js/blob/0355c0d1a2d4f4873c3cf9077f6228a3b5d05a18/src/renderers/webgl-fallback/utils/WebGLTextureUtils.js#L639
+                // Our video/HTML billboard content is sRGB, so we want to force it to use gl.SRGB8_ALPHA8.
+                const forceSRGB = true; 
+
+                // 3. Resolve Chromium 150+ 3-argument vs legacy 6-argument signature
+                if (originalTexElementImage2D.length === 3) {
+                    // Modern 3-argument signature: (target, internalformat, source)
                     const target = args[0];
-                    let internalformat = args[2]; // gl.RGBA8 or gl.RGBA
-                    
-                    // Map unsized gl.RGBA (6408) to sized gl.RGBA8 (32856) for Chromium 150+ compliance
-                    if (internalformat === 6408) {
-                        internalformat = 32856;
-                    }
-                    
+                    const internalformat = forceSRGB ? this.SRGB8_ALPHA8 : this.RGBA8;
                     const elem = args[args.length - 1];
                     return originalTexElementImage2D.call(this, target, internalformat, elem);
+                } else {
+                    // Legacy 6-argument signature: (target, level, internalformat, format, type, source)
+                    if (args.length >= 6) {
+                        if (forceSRGB) {
+                            args[2] = this.SRGB8_ALPHA8; // Overwrite internalFormat with gl.SRGB8_ALPHA8
+                            args[3] = this.RGBA;         // Overwrite format with gl.RGBA (must remain unsized in WebGL)
+                        } else {
+                            args[2] = this.RGBA8;        // Overwrite internalFormat with gl.RGBA8
+                            args[3] = this.RGBA;         // Overwrite format with gl.RGBA
+                        }
+                    }
+                    return originalTexElementImage2D.apply(this, args);
                 }
-
-                return originalTexElementImage2D.apply(this, args);
             };
         }
 

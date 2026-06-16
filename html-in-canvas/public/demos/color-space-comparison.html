@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+    <meta http-equiv="origin-trial"
+        content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSIOiJodHRwSW5DYW52YXMiLCJleHBpcnkiOjE3ODc2MTYwMDB9">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Comparative analysis of HTML rendering in sRGB vs. Display-P3 vs HDR color spaces inside WebGL canvas contexts using HTML-in-Canvas.">
+    <title>HTML-in-Canvas Color Space & HDR Comparison</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <style>
+        body {
+            background-color: #0f1015;
+            color: #e3e1ec;
+            font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff7b00, #ff0055, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .page-header p {
+            color: #8f8f9f;
+            font-size: 15px;
+        }
+
+        .section-header {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 60px;
+            margin-bottom: 24px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #28293d;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 24px;
+            border-radius: 3px;
+        }
+        
+        .section-srgb::before { background: #62ff24; }
+        .section-p3::before { background: #24d6ff; }
+        .section-hdr::before { background: #ff00ea; }
+
+        .comparison-card {
+            background: #161720;
+            border: 1px solid #28293d;
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #28293d;
+            padding-bottom: 14px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+        }
+
+        .badge-rgba8 { background: #3d2c14; color: #ffab24; }
+        .badge-srgb { background: #1a3d14; color: #62ff24; }
+        .badge-p3 { background: #14353d; color: #24d6ff; }
+        .badge-hdr { background: #3c143d; color: #ff24ea; }
+
+        .row-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .side-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .side-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8f8f9f;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+        }
+
+        .patch-area {
+            background: #1e1f29;
+            border: 1px dashed #3a3b5c;
+            border-radius: 16px;
+        }
+
+        .swatch-grid {
+            width: 100%;
+            height: 220px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px;
+            box-sizing: border-box;
+            place-items: center;
+            background: transparent;
+        }
+
+        .canvas-area {
+            position: relative;
+            background: #1e1f29;
+            border: 1px solid #3a3b5c;
+            border-radius: 16px;
+            height: 220px;
+            overflow: hidden;
+        }
+
+        .canvas-element {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Color Swatches */
+        .swatch {
+            width: 76px;
+            height: 80px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 700;
+            text-align: center;
+            padding: 4px;
+            box-sizing: border-box;
+            line-height: 1.2;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .swatch.hidden-swatch {
+            opacity: 0 !important;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+        
+        .swatch-name {
+            font-size: 9px;
+            margin-bottom: 2px;
+            font-weight: 800;
+        }
+
+        /* Section 1 colors (sRGB) */
+        .color-srgb-red      { background-color: #ff0000; color: #ffffff; }
+        .color-srgb-green    { background-color: #00ff00; color: #111116; }
+        .color-srgb-blue     { background-color: #0000ff; color: #ffffff; }
+        .color-srgb-cyan     { background-color: #00ffff; color: #111116; }
+        .color-srgb-magenta  { background-color: #ff00ff; color: #ffffff; }
+        .color-srgb-yellow   { background-color: #ffff00; color: #111116; }
+        .color-srgb-lavender { background-color: #cbcfff; color: #111116; }
+        .color-srgb-orange   { background-color: #ff8000; color: #111116; }
+        .color-srgb-teal     { background-color: #008080; color: #ffffff; }
+        .color-srgb-pink     { background-color: #ffc0cb; color: #111116; }
+        .color-srgb-lime     { background-color: #a0ff20; color: #111116; }
+        .color-srgb-white    { background-color: #ffffff; color: #111116; }
+
+        /* Section 2 colors (Display-P3 with fallback to sRGB) */
+        .color-p3-red      { background-color: #ff0000; color: #ffffff; }
+        .color-p3-green    { background-color: #00ff00; color: #111116; }
+        .color-p3-blue     { background-color: #0000ff; color: #ffffff; }
+        .color-p3-cyan     { background-color: #00ffff; color: #111116; }
+        .color-p3-magenta  { background-color: #ff00ff; color: #ffffff; }
+        .color-p3-yellow   { background-color: #ffff00; color: #111116; }
+        .color-p3-lavender { background-color: #cbcfff; color: #111116; }
+        .color-p3-orange   { background-color: #ff8000; color: #111116; }
+        .color-p3-teal     { background-color: #008080; color: #ffffff; }
+        .color-p3-pink     { background-color: #ffc0cb; color: #111116; }
+        .color-p3-lime     { background-color: #a0ff20; color: #111116; }
+        .color-p3-white    { background-color: #ffffff; color: #111116; }
+
+        @supports (color: color(display-p3 1 0 0)) {
+            .color-p3-red      { background-color: color(display-p3 1.0 0.0 0.0); }
+            .color-p3-green    { background-color: color(display-p3 0.0 1.0 0.0); }
+            .color-p3-blue     { background-color: color(display-p3 0.0 0.0 1.0); }
+            .color-p3-cyan     { background-color: color(display-p3 0.0 1.0 1.0); }
+            .color-p3-magenta  { background-color: color(display-p3 1.0 0.0 1.0); }
+            .color-p3-yellow   { background-color: color(display-p3 1.0 1.0 0.0); }
+            .color-p3-lavender { background-color: color(display-p3 0.79889 0.81125 0.98486); }
+            .color-p3-orange   { background-color: color(display-p3 1.0 0.5 0.0); }
+            .color-p3-teal     { background-color: color(display-p3 0.0 0.5 0.5); }
+            .color-p3-pink     { background-color: color(display-p3 1.0 0.75 0.80); }
+            .color-p3-lime     { background-color: color(display-p3 0.6 1.0 0.1); }
+            .color-p3-white    { background-color: color(display-p3 1.0 1.0 1.0); }
+        }
+
+        /* Section 3 colors (HDR Display-P3 with fallback to sRGB) */
+        .color-hdr-red      { background-color: #ff0000; color: #ffffff; }
+        .color-hdr-green    { background-color: #00ff00; color: #111116; }
+        .color-hdr-blue     { background-color: #0000ff; color: #ffffff; }
+        .color-hdr-cyan     { background-color: #00ffff; color: #111116; }
+        .color-hdr-magenta  { background-color: #ff00ff; color: #ffffff; }
+        .color-hdr-yellow   { background-color: #ffff00; color: #111116; }
+        .color-hdr-lavender { background-color: #cbcfff; color: #111116; }
+        .color-hdr-orange   { background-color: #ff8000; color: #111116; }
+        .color-hdr-teal     { background-color: #008080; color: #ffffff; }
+        .color-hdr-pink     { background-color: #ffc0cb; color: #111116; }
+        .color-hdr-lime     { background-color: #a0ff20; color: #111116; }
+        .color-hdr-white    { background-color: #ffffff; color: #111116; }
+
+        @supports (color: color(display-p3 1.5 0 0)) {
+            .color-hdr-red      { background-color: color(display-p3 1.5 0.0 0.0); }
+            .color-hdr-green    { background-color: color(display-p3 0.0 1.5 0.0); }
+            .color-hdr-blue     { background-color: color(display-p3 0.0 0.0 1.5); }
+            .color-hdr-cyan     { background-color: color(display-p3 0.0 1.5 1.5); }
+            .color-hdr-magenta  { background-color: color(display-p3 1.5 0.0 1.5); }
+            .color-hdr-yellow   { background-color: color(display-p3 1.5 1.5 0.0); }
+            .color-hdr-lavender { background-color: color(display-p3 1.2 1.2 1.5); }
+            .color-hdr-orange   { background-color: color(display-p3 1.5 0.75 0.0); }
+            .color-hdr-teal     { background-color: color(display-p3 0.0 0.8 0.8); }
+            .color-hdr-pink     { background-color: color(display-p3 1.5 1.0 1.1); }
+            .color-hdr-lime     { background-color: color(display-p3 0.9 1.5 0.15); }
+            .color-hdr-white    { background-color: color(display-p3 1.5 1.5 1.5); }
+        }
+
+        .card-footer {
+            margin-top: 20px;
+            padding-top: 14px;
+            border-top: 1px solid #28293d;
+            font-size: 13px;
+            color: #8f8f9f;
+        }
+
+        /* Float Configuration Panel */
+        .color-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(22, 23, 32, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            width: 140px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+        
+        .color-menu-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .color-menu-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .color-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #8f8f9f;
+            transition: color 0.2s ease;
+        }
+
+        .color-checkbox-label:hover {
+            color: #ffffff;
+        }
+
+        .color-checkbox {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #3a3b5c;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .color-checkbox:checked {
+            background: #ff0055;
+            border-color: #ff0055;
+        }
+
+        .color-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .github-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            color: #ffffff !important;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            backdrop-filter: blur(2px);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .github-link:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #ffffff !important;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Toggle Controls Sidebar Menu -->
+    <div class="color-menu" id="colorMenu">
+        <div class="color-menu-title">
+            <span>Filter Colors</span>
+            <button id="toggleMenuBtn" style="background: none; border: none; color: #ff0055; cursor: pointer; font-size: 14px; font-weight: bold;">✕</button>
+        </div>
+        <div class="color-menu-options">
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="red" checked>Red</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="green" checked>Green</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="blue" checked>Blue</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="cyan" checked>Cyan</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="magenta" checked>Magenta</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="yellow" checked>Yellow</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="lavender" checked>Lavender</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="orange" checked>Orange</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="teal" checked>Teal</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="pink" checked>Pink</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="lime" checked>Lime</label>
+            <label class="color-checkbox-label"><input type="checkbox" class="color-checkbox" data-color="white" checked>White</label>
+        </div>
+    </div>
+    
+    <button id="openMenuBtn" style="position: fixed; top: 20px; left: 20px; z-index: 999; background: #161720; border: 1px solid #28293d; border-radius: 50%; width: 44px; height: 44px; display: none; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 18px;">⚙</button>
+
+    <div class="page-header">
+        <h1>HTML-in-Canvas Color Space & HDR Comparison</h1>
+        <p>Interactive playground comparing 12 colors across color spaces, texture formats, and WebGL drawing buffer configurations.</p>
+    </div>
+
+    <!-- SECTION 1: HTML in sRGB -->
+    <h1 class="section-header section-srgb">HTML in sRGB</h1>
+
+    <!-- Row 1.1: RGBA8 -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">1. RGBA8 Texture Format (No Color Correction, internalFormat: gl.RGBA8)</div>
+            <div class="card-badge badge-rgba8">RGBA8 / sRGB</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (sRGB input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-srgb-red" data-color="red"><span class="swatch-name">Red</span>#ff0000</div>
+                    <div class="swatch color-srgb-green" data-color="green"><span class="swatch-name">Green</span>#00ff00</div>
+                    <div class="swatch color-srgb-blue" data-color="blue"><span class="swatch-name">Blue</span>#0000ff</div>
+                    <div class="swatch color-srgb-cyan" data-color="cyan"><span class="swatch-name">Cyan</span>#00ffff</div>
+                    <div class="swatch color-srgb-magenta" data-color="magenta"><span class="swatch-name">Magenta</span>#ff00ff</div>
+                    <div class="swatch color-srgb-yellow" data-color="yellow"><span class="swatch-name">Yellow</span>#ffff00</div>
+                    <div class="swatch color-srgb-lavender" data-color="lavender"><span class="swatch-name">Lavender</span>#cbcfff</div>
+                    <div class="swatch color-srgb-orange" data-color="orange"><span class="swatch-name">Orange</span>#ff8000</div>
+                    <div class="swatch color-srgb-teal" data-color="teal"><span class="swatch-name">Teal</span>#008080</div>
+                    <div class="swatch color-srgb-pink" data-color="pink"><span class="swatch-name">Pink</span>#ffc0cb</div>
+                    <div class="swatch color-srgb-lime" data-color="lime"><span class="swatch-name">Lime</span>#a0ff20</div>
+                    <div class="swatch color-srgb-white" data-color="white"><span class="swatch-name">White</span>#ffffff</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-srgb-rgba8" layoutsubtree>
+                        <div class="swatch-grid" id="container-srgb-rgba8">
+                            <div class="swatch color-srgb-red" data-color="red"><span class="swatch-name">Red</span>#ff0000</div>
+                            <div class="swatch color-srgb-green" data-color="green"><span class="swatch-name">Green</span>#00ff00</div>
+                            <div class="swatch color-srgb-blue" data-color="blue"><span class="swatch-name">Blue</span>#0000ff</div>
+                            <div class="swatch color-srgb-cyan" data-color="cyan"><span class="swatch-name">Cyan</span>#00ffff</div>
+                            <div class="swatch color-srgb-magenta" data-color="magenta"><span class="swatch-name">Magenta</span>#ff00ff</div>
+                            <div class="swatch color-srgb-yellow" data-color="yellow"><span class="swatch-name">Yellow</span>#ffff00</div>
+                            <div class="swatch color-srgb-lavender" data-color="lavender"><span class="swatch-name">Lavender</span>#cbcfff</div>
+                            <div class="swatch color-srgb-orange" data-color="orange"><span class="swatch-name">Orange</span>#ff8000</div>
+                            <div class="swatch color-srgb-teal" data-color="teal"><span class="swatch-name">Teal</span>#008080</div>
+                            <div class="swatch color-srgb-pink" data-color="pink"><span class="swatch-name">Pink</span>#ffc0cb</div>
+                            <div class="swatch color-srgb-lime" data-color="lime"><span class="swatch-name">Lime</span>#a0ff20</div>
+                            <div class="swatch color-srgb-white" data-color="white"><span class="swatch-name">White</span>#ffffff</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Observation:</strong> Pastel and mid-tone colors show significant wash-out in the canvas since they are double gamma corrected.
+        </div>
+    </div>
+
+    <!-- Row 1.2: sRGB -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">2. SRGB8_ALPHA8 Texture Format (Gamma-Corrected sRGB, internalFormat: gl.SRGB8_ALPHA8)</div>
+            <div class="card-badge badge-srgb">SRGB8_ALPHA8 / sRGB</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (sRGB input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-srgb-red" data-color="red"><span class="swatch-name">Red</span>#ff0000</div>
+                    <div class="swatch color-srgb-green" data-color="green"><span class="swatch-name">Green</span>#00ff00</div>
+                    <div class="swatch color-srgb-blue" data-color="blue"><span class="swatch-name">Blue</span>#0000ff</div>
+                    <div class="swatch color-srgb-cyan" data-color="cyan"><span class="swatch-name">Cyan</span>#00ffff</div>
+                    <div class="swatch color-srgb-magenta" data-color="magenta"><span class="swatch-name">Magenta</span>#ff00ff</div>
+                    <div class="swatch color-srgb-yellow" data-color="yellow"><span class="swatch-name">Yellow</span>#ffff00</div>
+                    <div class="swatch color-srgb-lavender" data-color="lavender"><span class="swatch-name">Lavender</span>#cbcfff</div>
+                    <div class="swatch color-srgb-orange" data-color="orange"><span class="swatch-name">Orange</span>#ff8000</div>
+                    <div class="swatch color-srgb-teal" data-color="teal"><span class="swatch-name">Teal</span>#008080</div>
+                    <div class="swatch color-srgb-pink" data-color="pink"><span class="swatch-name">Pink</span>#ffc0cb</div>
+                    <div class="swatch color-srgb-lime" data-color="lime"><span class="swatch-name">Lime</span>#a0ff20</div>
+                    <div class="swatch color-srgb-white" data-color="white"><span class="swatch-name">White</span>#ffffff</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-srgb-srgb" layoutsubtree>
+                        <div class="swatch-grid" id="container-srgb-srgb">
+                            <div class="swatch color-srgb-red" data-color="red"><span class="swatch-name">Red</span>#ff0000</div>
+                            <div class="swatch color-srgb-green" data-color="green"><span class="swatch-name">Green</span>#00ff00</div>
+                            <div class="swatch color-srgb-blue" data-color="blue"><span class="swatch-name">Blue</span>#0000ff</div>
+                            <div class="swatch color-srgb-cyan" data-color="cyan"><span class="swatch-name">Cyan</span>#00ffff</div>
+                            <div class="swatch color-srgb-magenta" data-color="magenta"><span class="swatch-name">Magenta</span>#ff00ff</div>
+                            <div class="swatch color-srgb-yellow" data-color="yellow"><span class="swatch-name">Yellow</span>#ffff00</div>
+                            <div class="swatch color-srgb-lavender" data-color="lavender"><span class="swatch-name">Lavender</span>#cbcfff</div>
+                            <div class="swatch color-srgb-orange" data-color="orange"><span class="swatch-name">Orange</span>#ff8000</div>
+                            <div class="swatch color-srgb-teal" data-color="teal"><span class="swatch-name">Teal</span>#008080</div>
+                            <div class="swatch color-srgb-pink" data-color="pink"><span class="swatch-name">Pink</span>#ffc0cb</div>
+                            <div class="swatch color-srgb-lime" data-color="lime"><span class="swatch-name">Lime</span>#a0ff20</div>
+                            <div class="swatch color-srgb-white" data-color="white"><span class="swatch-name">White</span>#ffffff</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Observation:</strong> All 12 colors match perfectly between the HTML panel and the WebGL canvas.
+        </div>
+    </div>
+
+    <!-- Row 1.3: Display-P3 -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">3. Display-P3 Canvas Drawing Buffer (internalFormat: gl.RGBA16F)</div>
+            <div class="card-badge badge-p3">Display-P3</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (sRGB input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-srgb-red" data-color="red"><span class="swatch-name">Red</span>#ff0000</div>
+                    <div class="swatch color-srgb-green" data-color="green"><span class="swatch-name">Green</span>#00ff00</div>
+                    <div class="swatch color-srgb-blue" data-color="blue"><span class="swatch-name">Blue</span>#0000ff</div>
+                    <div class="swatch color-srgb-cyan" data-color="cyan"><span class="swatch-name">Cyan</span>#00ffff</div>
+                    <div class="swatch color-srgb-magenta" data-color="magenta"><span class="swatch-name">Magenta</span>#ff00ff</div>
+                    <div class="swatch color-srgb-yellow" data-color="yellow"><span class="swatch-name">Yellow</span>#ffff00</div>
+                    <div class="swatch color-srgb-lavender" data-color="lavender"><span class="swatch-name">Lavender</span>#cbcfff</div>
+                    <div class="swatch color-srgb-orange" data-color="orange"><span class="swatch-name">Orange</span>#ff8000</div>
+                    <div class="swatch color-srgb-teal" data-color="teal"><span class="swatch-name">Teal</span>#008080</div>
+                    <div class="swatch color-srgb-pink" data-color="pink"><span class="swatch-name">Pink</span>#ffc0cb</div>
+                    <div class="swatch color-srgb-lime" data-color="lime"><span class="swatch-name">Lime</span>#a0ff20</div>
+                    <div class="swatch color-srgb-white" data-color="white"><span class="swatch-name">White</span>#ffffff</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-srgb-p3" layoutsubtree>
+                        <div class="swatch-grid" id="container-srgb-p3">
+                            <div class="swatch color-srgb-red" data-color="red"><span class="swatch-name">Red</span>#ff0000</div>
+                            <div class="swatch color-srgb-green" data-color="green"><span class="swatch-name">Green</span>#00ff00</div>
+                            <div class="swatch color-srgb-blue" data-color="blue"><span class="swatch-name">Blue</span>#0000ff</div>
+                            <div class="swatch color-srgb-cyan" data-color="cyan"><span class="swatch-name">Cyan</span>#00ffff</div>
+                            <div class="swatch color-srgb-magenta" data-color="magenta"><span class="swatch-name">Magenta</span>#ff00ff</div>
+                            <div class="swatch color-srgb-yellow" data-color="yellow"><span class="swatch-name">Yellow</span>#ffff00</div>
+                            <div class="swatch color-srgb-lavender" data-color="lavender"><span class="swatch-name">Lavender</span>#cbcfff</div>
+                            <div class="swatch color-srgb-orange" data-color="orange"><span class="swatch-name">Orange</span>#ff8000</div>
+                            <div class="swatch color-srgb-teal" data-color="teal"><span class="swatch-name">Teal</span>#008080</div>
+                            <div class="swatch color-srgb-pink" data-color="pink"><span class="swatch-name">Pink</span>#ffc0cb</div>
+                            <div class="swatch color-srgb-lime" data-color="lime"><span class="swatch-name">Lime</span>#a0ff20</div>
+                            <div class="swatch color-srgb-white" data-color="white"><span class="swatch-name">White</span>#ffffff</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Observation:</strong> Colors match properly but cannot exceed the sRGB gamut because the HTML source definitions are limited to sRGB colorspace.
+        </div>
+    </div>
+
+
+    <!-- SECTION 2: HTML in Display-P3 -->
+    <h1 class="section-header section-p3">HTML in Display-P3</h1>
+
+    <!-- Row 2.1: RGBA8 -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">1. RGBA8 Texture Format (No Color Correction, internalFormat: gl.RGBA8)</div>
+            <div class="card-badge badge-rgba8">RGBA8 / sRGB</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (Display-P3 input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-p3-red" data-color="red"><span class="swatch-name">P3 Red</span>color(p3 1 0 0)</div>
+                    <div class="swatch color-p3-green" data-color="green"><span class="swatch-name">P3 Green</span>color(p3 0 1 0)</div>
+                    <div class="swatch color-p3-blue" data-color="blue"><span class="swatch-name">P3 Blue</span>color(p3 0 0 1)</div>
+                    <div class="swatch color-p3-cyan" data-color="cyan"><span class="swatch-name">P3 Cyan</span>color(p3 0 1 1)</div>
+                    <div class="swatch color-p3-magenta" data-color="magenta"><span class="swatch-name">P3 Mag</span>color(p3 1 0 1)</div>
+                    <div class="swatch color-p3-yellow" data-color="yellow"><span class="swatch-name">P3 Yel</span>color(p3 1 1 0)</div>
+                    <div class="swatch color-p3-lavender" data-color="lavender"><span class="swatch-name">P3 Lav</span>color(p3 P3-coords)</div>
+                    <div class="swatch color-p3-orange" data-color="orange"><span class="swatch-name">P3 Orange</span>color(p3 1 .5 0)</div>
+                    <div class="swatch color-p3-teal" data-color="teal"><span class="swatch-name">P3 Teal</span>color(p3 0 .5 .5)</div>
+                    <div class="swatch color-p3-pink" data-color="pink"><span class="swatch-name">P3 Pink</span>color(p3 P3-coords)</div>
+                    <div class="swatch color-p3-lime" data-color="lime"><span class="swatch-name">P3 Lime</span>color(p3 .6 1 .1)</div>
+                    <div class="swatch color-p3-white" data-color="white"><span class="swatch-name">P3 White</span>color(p3 1 1 1)</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-p3-rgba8" layoutsubtree>
+                        <div class="swatch-grid" id="container-p3-rgba8">
+                            <div class="swatch color-p3-red" data-color="red"><span class="swatch-name">P3 Red</span>color(p3 1 0 0)</div>
+                            <div class="swatch color-p3-green" data-color="green"><span class="swatch-name">P3 Green</span>color(p3 0 1 0)</div>
+                            <div class="swatch color-p3-blue" data-color="blue"><span class="swatch-name">P3 Blue</span>color(p3 0 0 1)</div>
+                            <div class="swatch color-p3-cyan" data-color="cyan"><span class="swatch-name">P3 Cyan</span>color(p3 0 1 1)</div>
+                            <div class="swatch color-p3-magenta" data-color="magenta"><span class="swatch-name">P3 Mag</span>color(p3 1 0 1)</div>
+                            <div class="swatch color-p3-yellow" data-color="yellow"><span class="swatch-name">P3 Yel</span>color(p3 1 1 0)</div>
+                            <div class="swatch color-p3-lavender" data-color="lavender"><span class="swatch-name">P3 Lav</span>color(p3 P3-coords)</div>
+                            <div class="swatch color-p3-orange" data-color="orange"><span class="swatch-name">P3 Orange</span>color(p3 1 .5 0)</div>
+                            <div class="swatch color-p3-teal" data-color="teal"><span class="swatch-name">P3 Teal</span>color(p3 0 .5 .5)</div>
+                            <div class="swatch color-p3-pink" data-color="pink"><span class="swatch-name">P3 Pink</span>color(p3 P3-coords)</div>
+                            <div class="swatch color-p3-lime" data-color="lime"><span class="swatch-name">P3 Lime</span>color(p3 .6 1 .1)</div>
+                            <div class="swatch color-p3-white" data-color="white"><span class="swatch-name">P3 White</span>color(p3 1 1 1)</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Observation:</strong> Extreme color shifting occurs due to lack of sRGB correction.
+        </div>
+    </div>
+
+    <!-- Row 2.2: sRGB -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">2. SRGB8_ALPHA8 Texture Format (Gamma-Corrected sRGB, internalFormat: gl.SRGB8_ALPHA8)</div>
+            <div class="card-badge badge-srgb">SRGB8_ALPHA8 / sRGB</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (Display-P3 input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-p3-red" data-color="red"><span class="swatch-name">P3 Red</span>color(p3 1 0 0)</div>
+                    <div class="swatch color-p3-green" data-color="green"><span class="swatch-name">P3 Green</span>color(p3 0 1 0)</div>
+                    <div class="swatch color-p3-blue" data-color="blue"><span class="swatch-name">P3 Blue</span>color(p3 0 0 1)</div>
+                    <div class="swatch color-p3-cyan" data-color="cyan"><span class="swatch-name">P3 Cyan</span>color(p3 0 1 1)</div>
+                    <div class="swatch color-p3-magenta" data-color="magenta"><span class="swatch-name">P3 Mag</span>color(p3 1 0 1)</div>
+                    <div class="swatch color-p3-yellow" data-color="yellow"><span class="swatch-name">P3 Yel</span>color(p3 1 1 0)</div>
+                    <div class="swatch color-p3-lavender" data-color="lavender"><span class="swatch-name">P3 Lav</span>color(p3 P3-coords)</div>
+                    <div class="swatch color-p3-orange" data-color="orange"><span class="swatch-name">P3 Orange</span>color(p3 1 .5 0)</div>
+                    <div class="swatch color-p3-teal" data-color="teal"><span class="swatch-name">P3 Teal</span>color(p3 0 .5 .5)</div>
+                    <div class="swatch color-p3-pink" data-color="pink"><span class="swatch-name">P3 Pink</span>color(p3 P3-coords)</div>
+                    <div class="swatch color-p3-lime" data-color="lime"><span class="swatch-name">P3 Lime</span>color(p3 .6 1 .1)</div>
+                    <div class="swatch color-p3-white" data-color="white"><span class="swatch-name">P3 White</span>color(p3 1 1 1)</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-p3-srgb" layoutsubtree>
+                        <div class="swatch-grid" id="container-p3-srgb">
+                            <div class="swatch color-p3-red" data-color="red"><span class="swatch-name">P3 Red</span>color(p3 1 0 0)</div>
+                            <div class="swatch color-p3-green" data-color="green"><span class="swatch-name">P3 Green</span>color(p3 0 1 0)</div>
+                            <div class="swatch color-p3-blue" data-color="blue"><span class="swatch-name">P3 Blue</span>color(p3 0 0 1)</div>
+                            <div class="swatch color-p3-cyan" data-color="cyan"><span class="swatch-name">P3 Cyan</span>color(p3 0 1 1)</div>
+                            <div class="swatch color-p3-magenta" data-color="magenta"><span class="swatch-name">P3 Mag</span>color(p3 1 0 1)</div>
+                            <div class="swatch color-p3-yellow" data-color="yellow"><span class="swatch-name">P3 Yel</span>color(p3 1 1 0)</div>
+                            <div class="swatch color-p3-lavender" data-color="lavender"><span class="swatch-name">P3 Lav</span>color(p3 P3-coords)</div>
+                            <div class="swatch color-p3-orange" data-color="orange"><span class="swatch-name">P3 Orange</span>color(p3 1 .5 0)</div>
+                            <div class="swatch color-p3-teal" data-color="teal"><span class="swatch-name">P3 Teal</span>color(p3 0 .5 .5)</div>
+                            <div class="swatch color-p3-pink" data-color="pink"><span class="swatch-name">P3 Pink</span>color(p3 P3-coords)</div>
+                            <div class="swatch color-p3-lime" data-color="lime"><span class="swatch-name">P3 Lime</span>color(p3 .6 1 .1)</div>
+                            <div class="swatch color-p3-white" data-color="white"><span class="swatch-name">P3 White</span>color(p3 1 1 1)</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Observation:</strong> Colors are color-managed but the standard sRGB canvas drawing buffer clamps wide-gamut primaries.
+        </div>
+    </div>
+
+    <!-- Row 2.3: Display-P3 -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">3. Display-P3 Canvas Drawing Buffer (internalFormat: gl.RGBA16F)</div>
+            <div class="card-badge badge-p3">Display-P3</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (Display-P3 input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-p3-red" data-color="red"><span class="swatch-name">P3 Red</span>color(p3 1 0 0)</div>
+                    <div class="swatch color-p3-green" data-color="green"><span class="swatch-name">P3 Green</span>color(p3 0 1 0)</div>
+                    <div class="swatch color-p3-blue" data-color="blue"><span class="swatch-name">P3 Blue</span>color(p3 0 0 1)</div>
+                    <div class="swatch color-p3-cyan" data-color="cyan"><span class="swatch-name">P3 Cyan</span>color(p3 0 1 1)</div>
+                    <div class="swatch color-p3-magenta" data-color="magenta"><span class="swatch-name">P3 Mag</span>color(p3 1 0 1)</div>
+                    <div class="swatch color-p3-yellow" data-color="yellow"><span class="swatch-name">P3 Yel</span>color(p3 1 1 0)</div>
+                    <div class="swatch color-p3-lavender" data-color="lavender"><span class="swatch-name">P3 Lav</span>color(p3 P3-coords)</div>
+                    <div class="swatch color-p3-orange" data-color="orange"><span class="swatch-name">P3 Orange</span>color(p3 1 .5 0)</div>
+                    <div class="swatch color-p3-teal" data-color="teal"><span class="swatch-name">P3 Teal</span>color(p3 0 .5 .5)</div>
+                    <div class="swatch color-p3-pink" data-color="pink"><span class="swatch-name">P3 Pink</span>color(p3 P3-coords)</div>
+                    <div class="swatch color-p3-lime" data-color="lime"><span class="swatch-name">P3 Lime</span>color(p3 .6 1 .1)</div>
+                    <div class="swatch color-p3-white" data-color="white"><span class="swatch-name">P3 White</span>color(p3 1 1 1)</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-p3-p3" layoutsubtree>
+                        <div class="swatch-grid" id="container-p3-p3">
+                            <div class="swatch color-p3-red" data-color="red"><span class="swatch-name">P3 Red</span>color(p3 1 0 0)</div>
+                            <div class="swatch color-p3-green" data-color="green"><span class="swatch-name">P3 Green</span>color(p3 0 1 0)</div>
+                            <div class="swatch color-p3-blue" data-color="blue"><span class="swatch-name">P3 Blue</span>color(p3 0 0 1)</div>
+                            <div class="swatch color-p3-cyan" data-color="cyan"><span class="swatch-name">P3 Cyan</span>color(p3 0 1 1)</div>
+                            <div class="swatch color-p3-magenta" data-color="magenta"><span class="swatch-name">P3 Mag</span>color(p3 1 0 1)</div>
+                            <div class="swatch color-p3-yellow" data-color="yellow"><span class="swatch-name">P3 Yel</span>color(p3 1 1 0)</div>
+                            <div class="swatch color-p3-lavender" data-color="lavender"><span class="swatch-name">P3 Lav</span>color(p3 P3-coords)</div>
+                            <div class="swatch color-p3-orange" data-color="orange"><span class="swatch-name">P3 Orange</span>color(p3 1 .5 0)</div>
+                            <div class="swatch color-p3-teal" data-color="teal"><span class="swatch-name">P3 Teal</span>color(p3 0 .5 .5)</div>
+                            <div class="swatch color-p3-pink" data-color="pink"><span class="swatch-name">P3 Pink</span>color(p3 P3-coords)</div>
+                            <div class="swatch color-p3-lime" data-color="lime"><span class="swatch-name">P3 Lime</span>color(p3 .6 1 .1)</div>
+                            <div class="swatch color-p3-white" data-color="white"><span class="swatch-name">P3 White</span>color(p3 1 1 1)</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Observation:</strong> On Display-P3 monitors, all 12 wide-gamut swatches match perfectly between pure HTML and WebGL canvas.
+        </div>
+    </div>
+
+
+    <!-- SECTION 3: HTML in HDR -->
+    <h1 class="section-header section-hdr">HTML in HDR</h1>
+    <div style="margin-top: -16px; margin-bottom: 24px; color: #8f8f9f; font-size: 14px;">
+        <strong>Visualising HDR Peaks:</strong> The WebGL shader is configured to highlight colors with values greater than 1.0 in <span style="color: #00ffff; font-weight: bold;">Cyan</span>, while normal LDR colors are dimmed.
+    </div>
+
+    <!-- Row 3.1: RGBA8 -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">1. RGBA8 Texture Format (No Color Correction, internalFormat: gl.RGBA8)</div>
+            <div class="card-badge badge-rgba8">RGBA8 / sRGB</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (HDR input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-hdr-red" data-color="red"><span class="swatch-name">HDR Red</span>color(p3 1.5 0 0)</div>
+                    <div class="swatch color-hdr-green" data-color="green"><span class="swatch-name">HDR Green</span>color(p3 0 1.5 0)</div>
+                    <div class="swatch color-hdr-blue" data-color="blue"><span class="swatch-name">HDR Blue</span>color(p3 0 0 1.5)</div>
+                    <div class="swatch color-hdr-cyan" data-color="cyan"><span class="swatch-name">HDR Cyan</span>color(p3 0 1.5 1.5)</div>
+                    <div class="swatch color-hdr-magenta" data-color="magenta"><span class="swatch-name">HDR Mag</span>color(p3 1.5 0 1.5)</div>
+                    <div class="swatch color-hdr-yellow" data-color="yellow"><span class="swatch-name">HDR Yel</span>color(p3 1.5 1.5 0)</div>
+                    <div class="swatch color-hdr-lavender" data-color="lavender"><span class="swatch-name">HDR Lav</span>color(p3 HDR-coords)</div>
+                    <div class="swatch color-hdr-orange" data-color="orange"><span class="swatch-name">HDR Orange</span>color(p3 1.5 .75 0)</div>
+                    <div class="swatch color-hdr-teal" data-color="teal"><span class="swatch-name">HDR Teal</span>color(p3 0 .8 .8)</div>
+                    <div class="swatch color-hdr-pink" data-color="pink"><span class="swatch-name">HDR Pink</span>color(p3 HDR-coords)</div>
+                    <div class="swatch color-hdr-lime" data-color="lime"><span class="swatch-name">HDR Lime</span>color(p3 .9 1.5 .15)</div>
+                    <div class="swatch color-hdr-white" data-color="white"><span class="swatch-name">HDR White</span>color(p3 1.5 1.5 1.5)</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-hdr-rgba8" layoutsubtree>
+                        <div class="swatch-grid" id="container-hdr-rgba8">
+                            <div class="swatch color-hdr-red" data-color="red"><span class="swatch-name">HDR Red</span>color(p3 1.5 0 0)</div>
+                            <div class="swatch color-hdr-green" data-color="green"><span class="swatch-name">HDR Green</span>color(p3 0 1.5 0)</div>
+                            <div class="swatch color-hdr-blue" data-color="blue"><span class="swatch-name">HDR Blue</span>color(p3 0 0 1.5)</div>
+                            <div class="swatch color-hdr-cyan" data-color="cyan"><span class="swatch-name">HDR Cyan</span>color(p3 0 1.5 1.5)</div>
+                            <div class="swatch color-hdr-magenta" data-color="magenta"><span class="swatch-name">HDR Mag</span>color(p3 1.5 0 1.5)</div>
+                            <div class="swatch color-hdr-yellow" data-color="yellow"><span class="swatch-name">HDR Yel</span>color(p3 1.5 1.5 0)</div>
+                            <div class="swatch color-hdr-lavender" data-color="lavender"><span class="swatch-name">HDR Lav</span>color(p3 HDR-coords)</div>
+                            <div class="swatch color-hdr-orange" data-color="orange"><span class="swatch-name">HDR Orange</span>color(p3 1.5 .75 0)</div>
+                            <div class="swatch color-hdr-teal" data-color="teal"><span class="swatch-name">HDR Teal</span>color(p3 0 .8 .8)</div>
+                            <div class="swatch color-hdr-pink" data-color="pink"><span class="swatch-name">HDR Pink</span>color(p3 HDR-coords)</div>
+                            <div class="swatch color-hdr-lime" data-color="lime"><span class="swatch-name">HDR Lime</span>color(p3 .9 1.5 .15)</div>
+                            <div class="swatch color-hdr-white" data-color="white"><span class="swatch-name">HDR White</span>color(p3 1.5 1.5 1.5)</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Expected:</strong> The canvas shows no Cyan highlights because the standard RGBA8 format clamps all color channels to 1.0 during upload, losing the HDR peaks.
+        </div>
+    </div>
+
+    <!-- Row 3.2: sRGB -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">2. SRGB8_ALPHA8 Texture Format (Gamma-Corrected sRGB, internalFormat: gl.SRGB8_ALPHA8)</div>
+            <div class="card-badge badge-srgb">SRGB8_ALPHA8 / sRGB</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (HDR input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-hdr-red" data-color="red"><span class="swatch-name">HDR Red</span>color(p3 1.5 0 0)</div>
+                    <div class="swatch color-hdr-green" data-color="green"><span class="swatch-name">HDR Green</span>color(p3 0 1.5 0)</div>
+                    <div class="swatch color-hdr-blue" data-color="blue"><span class="swatch-name">HDR Blue</span>color(p3 0 0 1.5)</div>
+                    <div class="swatch color-hdr-cyan" data-color="cyan"><span class="swatch-name">HDR Cyan</span>color(p3 0 1.5 1.5)</div>
+                    <div class="swatch color-hdr-magenta" data-color="magenta"><span class="swatch-name">HDR Mag</span>color(p3 1.5 0 1.5)</div>
+                    <div class="swatch color-hdr-yellow" data-color="yellow"><span class="swatch-name">HDR Yel</span>color(p3 1.5 1.5 0)</div>
+                    <div class="swatch color-hdr-lavender" data-color="lavender"><span class="swatch-name">HDR Lav</span>color(p3 HDR-coords)</div>
+                    <div class="swatch color-hdr-orange" data-color="orange"><span class="swatch-name">HDR Orange</span>color(p3 1.5 .75 0)</div>
+                    <div class="swatch color-hdr-teal" data-color="teal"><span class="swatch-name">HDR Teal</span>color(p3 0 .8 .8)</div>
+                    <div class="swatch color-hdr-pink" data-color="pink"><span class="swatch-name">HDR Pink</span>color(p3 HDR-coords)</div>
+                    <div class="swatch color-hdr-lime" data-color="lime"><span class="swatch-name">HDR Lime</span>color(p3 .9 1.5 .15)</div>
+                    <div class="swatch color-hdr-white" data-color="white"><span class="swatch-name">HDR White</span>color(p3 1.5 1.5 1.5)</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-hdr-srgb" layoutsubtree>
+                        <div class="swatch-grid" id="container-hdr-srgb">
+                            <div class="swatch color-hdr-red" data-color="red"><span class="swatch-name">HDR Red</span>color(p3 1.5 0 0)</div>
+                            <div class="swatch color-hdr-green" data-color="green"><span class="swatch-name">HDR Green</span>color(p3 0 1.5 0)</div>
+                            <div class="swatch color-hdr-blue" data-color="blue"><span class="swatch-name">HDR Blue</span>color(p3 0 0 1.5)</div>
+                            <div class="swatch color-hdr-cyan" data-color="cyan"><span class="swatch-name">HDR Cyan</span>color(p3 0 1.5 1.5)</div>
+                            <div class="swatch color-hdr-magenta" data-color="magenta"><span class="swatch-name">HDR Mag</span>color(p3 1.5 0 1.5)</div>
+                            <div class="swatch color-hdr-yellow" data-color="yellow"><span class="swatch-name">HDR Yel</span>color(p3 1.5 1.5 0)</div>
+                            <div class="swatch color-hdr-lavender" data-color="lavender"><span class="swatch-name">HDR Lav</span>color(p3 HDR-coords)</div>
+                            <div class="swatch color-hdr-orange" data-color="orange"><span class="swatch-name">HDR Orange</span>color(p3 1.5 .75 0)</div>
+                            <div class="swatch color-hdr-teal" data-color="teal"><span class="swatch-name">HDR Teal</span>color(p3 0 .8 .8)</div>
+                            <div class="swatch color-hdr-pink" data-color="pink"><span class="swatch-name">HDR Pink</span>color(p3 HDR-coords)</div>
+                            <div class="swatch color-hdr-lime" data-color="lime"><span class="swatch-name">HDR Lime</span>color(p3 .9 1.5 .15)</div>
+                            <div class="swatch color-hdr-white" data-color="white"><span class="swatch-name">HDR White</span>color(p3 1.5 1.5 1.5)</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Expected:</strong> The canvas shows no Cyan highlights because the standard SRGB8_ALPHA8 format also clamps all color channels to 1.0 during upload.
+        </div>
+    </div>
+
+    <!-- Row 3.3: RGBA16F -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <div class="card-title">3. RGBA16F Texture Format (High Dynamic Range, internalFormat: gl.RGBA16F)</div>
+            <div class="card-badge badge-hdr">RGBA16F / Display-P3</div>
+        </div>
+        <div class="row-container">
+            <div class="side-container">
+                <div class="side-title">Pure HTML Element (HDR input)</div>
+                <div class="patch-area swatch-grid">
+                    <div class="swatch color-hdr-red" data-color="red"><span class="swatch-name">HDR Red</span>color(p3 1.5 0 0)</div>
+                    <div class="swatch color-hdr-green" data-color="green"><span class="swatch-name">HDR Green</span>color(p3 0 1.5 0)</div>
+                    <div class="swatch color-hdr-blue" data-color="blue"><span class="swatch-name">HDR Blue</span>color(p3 0 0 1.5)</div>
+                    <div class="swatch color-hdr-cyan" data-color="cyan"><span class="swatch-name">HDR Cyan</span>color(p3 0 1.5 1.5)</div>
+                    <div class="swatch color-hdr-magenta" data-color="magenta"><span class="swatch-name">HDR Mag</span>color(p3 1.5 0 1.5)</div>
+                    <div class="swatch color-hdr-yellow" data-color="yellow"><span class="swatch-name">HDR Yel</span>color(p3 1.5 1.5 0)</div>
+                    <div class="swatch color-hdr-lavender" data-color="lavender"><span class="swatch-name">HDR Lav</span>color(p3 HDR-coords)</div>
+                    <div class="swatch color-hdr-orange" data-color="orange"><span class="swatch-name">HDR Orange</span>color(p3 1.5 .75 0)</div>
+                    <div class="swatch color-hdr-teal" data-color="teal"><span class="swatch-name">HDR Teal</span>color(p3 0 .8 .8)</div>
+                    <div class="swatch color-hdr-pink" data-color="pink"><span class="swatch-name">HDR Pink</span>color(p3 HDR-coords)</div>
+                    <div class="swatch color-hdr-lime" data-color="lime"><span class="swatch-name">HDR Lime</span>color(p3 .9 1.5 .15)</div>
+                    <div class="swatch color-hdr-white" data-color="white"><span class="swatch-name">HDR White</span>color(p3 1.5 1.5 1.5)</div>
+                </div>
+            </div>
+            <div class="side-container">
+                <div class="side-title">WebGL Canvas (HTML-in-Canvas)</div>
+                <div class="canvas-area">
+                    <canvas class="canvas-element" id="gl-canvas-hdr-p3" layoutsubtree>
+                        <div class="swatch-grid" id="container-hdr-p3">
+                            <div class="swatch color-hdr-red" data-color="red"><span class="swatch-name">HDR Red</span>color(p3 1.5 0 0)</div>
+                            <div class="swatch color-hdr-green" data-color="green"><span class="swatch-name">HDR Green</span>color(p3 0 1.5 0)</div>
+                            <div class="swatch color-hdr-blue" data-color="blue"><span class="swatch-name">HDR Blue</span>color(p3 0 0 1.5)</div>
+                            <div class="swatch color-hdr-cyan" data-color="cyan"><span class="swatch-name">HDR Cyan</span>color(p3 0 1.5 1.5)</div>
+                            <div class="swatch color-hdr-magenta" data-color="magenta"><span class="swatch-name">HDR Mag</span>color(p3 1.5 0 1.5)</div>
+                            <div class="swatch color-hdr-yellow" data-color="yellow"><span class="swatch-name">HDR Yel</span>color(p3 1.5 1.5 0)</div>
+                            <div class="swatch color-hdr-lavender" data-color="lavender"><span class="swatch-name">HDR Lav</span>color(p3 HDR-coords)</div>
+                            <div class="swatch color-hdr-orange" data-color="orange"><span class="swatch-name">HDR Orange</span>color(p3 1.5 .75 0)</div>
+                            <div class="swatch color-hdr-teal" data-color="teal"><span class="swatch-name">HDR Teal</span>color(p3 0 .8 .8)</div>
+                            <div class="swatch color-hdr-pink" data-color="pink"><span class="swatch-name">HDR Pink</span>color(p3 HDR-coords)</div>
+                            <div class="swatch color-hdr-lime" data-color="lime"><span class="swatch-name">HDR Lime</span>color(p3 .9 1.5 .15)</div>
+                            <div class="swatch color-hdr-white" data-color="white"><span class="swatch-name">HDR White</span>color(p3 1.5 1.5 1.5)</div>
+                        </div>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <strong>Current Limitation:</strong> Even with an RGBA16F floating-point texture format, the canvas does not show Cyan highlights. This is because the browser compositor currently rasterizes HTML layout subtrees to an 8-bit (LDR) intermediate target before uploading to WebGL, clamping values to 1.0.
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@latest/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // --- WebGL HIC Signature & Type Compatibility Patch ---
+        const originalTexElementImage2D = WebGL2RenderingContext.prototype.texElementImage2D;
+        if (originalTexElementImage2D) {
+            WebGL2RenderingContext.prototype.texElementImage2D = function (...args) {
+                let element = args[args.length - 1];
+                if (element && typeof element === 'object' && !(element instanceof Element)) {
+                    if (element.element instanceof Element) {
+                        args[args.length - 1] = element.element;
+                        element = element.element;
+                    }
+                }
+
+                const isHICElement = element instanceof Element &&
+                                     !(element instanceof HTMLImageElement) &&
+                                     !(element instanceof HTMLCanvasElement) &&
+                                     !(element instanceof HTMLVideoElement);
+
+                if (isHICElement) {
+                    const target = args[0];
+                    const canvasId = this.canvas.id;
+
+                    // RGBA8 rows
+                    if (canvasId.endsWith('-rgba8')) {
+                        if (originalTexElementImage2D.length === 3) {
+                            return originalTexElementImage2D.call(this, target, this.RGBA8 || 32856, element);
+                        } else {
+                            const level = args[1] !== undefined ? args[1] : 0;
+                            return originalTexElementImage2D.call(this, target, level, this.RGBA8 || 32856, this.RGBA, this.UNSIGNED_BYTE, element);
+                        }
+                    } else if (canvasId.endsWith('-p3')) {
+                        // HDR row: Force gl.RGBA16F + HALF_FLOAT
+                        console.log("Canvas using RGBA16F: ", canvasId);
+                        const internalformat = this.RGBA16F || 34842;
+                        const type = this.HALF_FLOAT || 36193;
+                        if (originalTexElementImage2D.length === 3) {
+                            return originalTexElementImage2D.call(this, target, internalformat, element);
+                        } else {
+                            const level = args[1] !== undefined ? args[1] : 0;
+                            return originalTexElementImage2D.call(this, target, level, internalformat, this.RGBA, type, element);
+                        }
+                    } else {
+                        // Color-corrected rows (srgb-srgb, p3-srgb, srgb-p3, p3-p3, hdr-srgb)
+                        if (originalTexElementImage2D.length === 3) {
+                            return originalTexElementImage2D.call(this, target, this.SRGB8_ALPHA8 || 35907, element);
+                        } else {
+                            const level = args[1] !== undefined ? args[1] : 0;
+                            return originalTexElementImage2D.call(this, target, level, this.SRGB8_ALPHA8 || 35907, this.RGBA, this.UNSIGNED_BYTE, element);
+                        }
+                    }
+                }
+
+                return originalTexElementImage2D.apply(this, args);
+            };
+        }
+
+        import * as THREE from 'three';
+
+        // Helper to setup a flat 2D scene on a canvas
+        function initScene(canvasId, containerId) {
+            const canvas = document.getElementById(canvasId);
+            const containerEl = document.getElementById(containerId);
+
+            // Initialize WebGLRenderer
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            renderer.toneMapping = THREE.NoToneMapping;
+
+            // Configure drawing buffer color space for Display-P3 rows
+            if (canvasId.endsWith('-p3')) {
+                try {
+                    const gl = renderer.getContext();
+                    if (gl) {
+                        gl.drawingBufferColorSpace = 'display-p3';
+                    }
+                } catch (e) {
+                    console.error('Failed to set drawingBufferColorSpace to display-p3:', e);
+                }
+            }
+
+            const scene = new THREE.Scene();
+
+            // Flat 2D orthographic camera
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+            camera.position.set(0, 0, 5);
+
+            // Setup HTMLTexture
+            const texture = new THREE.HTMLTexture(containerEl);
+            texture.colorSpace = THREE.SRGBColorSpace;
+
+            // Fill canvas with texture plane
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            
+            // Custom shader for visualizing HDR values on Section 3 (HDR)
+            let material;
+            if (canvasId.startsWith('gl-canvas-hdr-')) {
+                material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        map: { value: texture }
+                    },
+                    vertexShader: `
+                        varying vec2 vUv;
+                        void main() {
+                            vUv = uv;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D map;
+                        varying vec2 vUv;
+                        void main() {
+                            vec4 texColor = texture2D(map, vUv);
+                            
+                            // Check if color exceeds standard white (1.0) on any channel
+                            vec3 hdrPeaks = max(texColor.rgb - vec3(1.0), vec3(0.0));
+                            
+                            if (length(hdrPeaks) > 0.0) {
+                                // Render the amplified HDR peak in cyan
+                                gl_FragColor = vec4(0.0, 1.0, 1.0, texColor.a);
+                            } else {
+                                // Render standard content normally but dimmed so the HDR stands out
+                                gl_FragColor = vec4(texColor.rgb * 0.3, texColor.a);
+                            }
+                        }
+                    `,
+                    transparent: true
+                });
+            } else {
+                material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    transparent: true,
+                    toneMapped: false
+                });
+            }
+
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // Support High-DPI screen resizing
+            const observer = new ResizeObserver(([entry]) => {
+                let width, height;
+                if (entry.devicePixelContentBoxSize) {
+                    width = entry.devicePixelContentBoxSize[0].inlineSize;
+                    height = entry.devicePixelContentBoxSize[0].blockSize;
+                } else {
+                    width = entry.contentRect.width * window.devicePixelRatio;
+                    height = entry.contentRect.height * window.devicePixelRatio;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                renderer.setSize(width, height, false);
+                canvas.requestPaint();
+            });
+            observer.observe(canvas, { box: 'device-pixel-content-box' });
+
+            // Frame paint handler
+            canvas.onpaint = (event) => {
+                const changed = event.changedElements || [];
+                const gl = renderer.getContext();
+
+                // Check if element has changed
+                const hasChanged = changed.some(c => containerEl === c || containerEl.contains(c));
+
+                if (hasChanged) {
+                    // Update texture binding
+                    const textureProperties = renderer.properties.get(texture);
+                    if (textureProperties && textureProperties.__webglTexture && gl.texElementImage2D) {
+                        const webglTexture = textureProperties.__webglTexture;
+                        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                        
+                        let internalformat, type;
+                        if (canvasId.endsWith('-rgba8')) {
+                            internalformat = gl.RGBA8 || 32856;
+                            type = gl.UNSIGNED_BYTE;
+                        } else if (canvasId.endsWith('-p3')) {
+                            internalformat = gl.RGBA16F || 34842;
+                            type = gl.HALF_FLOAT || 36193;
+                        } else {
+                            internalformat = gl.SRGB8_ALPHA8 || 35907;
+                            type = gl.UNSIGNED_BYTE;
+                        }
+
+                        try {
+                            if (gl.texElementImage2D.length === 3) {
+                                gl.texElementImage2D(gl.TEXTURE_2D, internalformat, containerEl);
+                            } else {
+                                gl.texElementImage2D(gl.TEXTURE_2D, 0, internalformat, gl.RGBA, type, containerEl);
+                            }
+                        } catch (err) {
+                            console.error('texElementImage2D failed:', err);
+                        }
+                    }
+                }
+
+                renderer.render(scene, camera);
+            };
+
+            // Initial render loop start
+            function raf() {
+                canvas.requestPaint();
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        }
+
+        // Initialize all 9 comparisons
+        window.addEventListener('DOMContentLoaded', () => {
+            initScene('gl-canvas-srgb-rgba8', 'container-srgb-rgba8');
+            initScene('gl-canvas-srgb-srgb', 'container-srgb-srgb');
+            initScene('gl-canvas-srgb-p3', 'container-srgb-p3');
+            
+            initScene('gl-canvas-p3-rgba8', 'container-p3-rgba8');
+            initScene('gl-canvas-p3-srgb', 'container-p3-srgb');
+            initScene('gl-canvas-p3-p3', 'container-p3-p3');
+
+            initScene('gl-canvas-hdr-rgba8', 'container-hdr-rgba8');
+            initScene('gl-canvas-hdr-srgb', 'container-hdr-srgb');
+            initScene('gl-canvas-hdr-p3', 'container-hdr-p3');
+        });
+
+        // --- Configuration Menu Checkbox Handler ---
+        const checkboxes = document.querySelectorAll('.color-checkbox');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const color = e.target.dataset.color;
+                const isChecked = e.target.checked;
+                
+                const swatches = document.querySelectorAll(`[data-color="${color}"]`);
+                swatches.forEach(sw => {
+                    if (isChecked) {
+                        sw.classList.remove('hidden-swatch');
+                    } else {
+                        sw.classList.add('hidden-swatch');
+                    }
+                });
+
+                // Request repaint on all WebGL canvases
+                const canvases = document.querySelectorAll('.canvas-element');
+                canvases.forEach(canvas => {
+                    if (canvas.requestPaint) {
+                        canvas.requestPaint();
+                    }
+                });
+            });
+        });
+
+        // Collapse / Expand Menu Controls
+        const colorMenu = document.getElementById('colorMenu');
+        const openMenuBtn = document.getElementById('openMenuBtn');
+        const toggleMenuBtn = document.getElementById('toggleMenuBtn');
+
+        toggleMenuBtn.addEventListener('click', () => {
+            colorMenu.style.transform = 'translateX(-260px)';
+            colorMenu.style.opacity = '0';
+            setTimeout(() => {
+                colorMenu.style.display = 'none';
+                openMenuBtn.style.display = 'flex';
+            }, 300);
+        });
+
+        openMenuBtn.addEventListener('click', () => {
+            openMenuBtn.style.display = 'none';
+            colorMenu.style.display = 'block';
+            setTimeout(() => {
+                colorMenu.style.transform = 'translateX(0)';
+                colorMenu.style.opacity = '1';
+            }, 10);
+        });
+    </script>
+
+  <a href="https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/public/demos/color-space-comparison.html" class="github-link" target="_blank" rel="noopener noreferrer">
+    View Source
+  </a>
+</body>
+
+</html>
