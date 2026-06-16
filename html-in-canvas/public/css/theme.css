@@ -231,3 +231,25 @@ footer {
         margin-block-start: 1rem;
     }
 }
+
+.github-link {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    color: #ffffff !important;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    backdrop-filter: blur(2px);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.github-link:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #ffffff !important;
+    text-decoration: underline;
+}
