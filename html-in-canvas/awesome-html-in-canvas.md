@@ -23,6 +23,7 @@ This is a list of frameworks that have added support for HTML-in-Canvas along wi
 | [Three.js](https://threejs.org/) | JavaScript library used to create and display animated 3D computer graphics with WebGL & WebGPU | [HTMLTexture](https://goo.gle/HIC-threejs) | [Sample](https://goo.gle/HIC-threejs-example) |
 | [PlayCanvas](https://playcanvas.com/) | Open source engine and tools for building amazing 3D experiences | [html-texture](https://goo.gle/HIC-playcanvas) | [Sample](https://goo.gle/HIC-playcanvas-example) |
 | [PixiJS](https://pixijs.com/) | Fast, lightweight 2D rendering library for WebGL & WebGPU | [HTMLSource](https://pixijs.download/release/docs/rendering.HTMLSource.html) | [Sample](https://pixijs-html-in-canvas.vercel.app/) |
+| [Babylon.js](https://babylonjs.com/) | Babylon.js: Powerful, Beautiful, Simple, Open 3D engine for thw web | [HTML Texture](https://doc.babylonjs.com/features/featuresDeepDive/materials/using/htmlTexture/) | [Sample](https://playground.babylonjs.com/#8RDVXG#1) |
 
 ## Disclaimer
 
