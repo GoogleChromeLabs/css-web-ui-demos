@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complex Form Split (HTML-in-Canvas WebGL)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  
+  <!-- Load the HTML-in-Canvas polyfill to run in standard browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/three-html-render@0.1.2/dist/polyfill.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0f0f11;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 50vh;
+      position: relative;
+      background: #121214;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-sizing: border-box;
+    }
+
+    #canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #bottom-container {
+      width: 100vw;
+      height: 50vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0f0f11;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Warning Banner if browser doesn't support the API */
+    #api-warning {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 75, 75, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 16px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(255, 75, 75, 0.3);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      text-align: center;
+      max-width: 90%;
+      display: none;
+    }
+
+    #api-warning h2 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    #api-warning p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="api-warning">
+    <h2>HTML-in-Canvas Not Supported</h2>
+    <p>This demo requires a browser with HTML-in-Canvas support (e.g. Chrome 150+ with the "Experimental Web Platform Features" flag enabled).</p>
+  </div>
+
+  <div id="canvas-container">
+    <div id="controls" style="position: absolute; top: 16px; left: 16px; z-index: 1001; background: rgba(0,0,0,0.6); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 8px;">
+      <input type="checkbox" id="blend-checkbox" style="width: 16px; height: 16px; cursor: pointer;">
+      <label for="blend-checkbox" style="color: #fff; font-family: monospace; font-size: 14px; user-select: none; cursor: pointer;">gl.enable(gl.BLEND)</label>
+    </div>
+    <canvas id="canvas" layoutsubtree></canvas>
+  </div>
+  
+  <div id="bottom-container"></div>
+
+  <script>
+    // 1. Check support
+    if (!('requestPaint' in HTMLCanvasElement.prototype)) {
+      document.getElementById('api-warning').style.display = 'block';
+    }
+
+    // 2. Pack all the form styles into a single variable
+    const formStyles = `
+      <style>
+        .html-card {
+          position: absolute;
+          width: 60vh;
+          height: 40vh;
+          padding: 4.2vh;
+          /* THE BUG IS HERE: Looks like transperancy is not supported: white at the moment, not transparent */
+          background: rgba(255, 255, 255, 0.1); 
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 2.6vh;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          gap: 2.6vh;
+          text-align: center;
+          font-family: inherit;
+          color: #fff;
+        }
+        .html-card h1 {
+          margin: 0;
+          font-size: 3.2vh;
+          font-weight: 700;
+          background: linear-gradient(135deg, #007aff 0%, #00c6ff 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          letter-spacing: -0.5px;
+        }
+        .html-card p {
+          margin: 0;
+          font-size: 1.8vh;
+          color: rgba(255, 255, 255, 0.6);
+          line-height: 1.5;
+        }
+        .html-card input {
+          width: 100%;
+          padding: 1.6vh 2.1vh;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 1.3vh;
+          color: #fff;
+          font-family: inherit;
+          font-size: 1.8vh;
+          box-sizing: border-box;
+          outline: none;
+          transition: all 0.2s ease;
+        }
+        .html-card input:focus {
+          border-color: #007aff;
+          background: rgba(255, 255, 255, 0.1);
+          box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        .html-card button {
+          width: 100%;
+          padding: 1.6vh 2.6vh;
+          background: linear-gradient(135deg, #007aff 0%, #00c6ff 100%);
+          border: none;
+          border-radius: 1.3vh;
+          color: #fff;
+          font-family: inherit;
+          font-size: 1.8vh;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .html-card button:hover {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
+        }
+        .html-card button:active {
+          filter: brightness(0.9);
+          transform: translateY(0);
+        }
+      </style>
+    `;
+
+    // 3. Define raw HTML template for the card contents
+    const cardHtml = `
+      <h1>Split WebGL Form</h1>
+      <p>This form is an HTML-in-Canvas enabled interactive form rendered with WebGL canvas.</p>
+      <input type="text" placeholder="Type your message here..." id="card-input">
+      <button type="button" id="card-btn">Submit Form</button>
+    `;
+
+    // 4. Create bottom form
+    const bottomForm = document.createElement('form');
+    bottomForm.className = 'html-card';
+    bottomForm.onsubmit = (e) => e.preventDefault();
+    bottomForm.innerHTML = formStyles + cardHtml;
+    document.getElementById('bottom-container').appendChild(bottomForm);
+
+    // 5. Create canvas form (inside canvas element)
+    const canvas = document.getElementById('canvas');
+    const canvasForm = document.createElement('form');
+    canvasForm.className = 'html-card';
+    canvasForm.onsubmit = (e) => e.preventDefault();
+    // Note the the canvasForm is the exact same content as the bottomForm, including the styles
+    canvasForm.innerHTML = formStyles + cardHtml;
+    canvas.appendChild(canvasForm);
+
+    // 6. WebGL 2 Rendering Pipeline Setup
+    let gl, prog, vao, tex;
+    let initialized = false;
+
+    // Checkbox listener to control gl.enable(gl.BLEND) dynamically
+    const blendCheckbox = document.getElementById('blend-checkbox');
+    let isBlendEnabled = false;
+    blendCheckbox.addEventListener('change', () => {
+      isBlendEnabled = blendCheckbox.checked;
+    });
+
+    function initGL() {
+      gl = canvas.getContext('webgl2');
+      if (!gl) {
+        console.error("WebGL 2 not supported");
+        return;
+      }
+      
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+      // Vertex shader
+      const vsSrc = `#version 300 es
+        in vec2 a_pos;
+        in vec2 a_uv;
+        uniform mat4 u_matrix;
+        out vec2 v_uv;
+        void main(){
+          gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+          v_uv = a_uv;
+        }`;
+
+      // Fragment shader
+      const fsSrc = `#version 300 es
+        precision mediump float;
+        in vec2 v_uv;
+        uniform sampler2D u_tex;
+        out vec4 fragColor;
+        void main(){
+          fragColor = texture(u_tex, v_uv);
+        }`;
+
+      const vs = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vs, vsSrc);
+      gl.compileShader(vs);
+      
+      const fs = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fs, fsSrc);
+      gl.compileShader(fs);
+
+      prog = gl.createProgram();
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+      gl.useProgram(prog);
+
+      vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
+      
+      const vbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      
+      // Standard 1x1 quad centered at origin
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -0.5, -0.5,  0.0, 0.0,
+         0.5, -0.5,  1.0, 0.0,
+        -0.5,  0.5,  0.0, 1.0,
+        -0.5,  0.5,  0.0, 1.0,
+         0.5, -0.5,  1.0, 0.0,
+         0.5,  0.5,  1.0, 1.0
+      ]), gl.STATIC_DRAW);
+
+      const posLoc = gl.getAttribLocation(prog, 'a_pos');
+      const uvLoc = gl.getAttribLocation(prog, 'a_uv');
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 16, 0);
+      gl.enableVertexAttribArray(uvLoc);
+      gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, false, 16, 8);
+
+      tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      gl.uniform1i(gl.getUniformLocation(prog, 'u_tex'), 0);
+      
+      initialized = true;
+    }
+
+    function uploadTexture() {
+      if (!gl || !tex) return;
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      if (gl.texElementImage2D.length === 3) {
+        gl.texElementImage2D(gl.TEXTURE_2D, gl.SRGB8_ALPHA8, canvasForm);
+      } else {
+        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8, gl.RGBA, gl.UNSIGNED_BYTE, canvasForm);
+      }
+    }
+
+    function drawAndTransform(rx, ry) {
+      if (!initialized) return;
+
+      // Adjust WebGL viewport to match actual device pixel size
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      
+      // Dynamic blending and background transparency configuration
+      // When disabled, the transparent CSS colors of the HTML texture 
+      // aren't transparent: it seems like the alpha channel isn't supported
+      // by default by the HTML-in-Canvas API in WebGL.
+      if (isBlendEnabled) {
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        // Clear background with semi-transparent black-ish color (alpha 0.4, premultiplied)
+        gl.clearColor(0.07 * 0.4, 0.07 * 0.4, 0.08 * 0.4, 0.4);
+      } else {
+        gl.disable(gl.BLEND);
+        // Clear background with opaque black-ish color
+        gl.clearColor(0.07, 0.07, 0.08, 1.0);
+      }
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // --- COLOR PATCH ---
+      // Draw a patch of color rgba(255, 255, 255, 0.1) in the upper-right corner
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(canvas.width - 50, canvas.height - 50, 50, 50);
+      // White transparent square (premultiplied: R, G, B = 1.0 * 0.1 = 0.1)
+      gl.clearColor(0.1, 0.1, 0.1, 0.1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.disable(gl.SCISSOR_TEST);
+      // --- COLOR PATCH ---
+
+      // 1. Setup projection matrix
+      const aspect = canvas.clientWidth / canvas.clientHeight;
+      const fovRad = (45 * Math.PI) / 180;
+      const f = 1.0 / Math.tan(fovRad / 2);
+      const zNear = 0.1;
+      const zFar = 100.0;
+      const rangeInv = 1.0 / (zNear - zFar);
+
+      const projection = new DOMMatrix([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (zNear + zFar) * rangeInv, -1,
+        0, 0, zNear * zFar * rangeInv * 2, 0
+      ]);
+
+      // 2. Setup modelView transform (3D Translation + Rotations + Scale standard quad to 3x2 units)
+      const modelView = new DOMMatrix();
+      modelView.translateSelf(0, 0, -3.5);
+      modelView.rotateSelf(rx, ry, 0);
+      modelView.scaleSelf(3.48, 2.32, 1);
+
+      // Multiply Projection * ModelView
+      const finalMatrix = projection.multiply(modelView);
+
+      // Upload to shader
+      gl.useProgram(prog);
+      gl.bindVertexArray(vao);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+
+      const matrixLoc = gl.getUniformLocation(prog, 'u_matrix');
+      gl.uniformMatrix4fv(matrixLoc, false, finalMatrix.toFloat32Array());
+      
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      // --- COMPUTE CSS TRANSFORM FOR HIT TESTING ---
+      if (canvas.getElementTransform) {
+        // 1. Convert WebGL MVP Matrix (finalMatrix) to DOM Matrix (already DOMMatrix here)
+        const mvpDOM = finalMatrix;
+
+        // 2. Normalize the HTML element (pixels -> 1x1 unit square centered at origin)
+        const width = canvasForm.offsetWidth;
+        const height = canvasForm.offsetHeight;
+
+        const dprX = canvas.width / canvas.clientWidth;
+        const dprY = canvas.height / canvas.clientHeight;
+        const gridWidth = width * dprX;
+        const gridHeight = height * dprY;
+
+        const cssToUnitSpace = new DOMMatrix()
+          .scale(1 / gridWidth, -1 / gridHeight, 1 / gridHeight) // Scale and flip Y
+          .translate(-gridWidth / 2, -gridHeight / 2); // Center target element
+
+        // 3. Map WebGL Clip Space (-1..1) to Canvas Grid pixels (0..width, 0..height)
+        const clipToCanvasViewport = new DOMMatrix()
+          .translate(canvas.width / 2, canvas.height / 2) // Origin to center
+          .scale(canvas.width / 2, -canvas.height / 2, canvas.height / 2); // Stretch to canvas size
+
+        // 4. Combine: Viewport * MVP * Model
+        const screenSpaceTransform = clipToCanvasViewport.multiply(mvpDOM).multiply(cssToUnitSpace);
+
+        // 5. Apply the transform
+        const computedTransform = canvas.getElementTransform(canvasForm, screenSpaceTransform);
+        if (computedTransform) {
+          // Workaround for Chromium bug where transform.is2D is incorrectly true
+          const fixedTransform = new DOMMatrix(computedTransform.toString());
+          canvasForm.style.transform = fixedTransform.toString();
+        }
+      }
+    }
+
+    // 7. Interactive Tilt and Floating Animation
+    let rotationX = 0;
+    let rotationY = 0;
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    let time = 0;
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const nx = (x / rect.width) * 2 - 1;
+      const ny = (y / rect.height) * 2 - 1;
+      
+      targetRotationY = nx * 15;
+      targetRotationX = -ny * 15;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      targetRotationX = 0;
+      targetRotationY = 0;
+    });
+
+    function renderLoop() {
+      time += 0.015;
+      
+      // Smoothly interpolate towards target rotation
+      rotationX += (targetRotationX - rotationX) * 0.1;
+      rotationY += (targetRotationY - rotationY) * 0.1;
+      
+      const idleOscillationX = Math.sin(time) * 2.5;
+      const idleOscillationY = Math.cos(time * 0.8) * 2.5;
+      
+      const currentX = rotationX + idleOscillationX;
+      const currentY = rotationY + idleOscillationY;
+      
+      uploadTexture();
+      drawAndTransform(currentX, currentY);
+      
+      requestAnimationFrame(renderLoop);
+    }
+
+    // 8. Observer to handle canvas resizing (handles device pixel scaling and zoom)
+    const observer = new ResizeObserver(([entry]) => {
+      const dpc = entry.devicePixelContentBoxSize;
+      canvas.width = dpc ? dpc[0].inlineSize : Math.round(entry.contentRect.width * window.devicePixelRatio);
+      canvas.height = dpc ? dpc[0].blockSize : Math.round(entry.contentRect.height * window.devicePixelRatio);
+      if (!initialized) {
+        initGL();
+        requestAnimationFrame(renderLoop);
+      }
+    });
+
+    const supportsDevicePixelContentBox =
+      typeof ResizeObserverEntry !== 'undefined' &&
+      'devicePixelContentBoxSize' in ResizeObserverEntry.prototype;
+    const options = supportsDevicePixelContentBox ? { box: 'device-pixel-content-box' } : {};
+    observer.observe(canvas, options);
+
+    // 9. Event synchronization between bottom form and canvas form
+    const bottomInput = bottomForm.querySelector('#card-input');
+    const canvasInput = canvasForm.querySelector('#card-input');
+    const bottomBtn = bottomForm.querySelector('#card-btn');
+    const canvasBtn = canvasForm.querySelector('#card-btn');
+
+    bottomInput.addEventListener('input', () => {
+      canvasInput.value = bottomInput.value;
+    });
+
+    const triggerAlert = () => {
+      const val = bottomInput.value.trim();
+      alert(val ? `Submitted: "${val}"` : "Submitted empty form!");
+    };
+
+    bottomBtn.addEventListener('click', triggerAlert);
+    canvasBtn.addEventListener('click', triggerAlert);
+  </script>
+
+  <a href="https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/public/demos/complex-form-split.html" class="github-link" target="_blank" rel="noopener noreferrer">
+    View Source
+  </a>
+</body>
+
+</html>
