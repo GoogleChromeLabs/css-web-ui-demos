@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Babylon.js HTML-in-Canvas Demo</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  
+  <!-- Load the HTML-in-Canvas polyfill to run in standard browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/three-html-render@0.1.2/dist/polyfill.js"></script>
+  <!-- Load Babylon.js UMD bundle -->
+  <script src="https://unpkg.com/babylonjs@9.14.0/babylon.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1b 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #canvas-container {
+      position: relative;
+      width: 100vw;
+      height: 50vh;
+    }
+
+    #babylon-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #bottom-container {
+      width: 100vw;
+      height: 50vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.4);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+
+
+    /* Warning Banner if browser doesn't support the API */
+    #api-warning {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 75, 75, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 16px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(255, 75, 75, 0.3);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      text-align: center;
+      max-width: 90%;
+      display: none;
+    }
+
+    #api-warning h2 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    #api-warning p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Control Panel for Rotation Mode */
+    #control-panel {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: 280px;
+      padding: 20px;
+      background: rgba(18, 19, 26, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      z-index: 1001;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      transform-origin: top left;
+    }
+
+    #control-panel.hidden {
+      opacity: 0;
+      transform: scale(0.9) translateY(-10px);
+      pointer-events: none;
+    }
+
+    /* Floating Info/Settings Trigger Button */
+    #info-trigger-btn {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(18, 19, 26, 0.85);
+      color: #fff;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    #info-trigger-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
+
+    /* Close Button inside Control Panel */
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.2s ease;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+    }
+
+    #control-panel h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      padding-right: 20px; /* leave room for close button */
+    }
+
+    #control-panel p {
+      margin: 0 0 16px 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+
+    .switch-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #switch-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #00f0ff;
+      transition: color 0.2s ease;
+    }
+
+    /* Toggle Switch Styling */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .3s;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    input:checked + .slider {
+      background-color: #ff007f;
+      border-color: #ff007f;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 24px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="api-warning">
+    <h2>HTML-in-Canvas Not Supported</h2>
+    <p>This demo requires a browser with HTML-in-Canvas support (e.g. Chrome 150+ with the "Experimental Web Platform
+      Features" flag enabled).</p>
+  </div>
+
+  <div id="canvas-container">
+    <button id="info-trigger-btn" aria-label="Show rotation settings">?</button>
+    <div id="control-panel" class="hidden">
+      <button class="close-btn" aria-label="Close settings panel">&times;</button>
+      <h3>Rotation Mode</h3>
+      <p>Switch modes between "continuous" or "every 2 seconds" rotation to see how the canvas re-ndering is handled in this demo. The canvas is only updated when there's a plane rotation OR when any children elements of the HTML texture change. See the console logs.</p>
+      <div class="switch-container">
+        <label class="switch">
+          <input type="checkbox" id="rotation-mode-switch" checked>
+          <span class="slider round"></span>
+        </label>
+        <span id="switch-label">Continuous</span>
+      </div>
+    </div>
+    <canvas id="babylon-canvas" layoutsubtree></canvas>
+  </div>
+  <div id="bottom-container"></div>
+
+
+
+
+
+  <script>
+    async function initDemo() {
+      // 1. Check for browser HTML-in-Canvas support
+      if (!('requestPaint' in HTMLCanvasElement.prototype)) {
+        document.getElementById('api-warning').style.display = 'block';
+      }
+
+      // 2. Initialize Babylon.js Engine
+      const canvas = document.getElementById('babylon-canvas');
+
+      // Enable WebGL 2 with blending so that transparent color of the 
+      // HTML element is displayed correctly in canvas
+      const gl = canvas.getContext('webgl2');
+      if (!gl) {
+        console.error("WebGL 2 not supported");
+        return;
+      }
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      
+      const engine = new BABYLON.Engine(canvas, true, {
+        antialias: true,
+        adaptToDeviceRatio: true
+      });
+
+      // 3. Create Scene
+      const scene = new BABYLON.Scene(engine);
+      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0); // Transparent to show body gradient
+
+      // 4. Create Camera (directly in front, looking at origin)
+      const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, -4), scene);
+      camera.setTarget(BABYLON.Vector3.Zero());
+
+      // 5. Create Light
+      const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+      light.intensity = 0.7;
+
+      // 6. Define the stylesheet for the card
+      const formStyles = `
+        <style>
+          .html-card {
+            width: 450px;
+            height: 320px;
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+          }
+          .html-card h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+          }
+          .html-card p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+          }
+          .html-card input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+          }
+          .html-card input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #ff007f;
+            box-shadow: 0 0 0 4px rgba(255, 0, 127, 0.15);
+          }
+          .html-card button {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 0, 127, 0.25);
+            transition: all 0.2s ease;
+          }
+          .html-card button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(255, 0, 127, 0.35);
+          }
+          .html-card button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(255, 0, 127, 0.2);
+          }
+        </style>
+      `;
+
+      // 7. Define raw HTML template for the card contents
+      const cardHtml = `
+        <h1>Babylon.js + HTML-in-Canvas</h1>
+        <p>This card is a real, interactive HTML element rendered inside a Babylon.js canvas! Try typing or clicking the
+          button below.</p>
+        <input type="text" placeholder="Type something here..." class="card-input" name="card-input">
+        <button type="button" class="card-btn">Trigger Alert!</button>
+      `;
+
+      // 8. Create the bottom raw HTML card dynamically
+      const bottomForm = document.createElement('form');
+      bottomForm.className = 'html-card';
+      bottomForm.onsubmit = (event) => event.preventDefault();
+      bottomForm.innerHTML = formStyles + cardHtml;
+      document.getElementById('bottom-container').appendChild(bottomForm);
+
+      // 9. Create a separate element for the canvas texture rendering
+      const canvasForm = document.createElement('form');
+      canvasForm.className = 'html-card';
+      canvasForm.onsubmit = (event) => event.preventDefault();
+      canvasForm.innerHTML = formStyles + cardHtml;
+      
+      // 10. Create the HtmlTexture using the canvasForm (which will be appended inside the canvas)
+      const htmlTexture = new BABYLON.HtmlTexture("html", canvasForm, {
+        scene,
+        width: 450,
+        height: 320,
+        autoUpdate: true,
+      });
+
+      // 11. Create Material and assign texture
+      const material = new BABYLON.StandardMaterial("mat", scene);
+      material.emissiveTexture = htmlTexture;
+      // Set the same HTML texture as opacityTexture so that alpha channel is detected
+      material.opacityTexture = htmlTexture;
+      material.disableLighting = true;
+      material.useAlphaFromDiffuseTexture = true;
+
+      // 12. Create 3D Plane matching card aspect ratio (450 / 320 = 1.40625)
+      const plane = BABYLON.MeshBuilder.CreatePlane("plane", {
+        width: 1.40625 * 2,
+        height: 2
+      }, scene);
+      plane.material = material;
+
+      // 13. Forward events using HtmlInteractionManager for overlay native interaction
+      const interactionManager = new BABYLON.HtmlInteractionManager(scene, htmlTexture, plane);
+      const raycastInteractionManager = new BABYLON.HtmlRaycastInteractionManager(scene, htmlTexture, plane);
+
+      // 14. Set up input and click event handlers for each form
+      const bottomInput = bottomForm.querySelector('.card-input');
+      const canvasInput = canvasForm.querySelector('.card-input');
+      const bottomBtn = bottomForm.querySelector('.card-btn');
+      const canvasBtn = canvasForm.querySelector('.card-btn');
+
+      bottomBtn.addEventListener('click', () => {
+        console.log("click on regular HTML detected")
+        const val = bottomInput.value.trim();
+        alert(val ? `Bottom Form: "${val}"` : "Hello from the bottom raw HTML card!");
+      });
+
+      canvasBtn.addEventListener('click', () => {
+        console.log("click detected")
+        const val = canvasInput.value.trim();
+        alert(val ? `Canvas Texture Form: "${val}"` : "Hello from the interactive Babylon.js HTML texture!");
+      });
+
+      // 12. Set up rotation mode state and switch listeners
+      let rotationMode = "continuous"; // "every-2s" or "continuous"
+      const modeSwitch = document.getElementById('rotation-mode-switch');
+      const switchLabel = document.getElementById('switch-label');
+
+      // Collapsable Menu Toggle UI elements
+      const infoBtn = document.getElementById('info-trigger-btn');
+      const panel = document.getElementById('control-panel');
+      const closeBtn = panel.querySelector('.close-btn');
+
+      infoBtn.addEventListener('click', () => {
+        panel.classList.toggle('hidden');
+      });
+
+      closeBtn.addEventListener('click', () => {
+        panel.classList.add('hidden');
+      });
+
+      modeSwitch.addEventListener('change', () => {
+        if (modeSwitch.checked) {
+          rotationMode = "continuous";
+          switchLabel.textContent = "Continuous";
+          switchLabel.style.color = "#00f0ff";
+        } else {
+          rotationMode = "every-2s";
+          switchLabel.textContent = "Every 2 Seconds";
+          switchLabel.style.color = "#ff007f";
+        }
+      });
+
+      // Set up change-detection and animation variables
+      let time = 0;
+      let lastViewMatrix = null;
+      let lastWorldMatrix = null;
+      let textureUpdated = true; // force initial render
+      let expectTransformPaint = false; // true when a paint is expected from a 3D movement update
+
+      // Listen to paint event to detect HTML texture updates
+      canvas.addEventListener("paint", (event) => {
+        if (event.changedElements) {
+          const onlyTransformChanged = event.changedElements.length === 1 && event.changedElements[0] === canvasForm;
+          if (onlyTransformChanged && expectTransformPaint) {
+            // This paint event was caused by the CSS transform update from the last render; ignore it.
+            expectTransformPaint = false;
+            return;
+          }
+        }
+        textureUpdated = true;
+      });
+
+      // 13. Run Render Loop with Change Detection
+      // 13.1 Update plane rotation every 2 seconds to test on-demand rendering (only in every-2s mode)
+      setInterval(() => {
+        if (rotationMode === "every-2s") {
+          plane.rotation.z += 0.5;
+        }
+      }, 2000);
+
+      engine.runRenderLoop(() => {
+        // 13.1.5 If in continuous mode, run rotation and scale animation
+        if (rotationMode === "continuous") {
+          const deltaTime = engine.getDeltaTime() / 16.666;
+          time += engine.getDeltaTime() * 0.0015;
+
+          // Slow continuous rotation
+          plane.rotation.z += 0.003 * deltaTime;
+
+          // Gentle heartbeat scale effect
+          const scale = 1 + Math.sin(time) * 0.06;
+          plane.scaling.set(scale, scale, 1);
+        }
+
+        // 13.2 Check if the camera view matrix changed
+        const currentViewMatrix = scene.activeCamera.getViewMatrix();
+        let cameraChanged = false;
+        if (!lastViewMatrix || !currentViewMatrix.equals(lastViewMatrix)) {
+          cameraChanged = true;
+          if (!lastViewMatrix) lastViewMatrix = currentViewMatrix.clone();
+          else lastViewMatrix.copyFrom(currentViewMatrix);
+        }
+
+        // 13.3 Check if the plane's world matrix changed (due to the animation updates above)
+        const currentWorldMatrix = plane.computeWorldMatrix(true);
+        let planeChanged = false;
+        if (!lastWorldMatrix || !currentWorldMatrix.equals(lastWorldMatrix)) {
+          planeChanged = true;
+          if (!lastWorldMatrix) lastWorldMatrix = currentWorldMatrix.clone();
+          else lastWorldMatrix.copyFrom(currentWorldMatrix);
+        }
+
+        // 13.4 Render only if there was a camera, mesh, or texture change
+        if (cameraChanged || planeChanged || textureUpdated) {
+          console.log("re-rending triggered!");
+          
+          // If this render is caused by 3D movement, expect a paint event from the transform update
+          if (cameraChanged || planeChanged) {
+            expectTransformPaint = true;
+          }
+          
+          scene.render();
+          textureUpdated = false; // reset
+        }
+      });
+
+
+      // Handle window resizing
+      window.addEventListener('resize', () => {
+        engine.resize();
+      });
+    }
+
+    // Start initialization
+    initDemo().catch(console.error);
+  </script>
+
+  <a href="https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/public/demos/babylonjs-demo.html" class="github-link" target="_blank" rel="noopener noreferrer">
+    View Source
+  </a>
+</body>
+
+</html>
