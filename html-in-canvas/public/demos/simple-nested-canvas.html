@@ -177,117 +177,81 @@
     let initialColor = getCssColor();
     colorPicker.value = initialColor;
 
-    function paintInnerCanvas() {
-      console.log("Painting both inner standalone and nested canvases...")
-      const innerCtx = innerCanvas.getContext('2d');
-      const innerStandaloneCtx = innerStandaloneCanvas.getContext('2d');
+    // -------------- INNER CANVASES -------------- // 
+    const innerCtx = innerCanvas.getContext('2d');
+    const innerStandaloneCtx = innerStandaloneCanvas.getContext('2d');
 
+    // Draw the inner-content HTML element onto the inner canvas
+    innerCanvas.onpaint = () => {
+      console.log("innerCanvas.onpaint triggered")
       innerCtx.reset();
-      innerStandaloneCtx.reset();
-
-      // Without this piece of code, simply adding a css style .inner
-      // to the canvas deosn't apply the background color.
-      // // Fill 2D context bitmap with #d4ecff background color
-      // innerCtx.fillStyle = '#d4ecff';
-      // innerCtx.fillRect(0, 0, innerCanvas.width, innerCanvas.height);
-
-      // innerStandaloneCtx.fillStyle = '#d4ecff';
-      // innerStandaloneCtx.fillRect(0, 0, innerStandaloneCanvas.width, innerStandaloneCanvas.height);
-
-      // Draw the inner-content HTML element onto the inner canvas
+      
       let innerElementTransform = innerCtx.drawElementImage(
         innerCanvasContent,
         (innerCanvas.width - innerCanvasContent.offsetWidth) / 2,
         (innerCanvas.height - innerCanvasContent.offsetHeight) / 2
       );
       innerCanvasContent.style.transform = innerElementTransform.toString();
+      }
 
-      let innerStandaloneElementTransform = innerStandaloneCtx.drawElementImage(
+      innerStandaloneCanvas.onpaint = () => {
+        console.log("innerStandaloneCanvas.onpaint triggered")
+        innerStandaloneCtx.reset();
+
+        let innerStandaloneElementTransform = innerStandaloneCtx.drawElementImage(
         innerStandaloneCanvasContent,
         (innerStandaloneCanvas.width - innerStandaloneCanvasContent.offsetWidth) / 2,
         (innerStandaloneCanvas.height - innerStandaloneCanvasContent.offsetHeight) / 2
       );
       innerStandaloneCanvasContent.style.transform = innerStandaloneElementTransform.toString();
-    }
+      }
+    // -------------- INNER CANVASES -------------- // 
 
-    function paintOuterCanvas() {
-      console.log("Painting both outer standalone and nested canvases...");
-      const outerCtx = outerCanvas.getContext('2d');
-      const outerStandaloneCtx = outerStandaloneCanvas.getContext('2d');
+    // -------------- OUTER CANVASES -------------- // 
+    const outerCtx = outerCanvas.getContext('2d');
+    const outerStandaloneCtx = outerStandaloneCanvas.getContext('2d');
 
-      outerCtx.reset();
-      outerStandaloneCtx.reset();
+    // Center #outer-content vertically and horizontally inside outer canvas
+      outerCanvas.onpaint = () => {
+        const changed = event?.changedElements || [];
+        const onlyDirectChildrenChanged = changed.length > 0 && changed.every(el => el.parentElement === outerCanvas);
 
-      // Step B: Center #outer-content vertically and horizontally inside outer canvas
-      let outerElementTransform = outerCtx.drawElementImage(
-        outerCanvasContent,
-        (outerCanvas.width - outerCanvasContent.offsetWidth) / 2,
-        (outerCanvas.height - outerCanvasContent.offsetHeight) / 2
-      );
-      outerCanvasContent.style.transform = outerElementTransform.toString();
+         if (onlyDirectChildrenChanged) {
+          console.log(event?.changedElements)
+          console.log("outerCanvas.onpaint triggered")
+          // Why resetting the outer canvas removes the color of the inner canvas?
+          // outerCtx.reset();
+          let outerElementTransform = outerCtx.drawElementImage(
+            outerCanvasContent,
+            (outerCanvas.width - outerCanvasContent.offsetWidth) / 2,
+            (outerCanvas.height - outerCanvasContent.offsetHeight) / 2
+          );
+          outerCanvasContent.style.transform = outerElementTransform.toString();
+         }
+      }
 
       // While there are no children in the outer canvas, we can still update
       // it just to compare the standalone and the nested canvases
-      let outerStandaloneElementTransform = outerStandaloneCtx.drawElementImage(
-        outerStandaloneCanvasContent,
-        (outerStandaloneCanvas.width - outerStandaloneCanvasContent.offsetWidth) / 2,
-        (outerStandaloneCanvas.height - outerStandaloneCanvasContent.offsetHeight) / 2
-      );
+      outerStandaloneCanvas.onpaint = () => {
+        console.log("outerStandaloneCanvas.onpaint triggered")
+        outerStandaloneCtx.reset();
+        let outerStandaloneElementTransform = outerStandaloneCtx.drawElementImage(
+          outerStandaloneCanvasContent,
+          (outerStandaloneCanvas.width - outerStandaloneCanvasContent.offsetWidth) / 2,
+          (outerStandaloneCanvas.height - outerStandaloneCanvasContent.offsetHeight) / 2
+        );
+
       outerStandaloneCanvasContent.style.transform = outerStandaloneElementTransform.toString();
     }
+    // -------------- OUTER CANVASES -------------- // 
 
-    // Only re-render canvas when there has been a change in canvas children
-    innerCanvas.addEventListener("paint", (event) => {
-      if (event.changedElements && event.changedElements.length > 0) {
-        console.log("innerCanvas paint event - changedElements:", event.changedElements);
-        paintInnerCanvas();
-        paintOuterCanvas();
-      }
-    });
 
     // Update child DOM element style on color pick.
     // Modifying child DOM elements fires the "paint" event with event.changedElements
     colorPicker.addEventListener('input', (e) => {
       innerCanvasContent.style.background = e.target.value;
       innerStandaloneCanvasContent.style.background = e.target.value;
-
-      // We don't need to request paint for standalone canvases since
-      // they're re-painted when the nested canvas is painted.
-      if (innerCanvas.requestPaint) innerCanvas.requestPaint();
-      // if (outerCanvas.requestPaint) outerCanvas.requestPaint();
     });
-
-    // Initial render
-    paintInnerCanvas();
-    paintOuterCanvas();
-
-  
-  const observer = new ResizeObserver((entries) => {
-    console.log("ResizeObserver triggered for canvas: ")
-    // 1. Loop through every canvas that was resized
-    for (const entry of entries) {
-      // 2. entry.target points to the specific canvas element
-      const canvas = entry.target; 
-      const dpc = entry.devicePixelContentBoxSize;  
-      
-      canvas.width = dpc ? dpc[0].inlineSize : Math.round(entry.contentRect.width * window.devicePixelRatio);  
-      canvas.height = dpc ? dpc[0].blockSize : Math.round(entry.contentRect.height * window.devicePixelRatio);
-    }
-  });
-
-  const supportsDevicePixelContentBox =  
-    typeof ResizeObserverEntry !== 'undefined' &&  
-    'devicePixelContentBoxSize' in ResizeObserverEntry.prototype;
-    
-  const options = supportsDevicePixelContentBox ? { box: 'device-pixel-content-box' } : {};
-
-  // Observe canvases for resize events
-  observer.observe(innerCanvas, options);
-  observer.observe(outerCanvas, options);
-  observer.observe(innerStandaloneCanvas, options);
-  observer.observe(outerStandaloneCanvas, options);
-
-
 
   </script>
 </body>
