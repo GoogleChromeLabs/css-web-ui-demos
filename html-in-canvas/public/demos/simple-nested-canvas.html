@@ -111,6 +111,23 @@
       border: 2px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
     }
+
+    .color-control button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      margin-left: 12px;
+    }
+
+    .color-control button:hover {
+      background: #2563eb;
+    }
   </style>
 </head>
 
@@ -120,6 +137,7 @@
     <div class="color-control">
       <label for="color-picker">Choose Target Element Color:</label>
       <input type="color" id="color-picker">
+      <button id="check-nested-support-btn">Trigger nested canvas manually</button>
     </div>
 
     <h1>Nested canvas</h1>
@@ -129,7 +147,7 @@
         <canvas id="inner" class="inner" layoutsubtree width="140" height="140" style="width: 140px; height: 140px;">
           <!-- inner-content element drawn onto inner canvas -->
           <div id="inner-content" class="inner-content">
-            <p>INNER CANVAS CONTENT</p>
+            <p>NESTED CANVAS SUPPORTED!</p>
           </div>
         </canvas>
       </div>
@@ -139,20 +157,13 @@
     <canvas id="inner-standalone" class="inner" layoutsubtree width="140" height="140">
       <!-- inner-content element drawn onto inner canvas -->
       <div id="inner-standalone-content" class="inner-content">
-        <p>INNER CANVAS CONTENT</p>
-      </div>
-    </canvas>
-
-    <h1>Outer standalone canvas</h1>
-    <!-- 1. The HTML Layout -->
-    <canvas id="outer-standalone" class="outer" layoutsubtree width="240" height="240">
-      <div id="outer-standalone-content" class="outer-content">
+        <p>IS NESTED CANVAS SUPPORTED?</p>
       </div>
     </canvas>
     
     <h1>Standalone inner content</h1>
     <div id="standalone-inner-content" class="inner-content">
-      <p>INNER CANVAS CONTENT</p>
+      <p>IS NESTED CANVAS SUPPORTED?</p>
     </div>
   </div>
 
@@ -173,9 +184,6 @@
     const innerStandaloneCanvas = document.getElementById('inner-standalone');
     const innerStandaloneCanvasContent = document.getElementById('inner-standalone-content');
 
-    const outerStandaloneCanvas = document.getElementById('outer-standalone');
-    const outerStandaloneCanvasContent = document.getElementById('outer-standalone-content');
-    
     const standaloneInnerContent = document.getElementById('standalone-inner-content');
     
     const colorPicker = document.getElementById('color-picker');
@@ -188,8 +196,7 @@
     const innerStandaloneCtx = innerStandaloneCanvas.getContext('2d');
 
     // Draw the inner-content HTML element onto the inner canvas
-    innerCanvas.onpaint = () => {
-      console.log("innerCanvas.onpaint triggered")
+    function paintInnerCanvas() {
       innerCtx.reset();
 
       // WORKAROUND: Adjust the canvas size to the DPR
@@ -207,6 +214,12 @@
       );
 
       innerCanvasContent.style.transform = innerElementTransform.toString();
+    }
+
+    innerCanvas.onpaint = () => {
+      console.log("innerCanvas.onpaint triggered")
+      paintInnerCanvas();
+      paintOuterCanvas();
       }
 
       innerStandaloneCanvas.onpaint = () => {
@@ -224,35 +237,26 @@
 
     // -------------- OUTER CANVASES -------------- // 
     const outerCtx = outerCanvas.getContext('2d');
-    const outerStandaloneCtx = outerStandaloneCanvas.getContext('2d');
-
-    // Center #outer-content vertically and horizontally inside outer canvas
-      outerCanvas.onpaint = () => {
-        console.log(event?.changedElements)
-        console.log("outerCanvas.onpaint triggered")
-        // Why resetting the outer canvas removes the color of the inner canvas?
-        // outerCtx.reset();
-        let outerElementTransform = outerCtx.drawElementImage(
+    // If we only render outer canvas from inside inner canvas paint event,
+    // older Chrome browsers (before the fix in 152.0.7944.0: https://chromium-review.googlesource.com/c/chromium/src/+/7964051)
+    // will not re-render outer canvas, as the inner paint event never fires for a nested canvas 
+    function paintOuterCanvas() {
+      // outerCtx.reset();
+      console.log("updating outer canvas")
+      let outerElementTransform = outerCtx.drawElementImage(
           outerCanvasContent,
           (outerCanvas.width - outerCanvasContent.offsetWidth) / 2,
           (outerCanvas.height - outerCanvasContent.offsetHeight) / 2
         );
         outerCanvasContent.style.transform = outerElementTransform.toString();
-      }
-
-      // While there are no children in the outer canvas, we can still update
-      // it just to compare the standalone and the nested canvases
-      outerStandaloneCanvas.onpaint = () => {
-        console.log("outerStandaloneCanvas.onpaint triggered")
-        outerStandaloneCtx.reset();
-        let outerStandaloneElementTransform = outerStandaloneCtx.drawElementImage(
-          outerStandaloneCanvasContent,
-          (outerStandaloneCanvas.width - outerStandaloneCanvasContent.offsetWidth) / 2,
-          (outerStandaloneCanvas.height - outerStandaloneCanvasContent.offsetHeight) / 2
-        );
-
-      outerStandaloneCanvasContent.style.transform = outerStandaloneElementTransform.toString();
     }
+
+    outerCanvas.onpaint = () => {
+      // For demo purposes only, to monitor when the outer canvas is repainted
+      console.log("outerCanvas.onpaint triggered")
+    }
+
+
     // -------------- OUTER CANVASES -------------- // 
 
 
@@ -263,6 +267,22 @@
       innerStandaloneCanvasContent.style.background = e.target.value;
       standaloneInnerContent.style.background = e.target.value;
     });
+
+    function triggerNestedCanvasManually() {
+      console.log("Triggering nested canvas paint manually...");
+      try {
+        paintInnerCanvas();
+        paintOuterCanvas();
+      } catch (e) {
+        alert("Nested canvas paint not supported: " + e);
+      }
+      
+    }
+
+    const checkSupportBtn = document.getElementById('check-nested-support-btn');
+    if (checkSupportBtn) {
+      checkSupportBtn.addEventListener('click', triggerNestedCanvasManually);
+    }
   </script>
 </body>
 
