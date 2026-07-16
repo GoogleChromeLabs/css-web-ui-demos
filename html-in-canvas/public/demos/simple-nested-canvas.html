@@ -116,11 +116,17 @@
 
 <body>
   <div class="center">
+    <!-- Color picker control -->
+    <div class="color-control">
+      <label for="color-picker">Choose Target Element Color:</label>
+      <input type="color" id="color-picker">
+    </div>
+
     <h1>Nested canvas</h1>
     <!-- 1. The HTML Layout -->
     <canvas id="outer" class="outer" layoutsubtree width="240" height="240">
       <div id="outer-content" class="outer-content">
-        <canvas id="inner" class="inner" layoutsubtree width="140" height="140">
+        <canvas id="inner" class="inner" layoutsubtree width="140" height="140" style="width: 140px; height: 140px;">
           <!-- inner-content element drawn onto inner canvas -->
           <div id="inner-content" class="inner-content">
             <p>INNER CANVAS CONTENT</p>
@@ -143,12 +149,10 @@
       <div id="outer-standalone-content" class="outer-content">
       </div>
     </canvas>
-
-
-    <!-- Color picker control -->
-    <div class="color-control">
-      <label for="color-picker">Choose Target Element Color:</label>
-      <input type="color" id="color-picker">
+    
+    <h1>Standalone inner content</h1>
+    <div id="standalone-inner-content" class="inner-content">
+      <p>INNER CANVAS CONTENT</p>
     </div>
   </div>
 
@@ -171,7 +175,9 @@
 
     const outerStandaloneCanvas = document.getElementById('outer-standalone');
     const outerStandaloneCanvasContent = document.getElementById('outer-standalone-content');
-
+    
+    const standaloneInnerContent = document.getElementById('standalone-inner-content');
+    
     const colorPicker = document.getElementById('color-picker');
 
     let initialColor = getCssColor();
@@ -185,12 +191,21 @@
     innerCanvas.onpaint = () => {
       console.log("innerCanvas.onpaint triggered")
       innerCtx.reset();
-      
+
+      // WORKAROUND: Adjust the canvas size to the DPR
+      const dpr = window.devicePixelRatio || 1;
+      innerCanvas.width = 140 * dpr;
+      innerCanvas.height = 140 * dpr;
+
+      const physicalElementWidth = innerCanvasContent.offsetWidth * dpr;
+      const physicalElementHeight = innerCanvasContent.offsetHeight * dpr;
+
       let innerElementTransform = innerCtx.drawElementImage(
         innerCanvasContent,
-        (innerCanvas.width - innerCanvasContent.offsetWidth) / 2,
-        (innerCanvas.height - innerCanvasContent.offsetHeight) / 2
+        (innerCanvas.width - physicalElementWidth) / 2,
+        (innerCanvas.height - physicalElementHeight) / 2
       );
+
       innerCanvasContent.style.transform = innerElementTransform.toString();
       }
 
@@ -213,21 +228,16 @@
 
     // Center #outer-content vertically and horizontally inside outer canvas
       outerCanvas.onpaint = () => {
-        const changed = event?.changedElements || [];
-        const onlyDirectChildrenChanged = changed.length > 0 && changed.every(el => el.parentElement === outerCanvas);
-
-         if (onlyDirectChildrenChanged) {
-          console.log(event?.changedElements)
-          console.log("outerCanvas.onpaint triggered")
-          // Why resetting the outer canvas removes the color of the inner canvas?
-          // outerCtx.reset();
-          let outerElementTransform = outerCtx.drawElementImage(
-            outerCanvasContent,
-            (outerCanvas.width - outerCanvasContent.offsetWidth) / 2,
-            (outerCanvas.height - outerCanvasContent.offsetHeight) / 2
-          );
-          outerCanvasContent.style.transform = outerElementTransform.toString();
-         }
+        console.log(event?.changedElements)
+        console.log("outerCanvas.onpaint triggered")
+        // Why resetting the outer canvas removes the color of the inner canvas?
+        // outerCtx.reset();
+        let outerElementTransform = outerCtx.drawElementImage(
+          outerCanvasContent,
+          (outerCanvas.width - outerCanvasContent.offsetWidth) / 2,
+          (outerCanvas.height - outerCanvasContent.offsetHeight) / 2
+        );
+        outerCanvasContent.style.transform = outerElementTransform.toString();
       }
 
       // While there are no children in the outer canvas, we can still update
@@ -251,8 +261,8 @@
     colorPicker.addEventListener('input', (e) => {
       innerCanvasContent.style.background = e.target.value;
       innerStandaloneCanvasContent.style.background = e.target.value;
+      standaloneInnerContent.style.background = e.target.value;
     });
-
   </script>
 </body>
 
