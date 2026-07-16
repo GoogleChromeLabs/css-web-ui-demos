@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+
+<head>
+  <meta http-equiv="origin-trial"
+    content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Nested Canvas in HTML-in-Canvas demo. Demonstrates outer canvas drawing its direct children (#tv-casing, #tv-screen, #power-btn) and inner canvas drawing its direct children (#movie-player, #off-state-black-screen).">
+  <meta name="keywords"
+    content="HTML in Canvas, layoutsubtree, nested canvas, drawElementImage, Video in Canvas, Direct Children, 2D Context">
+  <title>Nested Canvas (HTML-in-Canvas)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+  <style>
+    :root {
+      --primary-accent: #38bdf8;
+      --secondary-accent: #818cf8;
+      --surface-card: rgba(30, 41, 59, 0.7);
+      --border-card: rgba(255, 255, 255, 0.12);
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background-color: var(--md-sys-color-background, #0f172a);
+      color: var(--md-sys-color-on-background, #f8fafc);
+      font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .demo-header {
+      max-width: 1280px;
+      margin: 0 auto 24px auto;
+    }
+
+    .demo-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .demo-description {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .tags {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      font-family: 'Fira Code', monospace;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .main-layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .canvas-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16/11;
+    }
+
+    /* Outer Canvas: #tv-frame */
+    canvas#tv-frame {
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #090d16;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+      display: block;
+    }
+
+    /* TV Casing Element inside outer canvas subtree */
+    #tv-casing {
+      width: 680px;
+      padding: 20px;
+      background: linear-gradient(145deg, #2a1b12, #180f0a);
+      border: 6px solid #4a3222;
+      border-radius: 24px;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 15px 35px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .tv-screen-bezel {
+      width: 640px;
+      height: 360px;
+      background: #0a0e17;
+      border: 8px solid #1e140d;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Inner Canvas: #tv-screen */
+    canvas#tv-screen {
+      width: 640px;
+      height: 360px;
+      border-radius: 8px;
+      background: #000;
+      display: block;
+    }
+
+    /* Video element inside inner canvas subtree */
+    #movie-player {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none; /* Hidden by default when TV is OFF */
+      opacity: 0.7; /* 70% transparency so TV noise bleeds through */
+    }
+
+    /* Off State Black Screen element inside inner canvas subtree */
+    #off-state-black-screen {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0f172a, #020617);
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Fira Code', monospace;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Control panel on the TV casing */
+    .tv-control-panel {
+      width: 640px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-sizing: border-box;
+    }
+
+    .tv-brand {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #d97706;
+      text-transform: uppercase;
+    }
+
+    .tv-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .tv-btn.on {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .tv-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .tv-btn:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    /* Controls Panel on right side */
+    .controls-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .controls-card h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+    }
+
+    .status-badge.active .status-indicator {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary-accent);
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+    }
+
+    .toggle-label {
+      font-size: 0.9rem;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Code Card */
+    .code-card {
+      grid-column: 1 / -1;
+      background: #090d16;
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .code-card h4 {
+      margin: 0 0 12px 0;
+      color: #38bdf8;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .code-kw { color: #c084fc; }
+    .code-tag { color: #f43f5e; }
+    .code-attr { color: #38bdf8; }
+    .code-str { color: #4ade80; }
+    .code-cm { color: #64748b; font-style: italic; }
+
+    .status-banner {
+      margin-top: 12px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #7dd3fc;
+    }
+
+    /* Debug bounds overlay */
+    .debug-bounds #tv-casing,
+    .debug-bounds #tv-screen,
+    .debug-bounds #power-btn,
+    .debug-bounds #movie-player,
+    .debug-bounds #off-state-black-screen {
+      outline: 2px dashed #f43f5e !important;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="demo-header">
+    <h1 class="demo-title">
+      <span class="material-symbols-outlined"
+        style="font-size: 36px; -webkit-text-fill-color: initial; color: #38bdf8;">tv</span>
+      Nested Canvas (HTML-in-Canvas)
+    </h1>
+    <p class="demo-description">
+      Demonstrates nested canvas rendering where all drawn elements are direct children of their respective canvas.
+      The outer canvas (<code>#tv-frame</code>) draws its direct children: <code>#tv-casing</code>, <code>#tv-screen</code> (inner canvas), and <code>#power-btn</code>.
+      The inner canvas (<code>#tv-screen</code>) draws its direct children: <code>#movie-player</code> and <code>#off-state-black-screen</code>.
+    </p>
+    <div class="tags">
+      <span class="tag">Direct Children</span>
+      <span class="tag">#tv-frame</span>
+      <span class="tag">#tv-screen</span>
+      <span class="tag">#power-btn</span>
+      <span class="tag">drawElementImage()</span>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Left: Canvas Container -->
+    <div class="canvas-card">
+      <div class="canvas-wrapper" id="canvas-wrapper">
+        <!-- Outer Canvas: #tv-frame -->
+        <canvas id="tv-frame" layoutsubtree width="800" height="550">
+
+          <!-- Direct Child 1 of #tv-frame: TV Casing -->
+          <div id="tv-casing" drawable>
+            <div class="tv-screen-bezel">
+              <!-- Empty bezel placeholder on casing background -->
+            </div>
+            <div class="tv-control-panel">
+              <span class="tv-brand">RETRO-VISION 2000</span>
+            </div>
+          </div>
+
+          <!-- Direct Child 2 of #tv-frame: Inner Canvas #tv-screen -->
+          <canvas id="tv-screen" drawable layoutsubtree width="640" height="360">
+            <!-- Direct Child 1 of #tv-screen: Video -->
+            <video drawable id="movie-player" src="../assets/demo-video.mp4" loop muted playsinline style="opacity: 0.7;"></video>
+            <!-- Direct Child 2 of #tv-screen: Black Screen -->
+            <div drawable id="off-state-black-screen">
+              <span class="material-symbols-outlined" style="font-size: 48px; color: #64748b;">tv_off</span>
+              <div style="font-size: 1.1rem; font-weight: 600; color: #f8fafc;">TV OFF</div>
+              <div style="font-size: 0.85rem; color: #64748b;">Click "Turn TV On" to start playback</div>
+            </div>
+          </canvas>
+
+          <!-- Direct Child 3 of #tv-frame: Power Button -->
+          <button drawable id="power-btn" class="tv-btn" onclick="togglePower()">
+            <span class="material-symbols-outlined">power_settings_new</span>
+            <span id="power-btn-text">Turn TV On</span>
+          </button>
+
+        </canvas>
+      </div>
+
+      <div class="status-banner" id="status-banner">
+        <span class="material-symbols-outlined">info</span>
+        <span id="status-text">Click the interactive "Turn TV On" button drawn inside the parent canvas!</span>
+      </div>
+    </div>
+
+    <!-- Right: Controls & Status Panel -->
+    <div class="controls-card">
+      <h3>
+        <span class="material-symbols-outlined">tune</span>
+        Canvas TV Controls
+      </h3>
+
+      <div class="control-row">
+        <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Current TV State</div>
+        <div class="status-badge" id="tv-status-badge">
+          <span class="status-indicator"></span>
+          <span id="status-badge-text">TV OFF (Black Screen Active)</span>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <md-filled-button id="sidebar-power-btn" onclick="togglePower()" style="width: 100%;">
+          <md-icon slot="icon">power_settings_new</md-icon>
+          <span id="sidebar-power-text">Turn TV On</span>
+        </md-filled-button>
+      </div>
+
+      <!-- Transparency Control Slider -->
+      <div class="control-row">
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #cbd5e1;">
+          <span>Video Opacity / Transparency:</span>
+          <span id="opacity-val" style="font-family: 'Fira Code', monospace; color: #38bdf8;">70%</span>
+        </div>
+        <input type="range" id="opacity-slider" min="0" max="100" value="70">
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">
+          <span class="material-symbols-outlined" style="font-size: 18px; color: #38bdf8;">sync</span>
+          Sync DOM Transform
+        </span>
+        <md-switch id="sync-transform-switch" selected></md-switch>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">
+          <span class="material-symbols-outlined" style="font-size: 18px; color: #f43f5e;">border_style</span>
+          Highlight DOM Bounds
+        </span>
+        <md-switch id="show-bounds-switch"></md-switch>
+      </div>
+    </div>
+
+    <!-- Bottom: Code Snippet Card -->
+    <div class="code-card">
+      <h4>
+        <span class="material-symbols-outlined">code</span>
+        Direct Canvas Children Pattern for Outer &amp; Inner Canvases
+      </h4>
+      <pre><code><span class="code-cm">&lt;!-- Outer Canvas contains direct children on which drawElementImage is invoked --&gt;</span>
+<span class="code-tag">&lt;canvas</span> <span class="code-attr">id</span>=<span class="code-str">"tv-frame"</span> <span class="code-attr">layoutsubtree</span><span class="code-tag">&gt;</span>
+  <span class="code-cm">&lt;!-- Direct Child 1 --&gt;</span>
+  <span class="code-tag">&lt;div</span> <span class="code-attr">id</span>=<span class="code-str">"tv-casing"</span> <span class="code-attr">drawable</span><span class="code-tag">&gt;&lt;/div&gt;</span>
+
+  <span class="code-cm">&lt;!-- Direct Child 2: Inner Canvas --&gt;</span>
+  <span class="code-tag">&lt;canvas</span> <span class="code-attr">id</span>=<span class="code-str">"tv-screen"</span> <span class="code-attr">drawable</span> <span class="code-attr">layoutsubtree</span><span class="code-tag">&gt;</span>
+    <span class="code-cm">&lt;!-- Direct Children of Inner Canvas --&gt;</span>
+    <span class="code-tag">&lt;video</span> <span class="code-attr">id</span>=<span class="code-str">"movie-player"</span> <span class="code-attr">drawable</span> <span class="code-attr">src</span>=<span class="code-str">"../assets/demo-video.mp4"</span> <span class="code-attr">style</span>=<span class="code-str">"opacity: 0.7;"</span><span class="code-tag">&gt;&lt;/video&gt;</span>
+    <span class="code-tag">&lt;div</span> <span class="code-attr">id</span>=<span class="code-str">"off-state-black-screen"</span> <span class="code-attr">drawable</span><span class="code-tag">&gt;&lt;/div&gt;</span>
+  <span class="code-tag">&lt;/canvas&gt;</span>
+
+  <span class="code-cm">&lt;!-- Direct Child 3: Power Button --&gt;</span>
+  <span class="code-tag">&lt;button</span> <span class="code-attr">id</span>=<span class="code-str">"power-btn"</span> <span class="code-attr">drawable</span> <span class="code-attr">onclick</span>=<span class="code-str">"togglePower()"</span><span class="code-tag">&gt;</span>Turn TV On<span class="code-tag">&lt;/button&gt;</span>
+<span class="code-tag">&lt;/canvas&gt;</span>
+
+<span class="code-tag">&lt;script&gt;</span>
+  <span class="code-kw">function</span> renderFrame() {
+    <span class="code-cm">// 1. Outer Canvas draws its direct children: tvCasing and powerBtn</span>
+    outerCtx.drawElementImage(tvCasing, casingX, casingY);
+    <span class="code-kw">const</span> btnTransform = outerCtx.drawElementImage(powerBtn, btnX, btnY);
+    powerBtn.style.transform = btnTransform.toString();
+
+    <span class="code-cm">// 2. Inner Canvas draws its direct children: tvNoise + video (or blackScreen)</span>
+    <span class="code-kw">if</span> (isTvOn) {
+      drawTvNoise(innerCtx, innerCanvas.width, innerCanvas.height);
+      innerCtx.globalAlpha = 0.7;
+      innerCtx.drawElementImage(video, 0, 0, innerCanvas.width, innerCanvas.height);
+    }
+
+    <span class="code-cm">// 3. Outer Canvas draws its direct child: innerCanvas</span>
+    <span class="code-kw">const</span> screenTransform = outerCtx.drawElementImage(innerCanvas, screenX, screenY);
+    innerCanvas.style.transform = screenTransform.toString();
+
+    requestAnimationFrame(renderFrame);
+  }
+<span class="code-tag">&lt;/script&gt;</span></code></pre>
+    </div>
+  </div>
+
+  <script>
+    const outerCanvas = document.getElementById('tv-frame');
+    const outerCtx = outerCanvas.getContext('2d');
+
+    const innerCanvas = document.getElementById('tv-screen');
+    const innerCtx = innerCanvas.getContext('2d');
+
+    const tvCasing = document.getElementById('tv-casing');
+    const video = document.getElementById('movie-player');
+    const blackScreen = document.getElementById('off-state-black-screen');
+    const powerBtn = document.getElementById('power-btn');
+    const powerBtnText = document.getElementById('power-btn-text');
+    const sidebarPowerText = document.getElementById('sidebar-power-text');
+    const statusBadge = document.getElementById('tv-status-badge');
+    const statusBadgeText = document.getElementById('status-badge-text');
+    const statusText = document.getElementById('status-text');
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+
+    const opacitySlider = document.getElementById('opacity-slider');
+    const opacityVal = document.getElementById('opacity-val');
+    const syncSwitch = document.getElementById('sync-transform-switch');
+    const boundsSwitch = document.getElementById('show-bounds-switch');
+
+    let isTvOn = false;
+    let isSyncEnabled = true;
+    let videoOpacity = 0.7; // 70% default transparency
+
+    opacitySlider.addEventListener('input', () => {
+      videoOpacity = parseFloat(opacitySlider.value) / 100;
+      opacityVal.textContent = opacitySlider.value + '%';
+      video.style.opacity = videoOpacity;
+    });
+
+    // Toggle Power State
+    window.togglePower = function () {
+      isTvOn = !isTvOn;
+
+      if (isTvOn) {
+        blackScreen.style.display = 'none';
+        video.style.display = 'block';
+        video.play().catch(e => console.log("Video auto play muted", e));
+        powerBtn.classList.add('on');
+        powerBtnText.textContent = 'Turn TV Off';
+        sidebarPowerText.textContent = 'Turn TV Off';
+        statusBadge.classList.add('active');
+        statusBadgeText.textContent = 'TV ON (Video 70% Opacity + TV Noise)';
+        statusText.textContent = 'TV is ON! Video is drawn at 70% opacity over animated TV noise inside #tv-screen.';
+      } else {
+        blackScreen.style.display = 'flex';
+        video.style.display = 'none';
+        video.pause();
+        powerBtn.classList.remove('on');
+        powerBtnText.textContent = 'Turn TV On';
+        sidebarPowerText.textContent = 'Turn TV On';
+        statusBadge.classList.remove('active');
+        statusBadgeText.textContent = 'TV OFF (Black Screen Active)';
+        statusText.textContent = 'TV is OFF. Black screen element is drawn to #tv-screen, and #tv-screen is drawn to #tv-frame.';
+      }
+    };
+
+    syncSwitch.addEventListener('change', () => {
+      isSyncEnabled = syncSwitch.selected;
+      if (!isSyncEnabled) {
+        tvCasing.style.transform = '';
+        powerBtn.style.transform = '';
+        innerCanvas.style.transform = '';
+        video.style.transform = '';
+        blackScreen.style.transform = '';
+      }
+    });
+
+    boundsSwitch.addEventListener('change', () => {
+      if (boundsSwitch.selected) {
+        canvasWrapper.classList.add('debug-bounds');
+      } else {
+        canvasWrapper.classList.remove('debug-bounds');
+      }
+    });
+
+    // Animate TV Static Noise pattern
+    let noiseFrame = 0;
+    function drawTvNoise(ctx, width, height) {
+      ctx.save();
+      const imgData = ctx.createImageData(Math.floor(width), Math.floor(height));
+      const data = imgData.data;
+      noiseFrame++;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const val = Math.floor(Math.random() * 95);
+        data[i] = val;          // R
+        data[i + 1] = val;      // G
+        data[i + 2] = val + 25; // B (slightly cool blueish static)
+        data[i + 3] = 255;      // A
+      }
+      ctx.putImageData(imgData, 0, 0);
+      ctx.restore();
+    }
+
+    let dpr = window.devicePixelRatio || 1;
+
+    // ResizeObserver for high DPI resolution scaling
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.devicePixelContentBoxSize && entry.devicePixelContentBoxSize.length > 0) {
+        outerCanvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+        outerCanvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+      } else {
+        outerCanvas.width = outerCanvas.clientWidth * dpr;
+        outerCanvas.height = outerCanvas.clientHeight * dpr;
+      }
+      innerCanvas.width = 640 * dpr;
+      innerCanvas.height = 360 * dpr;
+    });
+    observer.observe(outerCanvas, { box: 'device-pixel-content-box' });
+
+    // HTML-in-Canvas paint callbacks
+    outerCanvas.onpaint = () => {
+      renderFrame();
+    };
+    innerCanvas.onpaint = () => {
+      renderFrame();
+    };
+
+    // Main JavaScript renderFrame Loop
+    function renderFrame() {
+      dpr = outerCanvas.width / outerCanvas.clientWidth;
+      
+      // Clear contexts
+      innerCtx.reset();
+      outerCtx.reset();
+
+      // Draw outer canvas backdrop
+      outerCtx.fillStyle = '#090d16';
+      outerCtx.fillRect(0, 0, outerCanvas.width, outerCanvas.height);
+
+      const pW = outerCanvas.width;
+      const pH = outerCanvas.height;
+
+      const casingW = 680 * dpr;
+      const casingH = 460 * dpr;
+      const casingX = (pW - casingW) / 2;
+      const casingY = (pH - casingH) / 2;
+
+      // 1. Outer Canvas draws TV casing element (Direct Child 1 of outer canvas)
+      try {
+        const cTransform = outerCtx.drawElementImage(tvCasing, casingX, casingY);
+        if (isSyncEnabled && cTransform) {
+          tvCasing.style.transform = cTransform.toString();
+        }
+      } catch (e) {
+        console.warn("Outer canvas tv casing paint pending", e);
+      }
+
+      // 2. Outer Canvas draws TV power button (Direct Child 3 of outer canvas)
+      const btnX = casingX + 440 * dpr;
+      const btnY = casingY + 390 * dpr;
+      try {
+        const bTransform = outerCtx.drawElementImage(powerBtn, btnX, btnY);
+        if (isSyncEnabled && bTransform) {
+          powerBtn.style.transform = bTransform.toString();
+        }
+      } catch (e) {
+        console.warn("Outer canvas power button paint pending", e);
+      }
+
+      // 3. Inner Canvas rendering (Direct Children of inner canvas)
+
+      // 3a. Draw retro TV static noise on inner canvas background
+      drawTvNoise(innerCtx, innerCanvas.width, innerCanvas.height);
+
+      if (isTvOn) {
+        // 3b. Draw video (Direct Child 1 of inner canvas) with 70% opacity
+        innerCtx.save();
+        innerCtx.globalAlpha = videoOpacity;
+        try {
+          const vTransform = innerCtx.drawElementImage(video, 0, 0, innerCanvas.width, innerCanvas.height);
+          if (isSyncEnabled && vTransform) {
+            video.style.transform = vTransform.toString();
+          }
+        } catch (e) {
+          console.warn("Inner canvas video paint pending", e);
+        }
+        innerCtx.restore();
+      }
+
+      // 4. Outer Canvas draws Inner Canvas #tv-screen (Direct Child 2 of outer canvas)
+      const screenX = casingX + 20 * dpr;
+      const screenY = casingY + 20 * dpr;
+      try {
+        const sTransform = outerCtx.drawElementImage(innerCanvas, screenX, screenY);
+        if (isSyncEnabled && sTransform) {
+          innerCanvas.style.transform = sTransform.toString();
+        }
+      } catch (e) {
+        console.warn("Outer canvas drawing inner canvas paint pending", e);
+      }
+    }
+
+    // Continuous RAF Loop
+    function animationLoop() {
+      renderFrame();
+      requestAnimationFrame(animationLoop);
+    }
+    requestAnimationFrame(animationLoop);
+  </script>
+
+  <a href="https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/public/demos/nested-canvas.html"
+    class="github-link" target="_blank" rel="noopener noreferrer">
+    View Source
+  </a>
+</body>
+
+</html>
