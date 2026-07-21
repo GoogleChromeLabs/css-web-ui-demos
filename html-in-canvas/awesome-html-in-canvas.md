@@ -14,6 +14,7 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 | [Compiz Web](https://compiz-web.vercel.app/) | Shader-driven web page transitions demo | [Max Leiter](https://github.com/MaxLeiter) | [Source](https://github.com/MaxLeiter/compiz-web) |
 | [HTML cloth](https://arrival.space/htmlcanvas) | Customize a form on a hanging cloth inside a game | [Thomas Richter-Trummer](https://github.com/fimbox) | [Source](https://github.com/fimbox/html-in-canvas/blob/main/plugins/html-cloth.mjs) |
 | [PixiJS HTML Laser](https://pixijs-html-in-canvas.vercel.app) | Interactive landing page that shatters and heals over time | [Zyie](https://github.com/Zyie) | [Source](https://github.com/Zyie/pixijs-html-in-canvas) |
+| [Quest Signal](https://vav-labs.com/case-studies/quest-signal/) | A playable Godot scene with accessible, interactive DOM panels rendered as world-space WebGL textures | [Vav Labs](https://vav-labs.com/) | [Source](https://github.com/Vav-Labs/quest-signal) |
 | More | demos | coming | soon... |
 
 ## Framework Support 
