@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Embedded HTML-in-Canvas Demo. Demonstrates HTML-in-Canvas features rendered inside an iframe with Origin Trial enablement.">
+  <meta name="keywords" content="HTML in Canvas, iframe, Origin Trial, WebGL, Chrome Dev">
+  <title>Embedded HTML-in-Canvas</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+
+  <style>
+    :root {
+      --primary-accent: #38bdf8;
+      --secondary-accent: #a855f7;
+      --bg-card: rgba(30, 41, 59, 0.75);
+      --border-card: rgba(255, 255, 255, 0.12);
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background-color: var(--md-sys-color-background, #0f172a);
+      color: var(--md-sys-color-on-background, #f8fafc);
+      font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .demo-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .demo-header {
+      border-bottom: 1px solid var(--border-card);
+      padding-bottom: 20px;
+    }
+
+    .demo-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 12px 0;
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .info-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 1.02rem;
+      line-height: 1.6;
+      color: black;
+    }
+
+    .info-box a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 500;
+      border-bottom: 1px dashed rgba(56, 189, 248, 0.5);
+      transition: all 0.2s ease;
+    }
+
+    .info-box a:hover {
+      color: #7dd3fc;
+      border-bottom-style: solid;
+    }
+
+    .iframe-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .iframe-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: rgba(15, 23, 42, 0.85);
+      border-bottom: 1px solid var(--border-card);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+    }
+
+    .iframe-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #94a3b8;
+    }
+
+    .url-display {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #38bdf8;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 500px;
+    }
+
+    .iframe-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      height: 720px;
+      background: #020617;
+    }
+
+    @media (max-width: 768px) {
+      .iframe-wrapper {
+        height: 500px;
+      }
+    }
+
+    #demo-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .feature-card h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-card p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="demo-container">
+    <header class="demo-header">
+      <h1 class="demo-title">
+        <span class="material-symbols-outlined" style="font-size: 2.4rem;">web</span>
+        Embedded HTML-in-Canvas
+      </h1>
+      <div class="info-box">
+        This demo shows how the HTML-in-Canvas feature works when canvas is embedded in an iframe.
+        The page embeds an iframe from <a href="https://chrome.dev/html-in-canvas/demos/webgl-dragon-example.html" target="_blank" rel="noopener noreferrer">chrome.dev</a> that is currently signed up for an origin trial.
+        So, the HTML-in-Canvas feature should work in browsers where the feature is implemented behind a flag even when the flag is not enabled.
+      </div>
+    </header>
+
+    <!-- Embedded Iframe Display Card -->
+    <main class="iframe-card">
+      <div class="iframe-bar">
+        <div class="iframe-title-group">
+          <span class="material-symbols-outlined" style="font-size: 1.2rem; color: #38bdf8;">lock</span>
+          <span>Embedded Source:</span>
+          <span class="url-display">https://chrome.dev/html-in-canvas/demos/webgl-dragon-example.html</span>
+        </div>
+        <div class="iframe-controls">
+          <md-icon-button id="reload-btn" title="Reload iframe">
+            <span class="material-symbols-outlined">refresh</span>
+          </md-icon-button>
+          <md-icon-button id="fullscreen-btn" title="Toggle Fullscreen">
+            <span class="material-symbols-outlined">fullscreen</span>
+          </md-icon-button>
+        </div>
+      </div>
+
+      <div class="iframe-wrapper" id="iframe-wrapper">
+        <iframe
+          id="demo-iframe"
+          src="https://chrome.dev/html-in-canvas/demos/webgl-dragon-example.html"
+          title="Embedded HTML-in-Canvas Demo"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </main>
+
+    <!-- Additional Architecture Context -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <h3>
+          <span class="material-symbols-outlined" style="color: #38bdf8;">verified</span>
+          Origin Trial Integration
+        </h3>
+        <p>
+          Origin Trials allow web applications to enable experimental features on specific origins. Because chrome.dev registered an Origin Trial token, the embedded iframe executes with HTML-in-Canvas capabilities enabled regardless of parent frame settings.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <h3>
+          <span class="material-symbols-outlined" style="color: #a855f7;">view_in_ar</span>
+          WebGL & 3D Synchronization
+        </h3>
+        <p>
+          The Stanford Dragon WebGL demo demonstrates complex 3D rendering with live DOM layout subtree synchronization inside the embedded canvas context.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const iframe = document.getElementById('demo-iframe');
+    const reloadBtn = document.getElementById('reload-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const iframeWrapper = document.getElementById('iframe-wrapper');
+
+    reloadBtn.addEventListener('click', () => {
+      iframe.src = iframe.src;
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        iframeWrapper.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
