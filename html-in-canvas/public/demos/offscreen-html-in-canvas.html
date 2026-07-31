@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+
+<head>
+  <meta http-equiv="origin-trial"
+    content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="OffscreenCanvas HTML-in-Canvas demo with background running text on main thread and offscreen worker rendering.">
+  <meta name="keywords"
+    content="HTML in Canvas, OffscreenCanvas, Web Worker, captureElementImage, drawElementImage, layoutsubtree">
+  <title>Offscreen HTML-in-Canvas Demo</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script type="module" src="../js/material-web-bundle.js"></script>
+
+  <style>
+    :root {
+      --primary-accent: #3b82f6;
+      --secondary-accent: #8b5cf6;
+      --pink-glow: #ec4899;
+      --bg-dark: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --border-card: rgba(255, 255, 255, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: #f8fafc;
+      font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Running Text (Main Thread Marquee) */
+    .marquee-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      opacity: 0.18;
+      transform: skewY(-4deg) scale(1.1);
+    }
+
+    .marquee-row {
+      white-space: nowrap;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #60a5fa;
+      text-shadow: 0 0 12px rgba(96, 165, 250, 0.6);
+      display: flex;
+    }
+
+    .marquee-content {
+      display: inline-block;
+      will-change: transform;
+      color: white;
+    }
+
+    .marquee-row.reverse {
+      color: #ffffff;
+      text-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+    }
+
+    .marquee-row.accent {
+      color: #ffffff;
+      text-shadow: 0 0 12px rgba(244, 114, 182, 0.6);
+    }
+
+    /* Content Layout */
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-card);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-title-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 4px 0 0 0;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+
+    /* Info Bar & Controls */
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .status-badges {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .badge-main {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
+
+    .badge-worker {
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: #f472b6;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .status-dot.frozen {
+      background: #ef4444 !important;
+      box-shadow: 0 0 8px #ef4444 !important;
+      animation: none !important;
+    }
+
+    .badge.frozen,
+    .badge-main.frozen,
+    .badge-worker.frozen {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: rgba(239, 68, 68, 0.4) !important;
+      color: #fca5a5 !important;
+    }
+
+    #mainThreadChip *,
+    #workerThreadChip * {
+      color: inherit;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
+    }
+
+    /* Main Stage */
+    .main-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas-card-wrapper {
+      position: relative;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.15);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    .canvas-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .canvas-header-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #e2e8f0;
+    }
+
+    /* The Canvas Element */
+    canvas#canvas {
+      width: 580px;
+      height: 280px;
+      background: #020617;
+      border: 2px dashed rgba(236, 72, 153, 0.4);
+      border-radius: 12px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    /* The HTML Form Element rendered inside layoutsubtree */
+    #form_element {
+      width: 480px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(96, 165, 250, 0.5);
+      border-radius: 12px;
+      padding: 20px 24px;
+      color: #f8fafc;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(96, 165, 250, 0.2);
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    .hic-text {
+      margin: 0 0 16px 0;
+      font-size: 1rem;
+      line-height: 1.5;
+      font-weight: 500;
+      color: #f1f5f9;
+      background: linear-gradient(90deg, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hic-worker-marquee {
+      overflow: hidden;
+      white-space: nowrap;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #f472b6;
+      text-shadow: 0 0 8px rgba(244, 114, 182, 0.5);
+    }
+
+    .hic-worker-marquee-content {
+      display: inline-block;
+      will-change: transform;
+    }
+
+    .hic-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hic-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+
+    .hic-input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .hic-input {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: #f8fafc;
+      font-size: 0.92rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .hic-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+    }
+
+    .hic-btn {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      padding: 10px 18px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    .hic-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Explanation Section */
+    .explanation-card {
+      margin-top: 24px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .explanation-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .explanation-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Background Running Text on Main Thread (Animated via JS requestAnimationFrame) -->
+  <div class="marquee-container" id="marqueeContainer">
+    <div class="marquee-row">
+      <div class="marquee-content marquee-left">
+        main thread is running... main thread is running... main thread is running... main thread is running... main
+        thread is running... main thread is running...
+      </div>
+    </div>
+    <div class="marquee-row reverse">
+      <div class="marquee-content marquee-right">
+        main thread is running... main thread is running... main thread is running... main thread is running... main
+        thread is running... main thread is running...
+      </div>
+    </div>
+    <div class="marquee-row accent">
+      <div class="marquee-content marquee-left">
+        main thread is running... main thread is running... main thread is running... main thread is running... main
+        thread is running... main thread is running...
+      </div>
+    </div>
+    <div class="marquee-row">
+      <div class="marquee-content marquee-left">
+        main thread is running... main thread is running... main thread is running... main thread is running... main
+        thread is running... main thread is running...
+      </div>
+    </div>
+    <div class="marquee-row reverse">
+      <div class="marquee-content marquee-right">
+        main thread is running... main thread is running... main thread is running... main thread is running... main
+        thread is running... main thread is running...
+      </div>
+    </div>
+  </div>
+
+  <div class="app-wrapper">
+    <header>
+      <div class="header-title-area">
+        <md-filled-icon-button href="../index.html" title="Back to Demos">
+          <md-icon>arrow_back</md-icon>
+        </md-filled-icon-button>
+        <div>
+          <h1>Offscreen HTML-in-Canvas Demo</h1>
+          <p class="subtitle">Main Thread Background Animation + Web Worker Offscreen Canvas Rendering</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="control-panel">
+      <div class="status-badges">
+        <div class="badge badge-main" id="mainThreadChip">
+          <span class="status-dot" id="mainStatusDot"></span>
+          <span id="mainStatusText">Main Thread: Active</span>
+        </div>
+        <div class="badge badge-worker" id="workerThreadChip">
+          <span class="status-dot" id="workerStatusDot"></span>
+          <span id="workerStatusText">Worker Context: Active</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 20px; padding: 10px;">
+        <md-outlined-button id="busyThreadBtn">
+          <md-icon slot="icon">hourglass_top</md-icon>
+          Block Main Thread (5s)
+        </md-outlined-button>
+        <md-outlined-button id="busyWorkerBtn">
+          <md-icon slot="icon">timer_off</md-icon>
+          Block Worker Thread (5s)
+        </md-outlined-button>
+      </div>
+    </div>
+
+    <main class="main-stage">
+      <div class="canvas-card-wrapper">
+        <div class="canvas-header">
+          <span class="canvas-header-title">
+            <span class="material-symbols-outlined" style="color: #ec4899;">memory</span>
+            OffscreenCanvas (&lt;canvas layoutsubtree&gt;)
+          </span>
+          <span style="font-family: 'Fira Code', monospace; color: #94a3b8; font-size: 0.8rem;">
+            drawElementImage() in Worker
+          </span>
+        </div>
+
+        <!-- The Canvas Element with layoutsubtree -->
+        <canvas id="canvas" style="width: 580px; height: 280px;" layoutsubtree>
+           
+          <form id="form_element">
+            <div class="hic-worker-marquee" >
+              <div class="hic-worker-marquee-content" id="worker_marquee_content">
+                worker thread is running... worker thread is running... worker thread is running... worker thread is running...
+              </div>
+            </div>
+            <p class="hic-text">
+              This is an offscreen canvas, and the HTML-in-Canvas content is renderd in a separate worker
+            </p>
+            <div class="hic-form-group">
+              <label for="name" class="hic-label">Interactive Input Inside Worker Subtree</label>
+              <div class="hic-input-row">
+                <input id="name" class="hic-input" type="text" value="Interactive text inside worker"
+                  placeholder="Type something...">
+                <button type="button" id="click_btn" class="hic-btn">Clicks: 0</button>
+              </div>
+            </div>
+          </form>
+        </canvas>
+
+        <div class="explanation-card">
+          <h3>
+            <span class="material-symbols-outlined">info</span>
+            Demo overview
+          </h3>
+          <p>
+            This demo operates across two execution threads. The <strong>main thread</strong> renders the page DOM and animates the background text. The <strong>Web Worker</strong> controls the <code>OffscreenCanvas</code> off-thread. When DOM subtree elements change, <code>canvas.captureElementImage()</code> captures the bitmap and posts it to the worker, where <code>ctx.drawElementImage()</code> renders it off-thread. Because Web Workers do not have access to the DOM, the worker returns the calculated transform matrix back to the main thread, where it is applied to <code>formElement.style.transform</code> to align layout and hit-testing bounds.
+          </p>
+          <p style="margin-top: 12px;">
+            Offloading rendering to an <code>OffscreenCanvas</code> keeps the main thread responsive even when the worker thread is overloaded or frozen. Try freezing the worker thread to observe that main-thread background animations and UI interactions remain unaffected. Conversely, if the main thread is frozen, DOM paint events (<code>canvas.onpaint</code>) cannot execute, preventing updated element snapshots from being captured and sent to the worker.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 1. Worker implementation code (as Blob URL)
+    const workerCode = `
+      let ctx = null;
+      let offscreenCanvas = null;
+      let elementImage = null;
+      let textX = 0;
+      let lastRenderTime = performance.now();
+
+      self.onmessage = (e) => {
+        if (e.data.canvas) {
+          offscreenCanvas = e.data.canvas;
+          ctx = offscreenCanvas.getContext('2d');
+          requestAnimationFrame(render);
+        }
+        if (e.data.width && e.data.height) {
+          if (offscreenCanvas) {
+            offscreenCanvas.width = e.data.width;
+            offscreenCanvas.height = e.data.height;
+          }
+        }
+
+        if (e.data.blockWorker) {
+          const startTime = performance.now();
+          while (performance.now() - startTime < e.data.blockWorker) {
+            // Synchronous loop blocking worker thread for 5 seconds
+          }
+        }
+        if (e.data.elementImage) {
+          elementImage = e.data.elementImage;
+        }
+      };
+
+      function render(now) {
+        if (!ctx || !offscreenCanvas) return;
+
+        const width = offscreenCanvas.width;
+        const height = offscreenCanvas.height;
+
+        ctx.reset();
+
+        // Render worker-side canvas background
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, width, height);
+
+        // Render subtle background grid in worker
+        ctx.strokeStyle = 'rgba(236, 72, 153, 0.15)';
+        ctx.lineWidth = 1;
+        const gridSize = 30;
+        for (let x = 0; x < width; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < height; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+
+        // Draw worker label in corner
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#ec4899';
+        ctx.fillText('Worker Thread Context (2D)', 16, 24);
+
+        // Draw the captured HTML element image (which includes the real DOM running text) at offset (x: 50, y: 40)
+        if (elementImage && ctx.drawElementImage) {
+          const transform = ctx.drawElementImage(elementImage, 50, 40);
+          if (transform) {
+            self.postMessage({ transform: transform });
+          }
+        }
+
+        requestAnimationFrame(render);
+      }
+    `;
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const worker = new Worker(URL.createObjectURL(blob));
+
+    const canvas = document.getElementById('canvas');
+    const formElement = document.getElementById('form_element');
+    const offscreen = canvas.transferControlToOffscreen();
+
+    // Send the offscreen canvas to the worker
+    worker.postMessage({ canvas: offscreen }, [offscreen]);
+
+    // Capture element image on canvas paint and pass to worker
+    // Only trigger re-rendering if child DOM elements inside the canvas changed
+    canvas.onpaint = (event) => {
+      const childElementsUpdated = !event || !event.changedElements || event.changedElements.length > 0;
+      if (childElementsUpdated) {
+        const elementImage = canvas.captureElementImage(formElement);
+        worker.postMessage({ elementImage: elementImage }, [elementImage]);
+      } else {
+        console.log("No child elements updated on paint, skipping worker postMessage.");
+      }
+    };
+
+    // Synchronize the element's CSS transform to match its drawn location.
+    worker.onmessage = ({ data }) => {
+      if (data.transform) {
+        formElement.style.transform = data.transform.toString();
+      }
+    };
+
+    // Size the canvas grid to match the device scale factor to prevent blurriness.
+    const observer = new ResizeObserver(([entry]) => {
+      const inlineSize = entry.devicePixelContentBoxSize
+        ? entry.devicePixelContentBoxSize[0].inlineSize
+        : Math.round(entry.contentRect.width * window.devicePixelRatio);
+      const blockSize = entry.devicePixelContentBoxSize
+        ? entry.devicePixelContentBoxSize[0].blockSize
+        : Math.round(entry.contentRect.height * window.devicePixelRatio);
+
+      worker.postMessage({
+        width: inlineSize,
+        height: blockSize
+      });
+      if (canvas.requestPaint) {
+        canvas.requestPaint();
+      }
+    });
+    observer.observe(canvas, { box: 'device-pixel-content-box' });
+
+    // Interactive button counter inside the HTML element inside canvas
+    let clickCount = 0;
+    const clickBtn = document.getElementById('click_btn');
+    if (clickBtn) {
+      clickBtn.addEventListener('click', () => {
+        clickCount++;
+        clickBtn.textContent = `Clicks: ${clickCount}`;
+      });
+    }
+
+    // Main thread busy simulator button
+    const busyBtn = document.getElementById('busyThreadBtn');
+    const mainThreadChip = document.getElementById('mainThreadChip');
+    const mainStatusDot = document.getElementById('mainStatusDot');
+    const mainStatusText = document.getElementById('mainStatusText');
+
+    if (busyBtn) {
+      busyBtn.addEventListener('click', () => {
+        busyBtn.disabled = true;
+
+        // Change chip status to Frozen & red dot before entering blocking loop
+        if (mainStatusText) mainStatusText.textContent = "Main Thread: Frozen";
+        if (mainStatusDot) mainStatusDot.classList.add('frozen');
+        if (mainThreadChip) mainThreadChip.classList.add('frozen');
+
+        // Allow browser frame to render DOM changes before starting synchronous block
+        setTimeout(() => {
+          const startTime = performance.now();
+          while (performance.now() - startTime < 5000) {
+            // Busy wait on main thread
+          }
+
+          // Switch back to default active state after blocking loop exits
+          if (mainStatusText) mainStatusText.textContent = "Main Thread: Active";
+          if (mainStatusDot) mainStatusDot.classList.remove('frozen');
+          if (mainThreadChip) mainThreadChip.classList.remove('frozen');
+          busyBtn.disabled = false;
+        }, 50);
+      });
+    }
+
+    // Main thread RAF animation for running text tickers (both page background & canvas DOM subtree)
+    let leftOffset = 0;
+    let rightOffset = -600;
+    let workerTextOffset = 0;
+    let lastTickerTime = performance.now();
+
+    function animateMainThreadTicker(now) {
+      const dt = Math.min((now - lastTickerTime) / 1000, 0.1);
+      lastTickerTime = now;
+
+      leftOffset -= 80 * dt;
+      rightOffset += 60 * dt;
+      workerTextOffset -= 60 * dt;
+
+      if (leftOffset <= -600) leftOffset = 0;
+      if (rightOffset >= 0) rightOffset = -600;
+      if (workerTextOffset <= -350) workerTextOffset = 0;
+
+      const leftElements = document.querySelectorAll('.marquee-left');
+      leftElements.forEach(el => {
+        el.style.transform = `translateX(${leftOffset}px)`;
+      });
+
+      const rightElements = document.querySelectorAll('.marquee-right');
+      rightElements.forEach(el => {
+        el.style.transform = `translateX(${rightOffset}px)`;
+      });
+
+      const workerMarqueeEl = document.getElementById('worker_marquee_content');
+      if (workerMarqueeEl) {
+        workerMarqueeEl.style.transform = `translateX(${workerTextOffset}px)`;
+      }
+
+      requestAnimationFrame(animateMainThreadTicker);
+    }
+    requestAnimationFrame(animateMainThreadTicker);
+
+    // Worker thread busy simulator button
+    const busyWorkerBtn = document.getElementById('busyWorkerBtn');
+    const workerThreadChip = document.getElementById('workerThreadChip');
+    const workerStatusDot = document.getElementById('workerStatusDot');
+    const workerStatusText = document.getElementById('workerStatusText');
+
+    if (busyWorkerBtn) {
+      busyWorkerBtn.addEventListener('click', () => {
+        busyWorkerBtn.disabled = true;
+
+        // Change chip status to Frozen & red dot
+        if (workerStatusText) workerStatusText.textContent = "Worker Context: Frozen";
+        if (workerStatusDot) workerStatusDot.classList.add('frozen');
+        if (workerThreadChip) workerThreadChip.classList.add('frozen');
+
+        worker.postMessage({ blockWorker: 5000 });
+
+        // Switch back to default active state after 5 seconds
+        setTimeout(() => {
+          if (workerStatusText) workerStatusText.textContent = "Worker Context: Active";
+          if (workerStatusDot) workerStatusDot.classList.remove('frozen');
+          if (workerThreadChip) workerThreadChip.classList.remove('frozen');
+          busyWorkerBtn.disabled = false;
+        }, 5000);
+      });
+    }
+  </script>
+</body>
+
+</html>
