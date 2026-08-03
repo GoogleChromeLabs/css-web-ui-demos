@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+
+<head>
+  <meta http-equiv="origin-trial"
+    content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Demonstrates rendering multiple independent canvas elements with HTML layoutsubtree on a single page using HTML-in-Canvas.">
+  <meta name="keywords" content="HTML in Canvas, layoutsubtree, Multi Canvas, Carousel, 2D Canvas, Accessibility">
+  <title>Multi-Canvas Carousel (HTML-in-Canvas)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="../js/gl-matrix.js"></script>
+  <script type="module" src="../js/material-web-bundle.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --border-card: rgba(255, 255, 255, 0.12);
+      --primary-accent: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: #f8fafc;
+      font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .header-title-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 4px 0 0 0;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+
+    /* Controls Panel */
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      backdrop-filter: blur(12px);
+    }
+
+    .badge-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #7dd3fc;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    #counterStatus * {
+      color: inherit;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+    }
+
+    .carousel-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 10px;
+    }
+
+    .carousel-nav-btn md-outlined-button {
+      --md-outlined-button-leading-space: 20px;
+      --md-outlined-button-trailing-space: 20px;
+      --md-outlined-button-container-height: 44px;
+      --md-outlined-button-icon-label-space: 10px;
+      padding: 6px 20px;
+    }
+
+    /* Carousel Section */
+    .carousel-section {
+      position: relative;
+      width: 100%;
+      margin-bottom: 32px;
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding: 12px 4px 24px 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+
+    .carousel-track::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .carousel-track::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    /* Carousel Card Item */
+    .carousel-card-item {
+      flex: 0 0 480px;
+      scroll-snap-align: center;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .carousel-card-item.active {
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.25);
+      transform: translateY(-4px);
+    }
+
+    .card-header-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+    }
+
+    .card-canvas-label {
+      font-family: 'Fira Code', monospace;
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    /* Individual Canvas */
+    canvas.card-canvas {
+      width: 448px;
+      height: 250px;
+      background: #020617;
+      border-radius: 12px;
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    /* HTML DOM Subtree rendered inside Canvas */
+    .card-dom {
+      width: 400px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: #f8fafc;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+      box-sizing: border-box;
+    }
+
+    .card-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .card-title {
+      margin: 0 0 6px 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .card-desc {
+      margin: 0 0 14px 0;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .card-interactive {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .card-input {
+      flex: 1;
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #f8fafc;
+      font-size: 0.82rem;
+      outline: none;
+    }
+
+    .card-input:focus {
+      border-color: #38bdf8;
+    }
+
+    .card-btn {
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .card-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Indicators */
+    .carousel-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .dot.active {
+      background: #38bdf8;
+      transform: scale(1.3);
+      box-shadow: 0 0 8px #38bdf8;
+    }
+
+    /* Explanation Section */
+    .explanation-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 20px 24px;
+      width: 100%;
+    }
+
+    .explanation-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .explanation-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-wrapper">
+    <header>
+      <div class="header-title-area">
+        <md-filled-icon-button href="../index.html" title="Back to Demos">
+          <md-icon>arrow_back</md-icon>
+        </md-filled-icon-button>
+        <div>
+          <h1>Multi-Canvas Carousel Demo</h1>
+          <p class="subtitle">Rendering 10 Independent &lt;canvas&gt; elements on a single page</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="control-panel">
+      <div class="badge-info" id="counterStatus">
+        <span class="badge-dot"></span>
+        <span>Card 1 of 10 | 10 ctive Canvas elements</span>
+      </div>
+
+      <div class="carousel-nav-btn">
+        <md-outlined-button id="prevBtn">
+          <md-icon slot="icon">chevron_left</md-icon>
+          Previous
+        </md-outlined-button>
+        <md-outlined-button id="nextBtn">
+          <md-icon slot="icon">chevron_right</md-icon>
+          Next
+        </md-outlined-button>
+        <md-outlined-button id="autoPlayBtn">
+          <md-icon slot="icon">play_arrow</md-icon>
+          Auto Play
+        </md-outlined-button>
+      </div>
+    </div>
+
+    <main class="carousel-section">
+      <div class="carousel-track" id="carouselTrack">
+        <!-- 10 Independent Canvas Cards -->
+
+        <!-- Card 1 -->
+        <div class="carousel-card-item active" data-index="0">
+          <div class="card-header-bar">
+            <span>Card 1</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-1"&gt;</span>
+          </div>
+          <canvas id="canvas-1" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-1" class="card-dom">
+              <span class="card-tag">Effect #1: Glitch Shader</span>
+              <h2 class="card-title">Card 1: RGB Digital Glitch</h2>
+              <p class="card-desc">
+                Simulates horizontal RGB scanline displacement and digital noise distortion on 2D Canvas #1.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #1 Input" />
+                <button type="button" class="card-btn" id="btn-1">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="carousel-card-item" data-index="1">
+          <div class="card-header-bar">
+            <span>Card 2</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-2"&gt;</span>
+          </div>
+          <canvas id="canvas-2" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-2" class="card-dom">
+              <span class="card-tag">Effect #2: Matrix Rain</span>
+              <h2 class="card-title">Card 2: Digital Code Rain</h2>
+              <p class="card-desc">
+                Cascading streams of cyan and emerald matrix characters flowing down Canvas #2.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #2 Input" />
+                <button type="button" class="card-btn" id="btn-2">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="carousel-card-item" data-index="2">
+          <div class="card-header-bar">
+            <span>Card 3</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-3"&gt;</span>
+          </div>
+          <canvas id="canvas-3" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-3" class="card-dom">
+              <span class="card-tag">Effect #3: Cyber Grid</span>
+              <h2 class="card-title">Card 3: Synthwave Grid Wave</h2>
+              <p class="card-desc">
+                A retro 80s cyberpunk sun and animated 3D perspective wireframe grid on Canvas #3.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #3 Input" />
+                <button type="button" class="card-btn" id="btn-3">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="carousel-card-item" data-index="3">
+          <div class="card-header-bar">
+            <span>Card 4</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-4" &gt;</span>
+          </div>
+          <canvas id="canvas-4" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-4" class="card-dom">
+              <span class="card-tag">Effect #4: Starfield</span>
+              <h2 class="card-title">Card 4: Starfield Warp Drive</h2>
+              <p class="card-desc">
+                Radial 3D warp drive particles flying outward from the central core of Canvas #4.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #4 Input" />
+                <button type="button" class="card-btn" id="btn-4">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="carousel-card-item" data-index="4">
+          <div class="card-header-bar">
+            <span>Card 5</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-5" &gt;</span>
+          </div>
+          <canvas id="canvas-5" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-5" class="card-dom">
+              <span class="card-tag">Effect #5: Liquid Ripples</span>
+              <h2 class="card-title">Card 5: Underwater Wave Ripples</h2>
+              <p class="card-desc">
+                Layered sinusoidal liquid ocean wave curves undulating smoothly across Canvas #5.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #5 Input" />
+                <button type="button" class="card-btn" id="btn-5">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="carousel-card-item" data-index="5">
+          <div class="card-header-bar">
+            <span>Card 6</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-6" &gt;</span>
+          </div>
+          <canvas id="canvas-6" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-6" class="card-dom">
+              <span class="card-tag">Effect #6: Plasma Field</span>
+              <h2 class="card-title">Card 6: Plasma Nebula Field</h2>
+              <p class="card-desc">
+                A multi-frequency purple and magenta trigonometric plasma nebula shifting on Canvas #6.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #6 Input" />
+                <button type="button" class="card-btn" id="btn-6">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="carousel-card-item" data-index="6">
+          <div class="card-header-bar">
+            <span>Card 7</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-7" &gt;</span>
+          </div>
+          <canvas id="canvas-7" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-7" class="card-dom">
+              <span class="card-tag">Effect #7: CRT Scanlines</span>
+              <h2 class="card-title">Card 7: CRT Phosphor Monitor</h2>
+              <p class="card-desc">
+                Retro green phosphor monitor grid with animated CRT scanline sweeps on Canvas #7.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #7 Input" />
+                <button type="button" class="card-btn" id="btn-7">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="carousel-card-item" data-index="7">
+          <div class="card-header-bar">
+            <span>Card 8</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-8" layoutsubtree&gt;</span>
+          </div>
+          <canvas id="canvas-8" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-8" class="card-dom">
+              <span class="card-tag">Effect #8: Matrix Rain</span>
+              <h2 class="card-title">Card 8: Cybernetic Matrix Rain</h2>
+              <p class="card-desc">
+                Cascading digital green data streams and matrix pulses running across Canvas #8.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #8 Input" />
+                <button type="button" class="card-btn" id="btn-8">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 9 -->
+        <div class="carousel-card-item" data-index="8">
+          <div class="card-header-bar">
+            <span>Card 9</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-9" &gt;</span>
+          </div>
+          <canvas id="canvas-9" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-9" class="card-dom">
+              <span class="card-tag">Effect #9: Hexagon Pulse</span>
+              <h2 class="card-title">Card 9: Pulsing Hexagon Grid</h2>
+              <p class="card-desc">
+                Honeycomb hexagon geometric grid pulsing in radial wave patterns across Canvas #9.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #9 Input" />
+                <button type="button" class="card-btn" id="btn-9">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+
+        <!-- Card 10 -->
+        <div class="carousel-card-item" data-index="9">
+          <div class="card-header-bar">
+            <span>Card 10</span>
+            <span class="card-canvas-label">&lt;canvas id="canvas-10" &gt;</span>
+          </div>
+          <canvas id="canvas-10" class="card-canvas" width="448" height="250" layoutsubtree>
+            <form id="card-content-10" class="card-dom">
+              <span class="card-tag">Effect #10: Aurora Waves</span>
+              <h2 class="card-title">Card 10: Aurora Borealis Waves</h2>
+              <p class="card-desc">
+                Flowing emerald and teal northern lights ribbons swaying gracefully on Canvas #10.
+              </p>
+              <div class="card-interactive">
+                <input type="text" class="card-input" value="Canvas #10 Input" />
+                <button type="button" class="card-btn" id="btn-10">Likes: 0</button>
+              </div>
+            </form>
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Indicators -->
+      <div class="carousel-indicators" id="indicatorsContainer">
+        <!-- 10 Dots -->
+      </div>
+    </main>
+
+    <div class="explanation-card">
+      <h3>
+        <span class="material-symbols-outlined">info</span>
+        Demo Overview
+      </h3>
+      <p>
+        This demo demonstrates rendering <strong>10 separate <code>&lt;canvas&gt;</code> elements</strong> on a single webpage. Each canvas element encapsulates its own HTML DOM subtree, which is captured via <code>ctx.drawElementImage()</code>. Interactive form controls (inputs and buttons) inside all 10 canvas elements remain fully focusable and operational.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const totalCards = 10;
+    const track = document.getElementById('carouselTrack');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const autoPlayBtn = document.getElementById('autoPlayBtn');
+    const counterStatus = document.getElementById('counterStatus');
+    const indicatorsContainer = document.getElementById('indicatorsContainer');
+
+    let currentIndex = 0;
+    let autoPlayInterval = null;
+
+    // Create Indicators
+    for (let i = 0; i < totalCards; i++) {
+      const dot = document.createElement('div');
+      dot.className = `dot ${i === 0 ? 'active' : ''}`;
+      dot.addEventListener('click', () => scrollToCard(i));
+      indicatorsContainer.appendChild(dot);
+    }
+
+    // 10 Distinct WebGL Fragment Shaders applied to the HTML Element Texture
+    const fragmentShaderSources = [
+      // 1. Digital Glitch & RGB Split
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 uv = v_uv;
+          float glitch = step(0.88, sin(uv.y * 35.0 + u_time * 15.0)) * 0.03 * sin(u_time * 25.0);
+          uv.x += glitch;
+          
+          float r = texture2D(u_texture, uv + vec2(0.009, 0.0)).r;
+          float g = texture2D(u_texture, uv).g;
+          float b = texture2D(u_texture, uv - vec2(0.009, 0.0)).b;
+          float a = texture2D(u_texture, uv).a;
+          
+          vec3 bg = vec3(0.04, 0.05, 0.1);
+          vec3 color = mix(bg, vec3(r, g, b), a);
+          if (glitch != 0.0) color += vec3(0.15, 0.0, 0.2);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 2. Cyber Pixelation & Scanlines
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 grid = vec2(120.0, 60.0);
+          vec2 uv = floor(v_uv * grid) / grid;
+          vec4 tex = texture2D(u_texture, uv);
+          
+          float scanline = sin(v_uv.y * 180.0 + u_time * 6.0) * 0.15;
+          vec3 color = mix(vec3(0.02, 0.06, 0.04), tex.rgb * vec3(0.7, 1.2, 0.9) - scanline, tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 3. Liquid Wave Ripple
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 uv = v_uv;
+          uv.x += sin(uv.y * 16.0 + u_time * 3.5) * 0.02;
+          uv.y += cos(uv.x * 16.0 + u_time * 3.5) * 0.02;
+          
+          vec4 tex = texture2D(u_texture, uv);
+          vec3 tint = vec3(0.1, 0.6, 0.95);
+          vec3 color = mix(vec3(0.02, 0.08, 0.15), tex.rgb * 1.1 + tint * 0.18, tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 4. Holographic Prism / Chromatic Aberration
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 dist = v_uv - 0.5;
+          float shift = length(dist) * 0.045 * (1.0 + sin(u_time * 4.0) * 0.35);
+          
+          float r = texture2D(u_texture, v_uv + dist * shift).r;
+          float g = texture2D(u_texture, v_uv).g;
+          float b = texture2D(u_texture, v_uv - dist * shift).b;
+          float a = texture2D(u_texture, v_uv).a;
+          
+          vec3 holo = vec3(r * 1.25, g * 0.9, b * 1.45);
+          vec3 color = mix(vec3(0.03, 0.04, 0.1), holo + vec3(0.05, 0.1, 0.22), a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 5. CRT Vintage Curved Monitor
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 cc = v_uv - 0.5;
+          float dist = dot(cc, cc);
+          vec2 uv = v_uv + cc * dist * 0.35;
+          
+          if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            gl_FragColor = vec4(0.01, 0.02, 0.01, 1.0);
+            return;
+          }
+          
+          vec4 tex = texture2D(u_texture, uv);
+          float scanline = sin(uv.y * 220.0 + u_time * 10.0) * 0.12;
+          float vignette = smoothstep(0.7, 0.25, length(cc));
+          
+          vec3 color = mix(vec3(0.02, 0.05, 0.03), (tex.rgb - scanline) * vignette, tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 6. Emerald Plasma Wave
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 uv = v_uv;
+          float wave = sin(uv.y * 18.0 + u_time * 3.0) * 0.018;
+          uv.x += wave;
+          
+          vec4 tex = texture2D(u_texture, uv);
+          vec3 emerald = mix(vec3(0.0, 0.8, 0.5), vec3(0.2, 0.9, 0.3), uv.y);
+          vec3 color = mix(vec3(0.01, 0.05, 0.03), tex.rgb * 1.1 + emerald * 0.2 * (1.0 - uv.y), tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 7. Cyberpunk Edge Glow
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 uv = v_uv;
+          vec4 tex = texture2D(u_texture, uv);
+          
+          vec3 neonCyan = vec3(0.0, 0.95, 1.0);
+          vec3 neonMagenta = vec3(1.0, 0.0, 0.6);
+          vec3 glow = mix(neonCyan, neonMagenta, sin(uv.y * 4.0 + u_time * 2.0) * 0.5 + 0.5);
+          
+          vec3 color = mix(vec3(0.06, 0.02, 0.12), tex.rgb + glow * 0.25, tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 8. Cybernetic Matrix Rain
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec2 uv = v_uv;
+          
+          vec2 grid = vec2(35.0, 18.0);
+          vec2 st = floor(uv * grid);
+          
+          float speed = 2.5 + hash(vec2(st.x, 1.0)) * 3.0;
+          float yOffset = fract((uv.y + u_time * speed * 0.15) + hash(vec2(st.x, 0.0)));
+          
+          float trail = smoothstep(0.0, 0.8, yOffset) * (1.0 - smoothstep(0.8, 1.0, yOffset));
+          float head = step(0.85, yOffset);
+          
+          vec3 matrixGreen = vec3(0.05, 0.95, 0.35);
+          vec3 headWhite = vec3(0.8, 1.0, 0.9);
+          vec3 rainColor = mix(matrixGreen * trail, headWhite, head * 0.8);
+          
+          vec4 tex = texture2D(u_texture, uv);
+          vec3 bg = vec3(0.01, 0.04, 0.02);
+          
+          vec3 color = mix(bg, tex.rgb * 1.1 + rainColor * 0.35, tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 9. Hexagonal Shield Wave
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 uv = v_uv;
+          float pulse = sin(length(uv - 0.5) * 20.0 - u_time * 4.0) * 0.015;
+          uv += pulse;
+          
+          vec4 tex = texture2D(u_texture, uv);
+          vec3 shieldColor = vec3(0.4, 0.5, 1.0);
+          vec3 color = mix(vec3(0.04, 0.04, 0.12), tex.rgb + shieldColor * (pulse * 5.0 + 0.1), tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+
+      // 10. Aurora Borealis Wave
+      `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        uniform float u_time;
+        
+        void main() {
+          vec2 uv = v_uv;
+          float wave = sin(uv.x * 12.0 + u_time * 2.5) * 0.02;
+          uv.y += wave;
+          
+          vec4 tex = texture2D(u_texture, uv);
+          vec3 aurora = mix(vec3(0.0, 0.9, 0.6), vec3(0.1, 0.7, 0.9), sin(uv.x * 6.0 + u_time) * 0.5 + 0.5);
+          vec3 color = mix(vec3(0.01, 0.06, 0.08), tex.rgb + aurora * 0.2, tex.a);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    ];
+
+    // Shared Standard Quad Vertex Shader
+    const vsSource = `
+      attribute vec2 a_pos;
+      attribute vec2 a_uv;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = a_uv;
+        gl_Position = vec4(a_pos, 0.0, 1.0);
+      }
+    `;
+
+    function createWebGLProgram(gl, vsCode, fsCode) {
+      const vs = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vs, vsCode);
+      gl.compileShader(vs);
+
+      const fs = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fs, fsCode);
+      gl.compileShader(fs);
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+      return prog;
+    }
+
+    // Setup each of the 10 Canvas Cards with WebGL Shaders
+    function setupCard(index) {
+      const cardId = index + 1;
+      const canvas = document.getElementById(`canvas-${cardId}`);
+      const content = document.getElementById(`card-content-${cardId}`);
+      if (!canvas || !content) {
+        console.log("Card not found: ", index);
+        return;
+      }
+
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) {
+        console.warn(`WebGL not supported on canvas ${cardId}`);
+        return;
+      }
+
+      const program = createWebGLProgram(gl, vsSource, fragmentShaderSources[index]);
+      gl.useProgram(program);
+
+      // Vertex Quad Coordinates: Pos (x,y) and UV (u,v) flipped vertically for HTML top-left alignment
+      const quadBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        // pos.x, pos.y,  uv.x, uv.y
+        -1.0, -1.0,     0.0,  1.0,
+         1.0, -1.0,     1.0,  1.0,
+        -1.0,  1.0,     0.0,  0.0,
+        -1.0,  1.0,     0.0,  0.0,
+         1.0, -1.0,     1.0,  1.0,
+         1.0,  1.0,     1.0,  0.0,
+      ]), gl.STATIC_DRAW);
+
+      const aPosLoc = gl.getAttribLocation(program, 'a_pos');
+      const aUvLoc = gl.getAttribLocation(program, 'a_uv');
+      gl.enableVertexAttribArray(aPosLoc);
+      gl.vertexAttribPointer(aPosLoc, 2, gl.FLOAT, false, 16, 0);
+      gl.enableVertexAttribArray(aUvLoc);
+      gl.vertexAttribPointer(aUvLoc, 2, gl.FLOAT, false, 16, 8);
+
+      // WebGL Texture for the HTML DOM Subtree
+      const elementTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, elementTexture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+      const uTimeLoc = gl.getUniformLocation(program, 'u_time');
+      const uTextureLoc = gl.getUniformLocation(program, 'u_texture');
+      gl.uniform1i(uTextureLoc, 0);
+
+      const startTime = performance.now();
+
+      function drawWebGL(now) {
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.clientWidth || 448;
+        const height = canvas.clientHeight || 250;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        gl.useProgram(program);
+        gl.bindTexture(gl.TEXTURE_2D, elementTexture);
+
+        // Upload HTML DOM element image snapshot directly to WebGL Texture via texElementImage2D!
+        if (gl.texElementImage2D) {
+          if (gl.texElementImage2D.length === 3) {
+            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8 || 0x8058, content);
+          } else {
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, content);
+          }
+        }
+
+        const time = (now - startTime) / 1000;
+        gl.uniform1f(uTimeLoc, time);
+
+        // Draw WebGL Shader Quad
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        // Synchronize DOM hit-testing transform using canvas.getElementTransform (reflecting DPR & viewport matrices)
+        if (canvas.getElementTransform) {
+          content.style.position = 'absolute';
+          content.style.left = '0';
+          content.style.top = '0';
+          content.style.transformOrigin = '0 0';
+
+          const elemW = content.offsetWidth || 1;
+          const elemH = content.offsetHeight || 1;
+
+          // Scale factor mapping element local space (0..elemW, 0..elemH) to Canvas Grid space (0..canvas.width, 0..canvas.height)
+          const scaleX = canvas.width / elemW;
+          const scaleY = canvas.height / elemH;
+
+          const drawTransform = new DOMMatrix().scale(scaleX / dpr, scaleY / dpr, 1);
+          let transform = canvas.getElementTransform(content, drawTransform);
+
+          if (transform) {
+            content.style.transform = transform.toString();
+          }
+        }
+      }
+
+      canvas.addEventListener('paint', (event) => {
+        try {
+          drawWebGL(performance.now());
+        } catch (e) {
+          console.warn(`Canvas ${cardId} WebGL paint record not ready yet:`, e);
+        }
+      });
+
+      // Continuous animation loop calling requestPaint() to drive 60fps WebGL shaders
+      function animateLoop() {
+        if (canvas.requestPaint) {
+          canvas.requestPaint();
+        }
+        requestAnimationFrame(animateLoop);
+      }
+      requestAnimationFrame(animateLoop);
+
+      // Interactive button listener for each card
+      const btn = document.getElementById(`btn-${cardId}`);
+      if (btn) {
+        let likes = 0;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          likes++;
+          btn.textContent = `Likes: ${likes}`;
+        });
+      }
+    }
+
+    // Initialize all 10 cards
+    for (let i = 0; i < totalCards; i++) {
+      setupCard(i);
+    }
+
+    // Carousel Navigation
+    function scrollToCard(index) {
+      if (index < 0) index = totalCards - 1;
+      if (index >= totalCards) index = 0;
+
+      currentIndex = index;
+      const cardItems = track.querySelectorAll('.carousel-card-item');
+      if (cardItems[index]) {
+        cardItems[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+      updateActiveState(index);
+    }
+
+    function updateActiveState(index) {
+      const cardItems = track.querySelectorAll('.carousel-card-item');
+      const dots = indicatorsContainer.querySelectorAll('.dot');
+
+      cardItems.forEach((card, i) => {
+        if (i === index) card.classList.add('active');
+        else card.classList.remove('active');
+      });
+
+      dots.forEach((dot, i) => {
+        if (i === index) dot.classList.add('active');
+        else dot.classList.remove('active');
+      });
+
+      if (counterStatus) {
+        counterStatus.textContent = `Card ${index + 1} of ${totalCards} | 10 Active Canvas Elements`;
+      }
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', () => scrollToCard(currentIndex - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => scrollToCard(currentIndex + 1));
+
+    // Auto Play Toggle
+    if (autoPlayBtn) {
+      autoPlayBtn.addEventListener('click', () => {
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+          autoPlayBtn.querySelector('md-icon').textContent = 'play_arrow';
+        } else {
+          autoPlayInterval = setInterval(() => {
+            scrollToCard(currentIndex + 1);
+          }, 3000);
+          autoPlayBtn.querySelector('md-icon').textContent = 'pause';
+        }
+      });
+    }
+
+    // Scroll listener for track
+    track.addEventListener('scroll', () => {
+      const cardItems = track.querySelectorAll('.carousel-card-item');
+      if (!cardItems.length) return;
+
+      const isAtEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 15;
+      const isAtStart = track.scrollLeft <= 15;
+
+      let newIndex = 0;
+      if (isAtEnd) {
+        newIndex = totalCards - 1;
+      } else if (isAtStart) {
+        newIndex = 0;
+      } else {
+        let minDist = Infinity;
+        const trackCenter = track.scrollLeft + track.clientWidth / 2;
+        cardItems.forEach((card, i) => {
+          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+          const dist = Math.abs(trackCenter - cardCenter);
+          if (dist < minDist) {
+            minDist = dist;
+            newIndex = i;
+          }
+        });
+      }
+
+      if (newIndex >= 0 && newIndex < totalCards && newIndex !== currentIndex) {
+        currentIndex = newIndex;
+        updateActiveState(currentIndex);
+      }
+    });
+  </script>
+</body>
+
+</html>
