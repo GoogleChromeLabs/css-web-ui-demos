@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+
+<head>
+  <meta http-equiv="origin-trial"
+    content="AjU2FUEJRmjXjbBrLIswW7UfJd1qhYAyWcADl3EvP2v93xJVt0DoZdwIC98eFnYO5ZlFy7pYN6CNH89wzjnaIwUAAABQeyJvcmlnaW4iOiJodHRwczovL2Nocm9tZS5kZXY6NDQzIiwiZmVhdHVyZSI6IkhUTUxJbkNhbnZhcyIsImV4cGlyeSI6MTc4NzYxNjAwMH0=">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Nested Canvas Demo</title>
+  <style>
+    :root {
+      --inner-element-color: #d9d20e;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 24px;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      margin: 0;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+
+    /* Outer Canvas */
+    .outer {
+      background: #ffddff;
+      display: block;
+    }
+
+    /* Inner Canvas */
+    .inner {
+      display: block;
+      background: #d4ecff;
+    }
+
+    .outer-content {
+      width: 200px;
+      height: 200px;
+      padding: 10px;
+      margin: 10px;
+      display: grid;
+      place-items: center;
+    }
+
+    /* Target HTML Div Element */
+    .inner-content {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      margin: 10px;
+      background: var(--inner-element-color);
+      color: white;
+    }
+
+    .color-control {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .color-control label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      cursor: pointer;
+    }
+
+    .color-control input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: none;
+    }
+
+    .color-control input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .color-control input[type="color"]::-webkit-color-swatch {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+    }
+
+    .color-control button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      margin-left: 12px;
+    }
+
+    .color-control button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="center">
+    <!-- Color picker control -->
+    <div class="color-control">
+      <label for="color-picker">Choose Target Element Color:</label>
+      <input type="color" id="color-picker">
+      <button id="check-nested-support-btn">Trigger nested canvas manually</button>
+    </div>
+
+    <h1>Nested canvas</h1>
+    <!-- 1. The HTML Layout -->
+    <canvas id="outer" class="outer" layoutsubtree width="240" height="240" style="width: 240px; height: 240px;">
+      <div id="outer-content" class="outer-content">
+        <canvas id="inner" class="inner" layoutsubtree width="140" height="140" style="width: 140px; height: 140px;">
+          <!-- inner-content element drawn onto inner canvas -->
+          <div id="inner-content" class="inner-content">
+            <p>NESTED CANVAS SUPPORTED!</p>
+          </div>
+        </canvas>
+      </div>
+    </canvas>
+
+    <h1>Inner standalone canvas</h1>
+    <canvas id="inner-standalone" class="inner" layoutsubtree width="140" height="140" style="width: 140px; height: 140px;">
+      <!-- inner-content element drawn onto inner canvas -->
+      <div id="inner-standalone-content" class="inner-content">
+        <p>IS NESTED CANVAS SUPPORTED?</p>
+      </div>
+    </canvas>
+    
+    <h1>Standalone inner content</h1>
+    <div id="standalone-inner-content" class="inner-content">
+      <p>IS NESTED CANVAS SUPPORTED?</p>
+    </div>
+  </div>
+
+  <!-- 2. Execution Script -->
+  <script>
+    function getCssColor() {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--inner-element-color').trim() || '#d9d20e';
+    }
+
+    const outerCanvas = document.getElementById('outer');
+    const outerCanvasContent = document.getElementById('outer-content');
+
+    const innerCanvas = document.getElementById('inner');
+    const innerCanvasContent = document.getElementById('inner-content');
+
+    // Also render standalone canvases to compare rendered elements
+    const innerStandaloneCanvas = document.getElementById('inner-standalone');
+    const innerStandaloneCanvasContent = document.getElementById('inner-standalone-content');
+
+    const standaloneInnerContent = document.getElementById('standalone-inner-content');
+    
+    const colorPicker = document.getElementById('color-picker');
+
+    let initialColor = getCssColor();
+    colorPicker.value = initialColor;
+
+    // -------------- INNER CANVASES -------------- // 
+    const innerCtx = innerCanvas.getContext('2d');
+    const innerStandaloneCtx = innerStandaloneCanvas.getContext('2d');
+
+    // Draw the inner-content HTML element onto the inner canvas
+    function paintInnerCanvas() {
+      innerCtx.reset();
+
+      let innerElementTransform = innerCtx.drawElementImage(
+        innerCanvasContent,
+        (innerCanvas.width - innerCanvasContent.offsetWidth) / 2,
+        (innerCanvas.height - innerCanvasContent.offsetHeight) / 2
+      );
+
+      innerCanvasContent.style.transform = innerElementTransform.toString();
+    }
+
+    innerCanvas.onpaint = () => {
+      console.log("innerCanvas.onpaint triggered")
+      paintInnerCanvas();
+      paintOuterCanvas();
+      }
+
+      innerStandaloneCanvas.onpaint = () => {
+        console.log("innerStandaloneCanvas.onpaint triggered")
+        innerStandaloneCtx.reset();
+
+        let innerStandaloneElementTransform = innerStandaloneCtx.drawElementImage(
+        innerStandaloneCanvasContent,
+        (innerStandaloneCanvas.width - innerStandaloneCanvasContent.offsetWidth) / 2,
+        (innerStandaloneCanvas.height - innerStandaloneCanvasContent.offsetHeight) / 2
+      );
+      innerStandaloneCanvasContent.style.transform = innerStandaloneElementTransform.toString();
+      }
+    // -------------- INNER CANVASES -------------- // 
+
+    // -------------- OUTER CANVASES -------------- // 
+    const outerCtx = outerCanvas.getContext('2d');
+    // If we only render outer canvas from inside inner canvas paint event,
+    // older Chrome browsers (before the fix in 152.0.7944.0: https://chromium-review.googlesource.com/c/chromium/src/+/7964051)
+    // will not re-render outer canvas, as the inner paint event never fires for a nested canvas 
+    function paintOuterCanvas() {
+      outerCtx.reset();
+      console.log("updating outer canvas")
+      let outerElementTransform = outerCtx.drawElementImage(
+          outerCanvasContent,
+          (outerCanvas.width - outerCanvasContent.offsetWidth) / 2,
+          (outerCanvas.height - outerCanvasContent.offsetHeight) / 2
+        );
+        outerCanvasContent.style.transform = outerElementTransform.toString();
+    }
+
+    outerCanvas.onpaint = () => {
+      // For demo purposes only, to monitor when the outer canvas is repainted
+      console.log("Logging: outerCanvas.onpaint triggered - we actually don't update anything here, this is just to check when onpaint triggers")
+    }
+
+
+    // -------------- OUTER CANVASES -------------- // 
+
+
+    // Update child DOM element style on color pick.
+    // Modifying child DOM elements fires the "paint" event with event.changedElements
+    colorPicker.addEventListener('input', (e) => {
+      innerCanvasContent.style.background = e.target.value;
+      innerStandaloneCanvasContent.style.background = e.target.value;
+      standaloneInnerContent.style.background = e.target.value;
+    });
+
+    function triggerNestedCanvasManually() {
+      console.log("Triggering nested canvas paint manually...");
+      try {
+        paintInnerCanvas();
+        paintOuterCanvas();
+      } catch (e) {
+        alert("Nested canvas paint not supported: " + e);
+      }
+      
+    }
+
+    const checkSupportBtn = document.getElementById('check-nested-support-btn');
+    if (checkSupportBtn) {
+      checkSupportBtn.addEventListener('click', triggerNestedCanvasManually);
+    }
+  </script>
+</body>
+
+</html>
