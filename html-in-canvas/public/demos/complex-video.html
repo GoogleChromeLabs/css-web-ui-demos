@@ -87,8 +87,8 @@
   <div id="container">
     <div class="panel">
       <div class="panel-title">Inside Canvas (Rotated 15° & Formatted)</div>
-      <canvas id="canvas" width="638" height="800" layoutsubtree>
-        <div id="draw_element" style="width: 250px; font-size: 16px; line-height: 1.5;">
+      <canvas id="canvas" width="638" height="800" content="drawable" layoutsubtree>
+        <div id="draw_element" drawable style="width: 250px; font-size: 16px; line-height: 1.5;">
           <div class="panel" style="margin-bottom: 15px;">
             <div class="panel-title" style="font-size: 11px;">Inside Canvas VIDEO!</div>
             <video id="inside-video" src="../assets/demo-video.mp4" autoplay loop muted playsinline controls></video>
@@ -130,9 +130,12 @@
         ctx.translate(-elemW / 2, -elemH / 2);   // Offset by half of element size
 
         // 3. Draw the element
-        let transform = ctx.drawElementImage(draw_element, 0, 0);
-
-        draw_element.style.transform = transform.toString();
+        const transform = ctx.drawElementImage(draw_element, 0, 0);
+        if (transform !== undefined && typeof transform?.toString === 'function') {
+          draw_element.style.transform = transform.toString();
+        } else if (draw_element.style.transform) {
+          draw_element.style.transform = '';
+        }
     }
 
     // High-performance RAF loop to trigger canvas paints in sync with the video frames

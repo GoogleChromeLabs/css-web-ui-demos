@@ -72,6 +72,9 @@ export function setupPhysicsRendering(canvas, containerId) {
     class PhysicsElement {
         constructor(domElement, isCircle = false) {
             this.domEl = domElement;
+            if (!this.domEl.hasAttribute('drawable')) {
+                this.domEl.setAttribute('drawable', '');
+            }
             this.isCircle = isCircle;
 
             this.tex = gl.createTexture();
@@ -136,6 +139,55 @@ export function setupPhysicsRendering(canvas, containerId) {
             });
         }
 
+        uploadTexture() {
+            try {
+                gl.bindTexture(gl.TEXTURE_2D, this.tex);
+                if (typeof gl.texElementSubImage2D === 'function') {
+                    // Chrome 155+: texElementSubImage2D() copies the element's latest paint record into an
+                    // EXISTING texture, so allocate the texture storage first (same pattern as
+                    // webgl-dragon-example.html and webgl-book.js).
+                    let width, height;
+                    if (typeof gl.canvas?.captureElementImage === 'function') {
+                        let elemImage;
+                        try {
+                            elemImage = gl.canvas.captureElementImage(this.domEl);
+                        } catch (e) {
+                            // "No cached paint record for element": the canvas hasn't painted this element
+                            // yet (e.g. on the first frames). Keep the current texture and retry next frame.
+                            return;
+                        }
+                        // ElementImage sizes are fractional, while the copy is rounded up: round up as well,
+                        // otherwise the copy overflows the texture (GL_INVALID_VALUE).
+                        width = Math.ceil(elemImage.width);
+                        height = Math.ceil(elemImage.height);
+                    }
+                    if (!width || !height) {
+                        const dpr = window.devicePixelRatio || 1;
+                        width = Math.max(1, Math.round(this.domEl.offsetWidth * dpr));
+                        height = Math.max(1, Math.round(this.domEl.offsetHeight * dpr));
+                    }
+                    // (Re-)allocate the texture storage only when the element size changes, not every frame.
+                    if (this.tex._hicW !== width || this.tex._hicH !== height) {
+                        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                        this.tex._hicW = width;
+                        this.tex._hicH = height;
+                    }
+                    // Pass the allocated size as the copy's destination size (WebGLCopyElementImageConfig), so
+                    // the element is rasterized to exactly fill the texture. Without it, Chrome 155 copies at
+                    // its own default size, which differs from ElementImage.width/height whenever the canvas
+                    // grid isn't exactly its device-pixel-content-box (canvas.width = innerWidth * dpr is
+                    // truncated and can differ from the snapped device pixel size).
+                    gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.domEl, { width, height });
+                } else if (typeof gl.texElementImage2D === 'function') {
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                    }
+                }
+            } catch {}
+        }
+
         updateSize() {
             this.width = this.domEl.offsetWidth / 80;
             this.height = this.domEl.offsetHeight / 80;
@@ -190,18 +242,7 @@ export function setupPhysicsRendering(canvas, containerId) {
             if (this.isDragging) {
                 this.rotV[2] *= 0.9;
                 this.rot[2] += this.rotV[2] * dt;
-                if (gl.texElementImage2D) {
-                    try {
-                        gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                        // This if block is used to ensure older browser support before the breaking update in Chromium 150
-                        // See https://github.com/WICG/html-in-canvas/pull/128/changes
-                        if (gl.texElementImage2D.length === 3) {
-                            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
-                        } else {
-                            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
-                        }
-                    } catch {}
-                }
+                this.uploadTexture();
                 return;
             }
 
@@ -282,18 +323,7 @@ export function setupPhysicsRendering(canvas, containerId) {
 
             this.rot[2] += this.rotV[2] * dt;
 
-            if (gl.texElementImage2D) {
-                try {
-                    gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                    // This if block is used to ensure older browser support before the breaking update in Chromium 150
-                    // See https://github.com/WICG/html-in-canvas/pull/128/changes
-                    if (gl.texElementImage2D.length === 3) {
-                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
-                    } else {
-                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
-                    }
-                } catch {}
-            }
+            this.uploadTexture();
         }
 
         getMatrix() {
@@ -469,9 +499,21 @@ export function setupPhysicsRendering(canvas, containerId) {
     mat4.lookAt(view, [0, 0, 15], [0, 0, 0], [0, 1, 0]);
 
     let lastTime = 0;
+    let paintListenerAdded = false;
     function render(time) {
         const dt = Math.min(0.05, (time - lastTime) / 1000);
         lastTime = time;
+
+        // Chrome 155+: like webgl-dragon-example.html, listen for paint and request a canvas paint every
+        // frame so the elements' paint records (read by captureElementImage() / texElementSubImage2D())
+        // exist and stay current.
+        if (typeof gl.texElementSubImage2D === 'function' && typeof canvas.requestPaint === 'function') {
+            if (!paintListenerAdded) {
+                paintListenerAdded = true;
+                canvas.addEventListener('paint', () => {});
+            }
+            canvas.requestPaint();
+        }
 
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -500,7 +542,7 @@ export function setupPhysicsRendering(canvas, containerId) {
             gl.bindVertexArray(vao);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-            if (canvas.getElementTransform) {
+            if (typeof canvas.updateElementGeometry === 'function' || typeof canvas.getElementTransform === 'function') {
                 try {
                     const w = p.domEl.offsetWidth;
                     const h = p.domEl.offsetHeight;
@@ -513,8 +555,31 @@ export function setupPhysicsRendering(canvas, containerId) {
                     mat4.multiply(mvp, mvp, model);
 
                     const finalT = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
-                    const syncT = canvas.getElementTransform(p.domEl, finalT);
-                    if (syncT) p.domEl.style.transform = syncT.toString();
+                    if (typeof canvas.updateElementGeometry === 'function') {
+                        // Chrome 155+: `canvasTransform` maps the element's border box to the
+                        // canvas in CSS pixels and is used as-is (the legacy
+                        // `getElementTransform()` below converts from canvas grid pixels instead).
+                        // The model matrix (getMatrix()) scales the unit quad [-0.5, 0.5] to the
+                        // element's size, so map the element's CSS pixels onto that unit quad
+                        // (1/w, 1/h; Y flipped: CSS down, GL up). `toGLModel` above scales by 1/80
+                        // instead, which double-applies the size and makes the hit box too large.
+                        const toUnitQuad = new DOMMatrix()
+                            .scale(1 / w, -1 / h, 1)
+                            .translate(-w / 2, -h / 2);
+                        const gridTransform = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toUnitQuad);
+                        // `toCSSViewport` outputs canvas grid (device) pixels, because the canvas
+                        // is sized to innerWidth * devicePixelRatio. So only the output is
+                        // scaled back to CSS pixels: T_css = S_gridToCss * T
+                        const dprX = canvas.width / canvas.clientWidth;
+                        const dprY = canvas.height / canvas.clientHeight;
+                        const canvasTransform = new DOMMatrix()
+                            .scale(1 / dprX, 1 / dprY)
+                            .multiply(gridTransform);
+                        canvas.updateElementGeometry(p.domEl, { canvasTransform });
+                    } else if (typeof canvas.getElementTransform === 'function') {
+                        const syncT = canvas.getElementTransform(p.domEl, finalT);
+                        if (syncT) p.domEl.style.transform = syncT.toString();
+                    }
                     p.domEl.style.visibility = 'visible';
                     p.domEl.style.pointerEvents = 'auto';
                     p.domEl.style.zIndex = Math.round(p.z * 100) + 1000;

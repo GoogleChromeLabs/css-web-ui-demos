@@ -153,17 +153,17 @@
 
     <div id="container">
         <!-- Single WebGL canvas containing all interactive HTML labels -->
-        <canvas id="gl-canvas" layoutsubtree>
+        <canvas id="gl-canvas" content="drawable" layoutsubtree>
             <!-- Authentic Tokyo Signs - English Only -->
-            <div class="label" id="lbl-panda">Prosperity Cafe <span class="sub">Exciting Desserts</span></div>
-            <div class="label" id="lbl-fish">Seafood Restaurant <span class="sub">Delicious Fish</span></div>
-            <div class="label" id="lbl-sushi">Sushi Shop <span class="sub">Authentic Sushi</span></div>
-            <div class="label" id="lbl-geisha">Themed Bar <span class="sub">Geisha Culture</span></div>
-            <div class="label" id="lbl-barber">Barbershop <span class="sub">Local Services</span></div>
-            <div class="label" id="lbl-ocean">Aquarium <span class="sub">Maritime Life</span></div>
-            <div class="label" id="lbl-mountain">Train Station <span class="sub">Local Transit</span></div>
-            <div class="label" id="lbl-egg">Egg Cafe <span class="sub">Breakfast Specialty</span></div>
-            <div class="label" id="lbl-sushiking">Sushi King <span class="sub">Premium Rolls</span></div>
+            <div class="label" id="lbl-panda" drawable>Prosperity Cafe <span class="sub">Exciting Desserts</span></div>
+            <div class="label" id="lbl-fish" drawable>Seafood Restaurant <span class="sub">Delicious Fish</span></div>
+            <div class="label" id="lbl-sushi" drawable>Sushi Shop <span class="sub">Authentic Sushi</span></div>
+            <div class="label" id="lbl-geisha" drawable>Themed Bar <span class="sub">Geisha Culture</span></div>
+            <div class="label" id="lbl-barber" drawable>Barbershop <span class="sub">Local Services</span></div>
+            <div class="label" id="lbl-ocean" drawable>Aquarium <span class="sub">Maritime Life</span></div>
+            <div class="label" id="lbl-mountain" drawable>Train Station <span class="sub">Local Transit</span></div>
+            <div class="label" id="lbl-egg" drawable>Egg Cafe <span class="sub">Breakfast Specialty</span></div>
+            <div class="label" id="lbl-sushiking" drawable>Sushi King <span class="sub">Premium Rolls</span></div>
         </canvas>
         <!-- Pure HTML square at the bottom-left corner -->
         <div id="bottom-left-square" style="position: absolute; bottom: 24px; left: 24px; width: 100px; height: 100px; background-color: var(--md-sys-color-surface); border-radius: 16px; box-shadow: var(--md-sys-elevation-level2); z-index: 20;"></div>
@@ -202,7 +202,7 @@
     <script type="module">
         // --- Ultimate WebGL HIC Signature & Type Compatibility Patch ---
         const originalTexElementImage2D = WebGL2RenderingContext.prototype.texElementImage2D;
-        if (originalTexElementImage2D) {
+        if (originalTexElementImage2D || typeof WebGL2RenderingContext.prototype.texElementSubImage2D === 'function') {
             WebGL2RenderingContext.prototype.texElementImage2D = function (...args) {
                 // 1. Resolve Three.js wrapped image objects (e.g. texture.image = { element: DOMElement })
                 let element = args[args.length - 1];
@@ -220,18 +220,36 @@
                                      !(element instanceof HTMLVideoElement);
                 if (isHICElement) {
                     const target = args[0];
-                    if (originalTexElementImage2D.length === 3) {
-                        // 3-argument signature: (target, internalformat, source)
-                        return originalTexElementImage2D.call(this, target, this.SRGB8_ALPHA8 || 35907, element);
-                    } else {
-                        // 6-argument signature: (target, level, internalformat, format, type, source)
-                        const level = args[1] !== undefined ? args[1] : 0;
-                        return originalTexElementImage2D.call(this, target, level, this.SRGB8_ALPHA8 || 35907, this.RGBA, this.UNSIGNED_BYTE, element);
+                    const internalformat = this.SRGB8_ALPHA8 || 35907;
+                    if (typeof this.texElementSubImage2D === 'function') {
+                        let width, height;
+                        if (typeof this.canvas?.captureElementImage === 'function') {
+                            const elemImage = this.canvas.captureElementImage(element);
+                            width = elemImage?.width;
+                            height = elemImage?.height;
+                        }
+                        if (!width || !height) {
+                            const dpr = window.devicePixelRatio || 1;
+                            width = Math.max(1, Math.round(element.offsetWidth * dpr));
+                            height = Math.max(1, Math.round(element.offsetHeight * dpr));
+                        }
+                        const level = args.length >= 6 && args[1] !== undefined ? args[1] : 0;
+                        this.texImage2D(target, level, internalformat, width, height, 0, this.RGBA, this.UNSIGNED_BYTE, null);
+                        return this.texElementSubImage2D(target, level, 0, 0, element);
+                    } else if (originalTexElementImage2D) {
+                        if (originalTexElementImage2D.length === 3) {
+                            // 3-argument signature: (target, internalformat, source)
+                            return originalTexElementImage2D.call(this, target, internalformat, element);
+                        } else {
+                            // 6-argument signature: (target, level, internalformat, format, type, source)
+                            const level = args[1] !== undefined ? args[1] : 0;
+                            return originalTexElementImage2D.call(this, target, level, internalformat, this.RGBA, this.UNSIGNED_BYTE, element);
+                        }
                     }
                 }
 
                 // 3. Fallback signature correction for other elements (e.g. images)
-                if (originalTexElementImage2D.length === 3 && args.length > 3) {
+                if (originalTexElementImage2D && originalTexElementImage2D.length === 3 && args.length > 3) {
                     const target = args[0];
                     let internalformat = args[2];
                     if (internalformat === 6408) {
@@ -241,7 +259,14 @@
                     return originalTexElementImage2D.call(this, target, internalformat, elem);
                 }
 
-                return originalTexElementImage2D.apply(this, args);
+                return originalTexElementImage2D?.apply(this, args);
+            };
+        }
+
+        if (!HTMLCanvasElement.prototype.getElementTransform && typeof HTMLCanvasElement.prototype.updateElementGeometry === 'function') {
+            HTMLCanvasElement.prototype.getElementTransform = function (element, canvasTransform) {
+                this.updateElementGeometry(element, { canvasTransform });
+                return new DOMMatrix();
             };
         }
 
@@ -491,19 +516,34 @@
 
                 if (hasChanged) {
                     const textureProperties = renderer.properties.get(mesh.material.map);
-                    if (textureProperties && textureProperties.__webglTexture && gl.texElementImage2D) {
+                    if (textureProperties && textureProperties.__webglTexture && (typeof gl.texElementSubImage2D === 'function' || typeof gl.texElementImage2D === 'function')) {
                         const webglTexture = textureProperties.__webglTexture;
                         gl.bindTexture(gl.TEXTURE_2D, webglTexture);
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
                         try {
-                            if (gl.texElementImage2D.length === 3) {
-                                gl.texElementImage2D(gl.TEXTURE_2D, gl.SRGB8_ALPHA8 || 35907, el);
+                            const internalformat = gl.SRGB8_ALPHA8 || 35907;
+                            if (typeof gl.texElementSubImage2D === 'function') {
+                                let width, height;
+                                if (typeof canvas.captureElementImage === 'function') {
+                                    const elemImage = canvas.captureElementImage(el);
+                                    width = elemImage?.width;
+                                    height = elemImage?.height;
+                                }
+                                if (!width || !height) {
+                                    const dpr = window.devicePixelRatio || 1;
+                                    width = Math.max(1, Math.round(el.offsetWidth * dpr));
+                                    height = Math.max(1, Math.round(el.offsetHeight * dpr));
+                                }
+                                gl.texImage2D(gl.TEXTURE_2D, 0, internalformat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                                gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, el);
+                            } else if (gl.texElementImage2D.length === 3) {
+                                gl.texElementImage2D(gl.TEXTURE_2D, internalformat, el);
                             } else {
-                                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8 || 35907, gl.SRGB8_ALPHA8 || 35907, gl.UNSIGNED_BYTE, el);
+                                gl.texElementImage2D(gl.TEXTURE_2D, 0, internalformat, internalformat, gl.UNSIGNED_BYTE, el);
                             }
                         } catch (err) {
-                            console.error('texElementImage2D failed:', err);
+                            console.error('texElementSubImage2D / texElementImage2D failed:', err);
                         }
                     }
                 }

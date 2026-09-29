@@ -180,34 +180,82 @@
     // This prototype patch intercepts legacy 6-argument calls on the fly and rewrites them.
     (function () {
       const gl = WebGL2RenderingContext.prototype;
-      if (!gl || !gl.texElementImage2D) return;
+      if (!gl || (!gl.texElementImage2D && !gl.texElementSubImage2D)) return;
 
       const originalTexElementImage2D = gl.texElementImage2D;
-      // Only apply the patch if the browser uses the latest 3-argument signature
-      if (originalTexElementImage2D.length === 3) {
-        gl.texElementImage2D = function (target, ...args) {
-          // Intercept legacy 6-argument signature: (target, level, internalformat, format, type, source)
-          if (args.length > 2) {
-            const level = args[0];
-            const internalFormat = args[1];
-            const format = args[2];
-            const type = args[3];
-            const source = args[4];
-
-            // Map unsized gl.RGBA to sized gl.RGBA8 for modern WebGL compliance
-            let sizedFormat = internalFormat;
-            if (internalFormat === this.RGBA) {
-              sizedFormat = this.RGBA8;
-            }
-
-            // Call native 3-argument signature: (target, internalformat, source)
-            return originalTexElementImage2D.call(this, target, sizedFormat, source);
+      const originalTexElementSubImage2D = gl.texElementSubImage2D;
+      gl.texElementImage2D = function (target, ...args) {
+        const source = args[args.length - 1];
+        if (this.canvas) {
+          if (!this.canvas.hasAttribute('content')) this.canvas.setAttribute('content', 'drawable');
+          if (!this.canvas.hasAttribute('layoutsubtree')) this.canvas.setAttribute('layoutsubtree', '');
+          if (!this.canvas._hicPaintInit) {
+            this.canvas._hicPaintInit = true;
+            this.canvas.addEventListener('paint', () => {});
           }
+          this.canvas.requestPaint?.();
+        }
+        if (source instanceof Element && !source.hasAttribute('drawable')) {
+          source.setAttribute('drawable', '');
+        }
+        const internalFormat = args.length > 2 ? args[1] : args[0];
+        const sizedFormat = internalFormat === this.RGBA ? (this.RGBA8 || this.RGBA) : (internalFormat || this.RGBA8 || this.RGBA);
+        const boundTex = this.getParameter(this.TEXTURE_BINDING_2D);
+        const flipY = this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+        const dpr = window.devicePixelRatio || 1;
+        let width = Math.max(1, Math.round((source?.offsetWidth || 450) * dpr));
+        let height = Math.max(1, Math.round((source?.offsetHeight || 320) * dpr));
 
-          // Standard 3-argument signature
+        if (typeof originalTexElementSubImage2D === 'function') {
+          let hasPaintRecord = false;
+          if (typeof this.canvas?.captureElementImage === 'function') {
+            try {
+              const elemImage = this.canvas.captureElementImage(source);
+              if (elemImage?.width && elemImage?.height) {
+                width = Math.ceil(elemImage.width);
+                height = Math.ceil(elemImage.height);
+                hasPaintRecord = true;
+              }
+            } catch (e) {
+              hasPaintRecord = false;
+            }
+          }
+          if (!boundTex || boundTex._hicW !== width || boundTex._hicH !== height) {
+            this.texImage2D(target, 0, sizedFormat, width, height, 0, this.RGBA, this.UNSIGNED_BYTE, null);
+            if (boundTex) {
+              boundTex._hicW = width;
+              boundTex._hicH = height;
+            }
+          }
+          if (hasPaintRecord || typeof this.canvas?.captureElementImage !== 'function') {
+            try {
+              return originalTexElementSubImage2D.call(this, target, 0, 0, 0, source);
+            } catch (e) {}
+          }
+          if (this.canvas && boundTex && !boundTex._hicPending) {
+            boundTex._hicPending = true;
+            this.canvas.addEventListener('paint', () => {
+              boundTex._hicPending = false;
+              const prevTex = this.getParameter(this.TEXTURE_BINDING_2D);
+              const prevFlip = this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+              this.bindTexture(target, boundTex);
+              this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, flipY);
+              this.texElementImage2D(target, sizedFormat, source);
+              this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, prevFlip);
+              this.bindTexture(target, prevTex);
+            }, { once: true });
+            this.canvas.requestPaint?.();
+          }
+          return;
+        } else if (originalTexElementImage2D.length === 3) {
+          try {
+            return originalTexElementImage2D.call(this, target, sizedFormat, source);
+          } catch (e) {}
+        }
+        try {
           return originalTexElementImage2D.apply(this, [target, ...args]);
-        };
-      }
+        } catch (e) {}
+      };
     })();
     // ---------------------------------------------------------------------
 
@@ -234,12 +282,16 @@
         hello: true
       });
 
+      app.canvas.setAttribute('content', 'drawable');
+      app.canvas.setAttribute('layoutsubtree', '');
+
       const container = document.getElementById('canvas-container');
       container.appendChild(app.canvas);
 
       // 3. Create the HTML element dynamically and append to the Pixi canvas (must be a direct child)
       const form = document.createElement('form');
       form.id = 'html-card';
+      form.setAttribute('drawable', '');
       form.onsubmit = (event) => event.preventDefault();
       form.innerHTML = `
         <h1>PixiJS + HTML-in-Canvas</h1>
@@ -278,8 +330,8 @@
         const scale = 1 + Math.sin(ticker.lastTime * 0.0015) * 0.06;
         sprite.scale.set(scale);
 
-        // Sync DOM transform using getElementTransform for interactive inputs
-        if (app.canvas.getElementTransform) {
+        // Sync DOM transform using updateElementGeometry / getElementTransform for interactive inputs
+        if (app.canvas.updateElementGeometry || app.canvas.getElementTransform) {
           const width = form.offsetWidth;
           const height = form.offsetHeight;
 
@@ -310,10 +362,25 @@
           form.style.top = '0';
           form.style.transformOrigin = '0 0';
 
-          let syncT = app.canvas.getElementTransform(form, finalTransform);
-
-          if (syncT) {
-            form.style.transform = syncT.toString();
+          if (typeof app.canvas.updateElementGeometry === 'function') {
+            // Chrome 155+: `canvasTransform` maps the element's border box to the
+            // canvas in CSS pixels and is used as-is. Unlike the legacy
+            // `getElementTransform()` below, the browser does not convert it from
+            // canvas grid pixels. `finalTransform` is in canvas grid (device)
+            // pixels, so change basis: T_css = S_gridToCss * T_grid * S_gridToCss^-1
+            // (dprX/dprY are the same grid-to-CSS ratios the legacy API uses).
+            const dprX = app.canvas.width / app.canvas.clientWidth;
+            const dprY = app.canvas.height / app.canvas.clientHeight;
+            const canvasTransform = new DOMMatrix()
+              .scale(1 / dprX, 1 / dprY)
+              .multiply(finalTransform)
+              .scale(dprX, dprY);
+            app.canvas.updateElementGeometry(form, { canvasTransform });
+          } else if (typeof app.canvas.getElementTransform === 'function') {
+            let syncT = app.canvas.getElementTransform(form, finalTransform);
+            if (syncT) {
+              form.style.transform = syncT.toString();
+            }
           }
         }
       });

@@ -94,6 +94,10 @@
         /* Label chip styling - Exact original 1x styles from webgl_animation_translate */
         .label {
             position: absolute;
+            /* Lay every label out at the canvas origin; its drawn position comes from the element
+               transform/geometry set in updateLabelTransforms(). */
+            left: 0;
+            top: 0;
             display: inline-flex;
             flex-direction: column;
             align-items: flex-start;
@@ -140,17 +144,17 @@
 
     <div id="container">
         <!-- Single WebGL canvas containing all interactive HTML labels -->
-        <canvas id="gl-canvas" layoutsubtree>
+        <canvas id="gl-canvas" content="drawable" layoutsubtree>
             <!-- Authentic Tokyo Signs - Defaulting to Japanese (JP) -->
-            <div class="label" id="lbl-panda">興 <span class="sub">Panda Cafe</span></div>
-            <div class="label" id="lbl-fish">おいしい魚 <span class="sub">Seafood Place</span></div>
-            <div class="label" id="lbl-sushi">寿司 <span class="sub">Sushi Shop</span></div>
-            <div class="label" id="lbl-geisha">芸者 <span class="sub">Theme Restaurant</span></div>
-            <div class="label" id="lbl-barber">理容室 <span class="sub">Barbershop</span></div>
-            <div class="label" id="lbl-ocean">水族館 <span class="sub">Aquarium</span></div>
-            <div class="label" id="lbl-mountain">駅 <span class="sub">Train Station</span></div>
-            <div class="label" id="lbl-egg">卵料理 <span class="sub">Egg Dishes</span></div>
-            <div class="label" id="lbl-sushiking">寿司王 <span class="sub">Sushi King</span></div>
+            <div class="label" id="lbl-panda" drawable>興 <span class="sub">Panda Cafe</span></div>
+            <div class="label" id="lbl-fish" drawable>おいしい魚 <span class="sub">Seafood Place</span></div>
+            <div class="label" id="lbl-sushi" drawable>寿司 <span class="sub">Sushi Shop</span></div>
+            <div class="label" id="lbl-geisha" drawable>芸者 <span class="sub">Theme Restaurant</span></div>
+            <div class="label" id="lbl-barber" drawable>理容室 <span class="sub">Barbershop</span></div>
+            <div class="label" id="lbl-ocean" drawable>水族館 <span class="sub">Aquarium</span></div>
+            <div class="label" id="lbl-mountain" drawable>駅 <span class="sub">Train Station</span></div>
+            <div class="label" id="lbl-egg" drawable>卵料理 <span class="sub">Egg Dishes</span></div>
+            <div class="label" id="lbl-sushiking" drawable>寿司王 <span class="sub">Sushi King</span></div>
         </canvas>
     </div>
 
@@ -197,35 +201,58 @@
     </script>
 
     <script type="module">
-        // --- Ultimate WebGL HIC Signature & Type Compatibility Patch ---
-        const originalTexElementImage2D = WebGL2RenderingContext.prototype.texElementImage2D;
-        if (originalTexElementImage2D) {
-            WebGL2RenderingContext.prototype.texElementImage2D = function (...args) {
-                // 1. Resolve Three.js wrapped image objects (e.g. texture.image = { element: DOMElement })
-                let element = args[args.length - 1];
-                if (element && typeof element === 'object' && !(element instanceof Element)) {
-                    if (element.element instanceof Element) {
-                        args[args.length - 1] = element.element;
-                        element = element.element;
-                    }
+        // --- Chrome 155+: copy an element snapshot into a pre-allocated texture ---
+        // texElementSubImage2D() only copies the element's latest snapshot into an EXISTING texture.
+        // Pre-allocate the texture backing with texImage2D(..., null) once, and again only when the
+        // snapshot size changes (first upload, language switch, DPR change). Every other update is just
+        // the copy. This is the pattern used by the WICG example and webgl-dragon-example.html.
+        // Don't call texImage2D() before every copy: that re-creates empty GPU storage each time.
+        // Returns false (without throwing) when there is nothing to copy yet.
+        function copyElementSnapshotToTexture(gl, texture, target, level, internalformat, element) {
+            if (!texture) return false;
+            let width, height;
+            if (typeof gl.canvas?.captureElementImage === 'function') {
+                let elemImage;
+                try {
+                    elemImage = gl.canvas.captureElementImage(element);
+                } catch (e) {
+                    // "No cached paint record for element": it hasn't been painted yet. Skip this
+                    // upload; the paint loop retries.
+                    return false;
                 }
+                // ElementImage width/height are fractional (e.g. 246.8), while the snapshot copy is
+                // rounded up (247px). A truncated 246px texture would be too small, so round up as well.
+                width = Math.ceil(elemImage.width);
+                height = Math.ceil(elemImage.height);
+            } else {
+                const dpr = window.devicePixelRatio || 1;
+                width = Math.max(1, Math.round(element.offsetWidth * dpr));
+                height = Math.max(1, Math.round(element.offsetHeight * dpr));
+            }
+            if (!width || !height) return false;
 
-                // 2. Resolve Chromium 150+ 3-argument vs 6-argument signature mismatch
-                if (originalTexElementImage2D.length === 3 && args.length > 3) {
-                    const target = args[0];
-                    let internalformat = args[2]; // gl.RGBA8 or gl.RGBA
+            // (Re-)allocate the texture backing only when the snapshot size changes.
+            if (texture._hicW !== width || texture._hicH !== height) {
+                console.log('texImage2D', width, height);
+                gl.texImage2D(target, level, internalformat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                texture._hicW = width;
+                texture._hicH = height;
+            }
 
-                    // Map unsized gl.RGBA (6408) to sized gl.RGBA8 (32856) for Chromium 150+ compliance
-                    if (internalformat === 6408) {
-                        internalformat = 32856;
-                    }
-
-                    const elem = args[args.length - 1];
-                    return originalTexElementImage2D.call(this, target, internalformat, elem);
-                }
-
-                return originalTexElementImage2D.apply(this, args);
-            };
+            // Pass the allocated size as the copy's destination size (the { width, height } members of
+            // WebGLCopyElementImageConfig), so the snapshot is rasterized to exactly fill the texture.
+            // Without it the copy uses its own default size, which in Chrome 155 is NOT the ElementImage
+            // size unless the canvas grid is sized 1:1 to its device-pixel-content-box:
+            //   - Chrome 155's ElementImage.width/height are the element's physical size (CSS px x DPR).
+            //   - The copy is additionally scaled by canvas.width / (canvas CSS width x DPR).
+            // This demo applies the DPR twice (setPixelRatio(DPR) plus device-pixel sizes passed to
+            // renderer.setSize()), so on a DPR 2 screen the canvas grid, and therefore the copy, was twice
+            // the texture size. The copy failed on every frame with GL_INVALID_VALUE "Offset overflows
+            // texture dimensions" and left the label textures empty (transparent). Newer Chrome returns
+            // ElementImage sizes in canvas grid coordinates, as the explainer specifies; there,
+            // { width, height } equals the default copy size anyway.
+            gl.texElementSubImage2D(target, level, 0, 0, element, { width, height });
+            return true;
         }
 
         import * as THREE from 'three';
@@ -237,7 +264,6 @@
 
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-        import { InteractionManager } from 'three/addons/interaction/InteractionManager.js';
 
         let mixer, model;
         const timer = new THREE.Timer();
@@ -282,11 +308,15 @@
         controls.target.set(0, 0.7, 0);
         controls.update();
 
-        // Initialize HIC InteractionManager
-        const interactions = new InteractionManager();
-        interactions.connect(renderer, camera);
-
         // ─── HTML-in-Canvas Label System ─────────────────────────────────────────
+        // The labels are NOT three.js objects. three.js only renders the 3D scene (model, sky and the dashed
+        // connector lines). Each label <div> is:
+        //   1. uploaded into a plain WebGLTexture with the browser's native texElementSubImage2D()
+        //      (Chrome 155+) / texElementImage2D() (older versions), see updateLabelTextures();
+        //   2. drawn as a camera-facing quad by a small raw WebGL program on three.js's GL context, right
+        //      after renderer.render(), see drawLabels();
+        //   3. kept hit-testable/focusable where it is drawn with the native canvas.updateElementGeometry()
+        //      (Chrome 155+) / canvas.getElementTransform() (older versions), see updateLabelTransforms().
         // All world positions are in Three.js world space.
         const LABELS = [
             { id: 'lbl-panda', world: new THREE.Vector3(1.5, 2.8, -1.0) },
@@ -300,8 +330,62 @@
             { id: 'lbl-sushiking', world: new THREE.Vector3(-0.5, 2.0, -2.0) },
         ];
 
-        const labelMeshes = [];
+        const LABEL_HEIGHT = 0.35; // Label height in world units at scale 1 (width follows the CSS aspect ratio)
         const labelLines = []; // List to hold ribbon meshes for billboarding
+
+        // --- Raw WebGL label program (shares three.js's WebGL2 context and depth buffer) ---
+        const gl = renderer.getContext();
+
+        const LABEL_VERTEX_SHADER = `#version 300 es
+            in vec2 aPosition; // Unit quad corners in [-0.5, 0.5]
+            uniform mat4 uMVP;
+            out vec2 vUv;
+            void main() {
+                vUv = aPosition + 0.5;
+                gl_Position = uMVP * vec4(aPosition, 0.0, 1.0);
+            }`;
+
+        const LABEL_FRAGMENT_SHADER = `#version 300 es
+            precision highp float;
+            in vec2 vUv;
+            uniform sampler2D uTexture;
+            out vec4 outColor;
+            void main() {
+                // The texture holds the label's sRGB CSS pixels: output them as-is (no tone mapping or
+                // color space conversion), so the label looks exactly like the DOM.
+                outColor = texture(uTexture, vUv);
+            }`;
+
+        function compileShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                throw new Error(`Label shader compile error: ${gl.getShaderInfoLog(shader)}`);
+            }
+            return shader;
+        }
+
+        const labelProgram = gl.createProgram();
+        gl.attachShader(labelProgram, compileShader(gl.VERTEX_SHADER, LABEL_VERTEX_SHADER));
+        gl.attachShader(labelProgram, compileShader(gl.FRAGMENT_SHADER, LABEL_FRAGMENT_SHADER));
+        gl.linkProgram(labelProgram);
+        if (!gl.getProgramParameter(labelProgram, gl.LINK_STATUS)) {
+            throw new Error(`Label program link error: ${gl.getProgramInfoLog(labelProgram)}`);
+        }
+        const uLabelMVP = gl.getUniformLocation(labelProgram, 'uMVP');
+        const uLabelTexture = gl.getUniformLocation(labelProgram, 'uTexture');
+
+        const labelVao = gl.createVertexArray();
+        gl.bindVertexArray(labelVao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        // Triangle strip: bottom-left, bottom-right, top-left, top-right
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5]), gl.STATIC_DRAW);
+        const aLabelPosition = gl.getAttribLocation(labelProgram, 'aPosition');
+        gl.enableVertexAttribArray(aLabelPosition);
+        gl.vertexAttribPointer(aLabelPosition, 2, gl.FLOAT, false, 0, 0);
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
         // Helper to generate a sharp, repeating dashed texture procedurally
         function createDashedTexture(height) {
@@ -322,46 +406,20 @@
             return texture;
         }
 
-        // Setup the Label Planes, Textures, and Connector Lines in 3D Space
-        LABELS.forEach((lbl) => {
+        // Setup the label textures and the Connector Lines in 3D Space
+        const labels = LABELS.map((lbl) => {
             const el = document.getElementById(lbl.id);
 
-            // 1. Get the actual CSS aspect ratio of this specific label
-            const cssWidth = el.offsetWidth || 150;
-            const cssHeight = el.offsetHeight || 50;
-            const aspect = cssWidth / cssHeight;
+            // 1. A plain WebGL texture for the label's HTML snapshot. Its storage is allocated on the first
+            //    upload (see updateLabelTextures()).
+            const texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-            // 2. Create the HTMLTexture wrapping the DOM element
-            const texture = new THREE.HTMLTexture(el);
-            texture.colorSpace = THREE.SRGBColorSpace; // <-- CRITICAL: Prevents color shifting in sRGB renderer!
-
-            // 3. Create a 3D Plane Mesh with a matching aspect ratio!
-            // We lock the height at 0.35 and compute the width dynamically.
-            const meshHeight = 0.35;
-            const meshWidth = meshHeight * aspect;
-            const geometry = new THREE.PlaneGeometry(meshWidth, meshHeight);
-            
-            const material = new THREE.MeshBasicMaterial({
-                map: texture,
-                transparent: true,
-                depthWrite: false, // prevents z-fighting and ensures clean transparent overlay sorting!
-                toneMapped: false  // PRESERVES RAW CSS COLORS PERFECTLY (bypasses WebGL color space shifting)
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.copy(lbl.world);
-
-            scene.add(mesh);
-            labelMeshes.push(mesh);
-
-            // Store the original metadata, aspect ratio, and language scale factor
-            mesh.userData.lbl = lbl;
-            mesh.userData.originalAspect = aspect;
-            mesh.userData.langScaleX = 1.0; // Initialize language horizontal scale factor
-
-            // 4. Register with InteractionManager for automatic HIC overlay & click-routing
-            interactions.add(mesh);
-
-            // 4. Create a 3D Dashed Line ribbon from the label to the ground (y = -1)
+            // 2. Create a 3D Dashed Line ribbon from the label to the ground (y = -1)
             // Using a thin plane mesh bypasses WebGL's driver-level 1px line limit,
             // allowing us to render beautiful, thick, and highly visible dashed lines!
             const ribbonHeight = lbl.world.y + 1.0;
@@ -382,11 +440,180 @@
             // This synchronizes the pivot points of the label and the line, preventing any rotation misalignment!
             line.position.copy(lbl.world);
             scene.add(line);
-
-            // Keep reference to the line on the mesh so we can toggle visibility together
-            mesh.userData.line = line;
             labelLines.push(line);
+
+            return {
+                el,
+                world: lbl.world,
+                texture,
+                line,
+                aspect: (el.offsetWidth || 150) / (el.offsetHeight || 50), // CSS aspect ratio of the label
+                uploaded: false, // true once the texture holds a snapshot of the label
+                visible: true,
+                mvp: new THREE.Matrix4(), // Label quad -> clip space, updated every frame
+                viewZ: 0, // View-space depth, for back-to-front sorting
+            };
         });
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        // The raw WebGL calls above bypassed three.js's GL state cache.
+        renderer.resetState();
+
+        // Upload labels into their textures with the native API. Only labels that are new or that appear in
+        // the paint event's changedElements are uploaded; camera moves need no upload.
+        function updateLabelTextures(changed) {
+            if (typeof gl.texElementSubImage2D !== 'function' && typeof gl.texElementImage2D !== 'function') return;
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // DOM rows go top-down, GL texture rows bottom-up
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+            for (const label of labels) {
+                if (!label.visible) continue;
+                const el = label.el;
+                const hasChanged = !label.uploaded || changed.some((c) => el === c || el.contains(c));
+                if (!hasChanged) continue;
+
+                // The label's text may have changed (e.g. language switch): refresh its aspect ratio.
+                if (el.offsetWidth && el.offsetHeight) label.aspect = el.offsetWidth / el.offsetHeight;
+
+                gl.bindTexture(gl.TEXTURE_2D, label.texture);
+                try {
+                    if (typeof gl.texElementSubImage2D === 'function') {
+                        // Chrome 155+: allocate the texture storage once per size and copy the new snapshot
+                        // into it (see copyElementSnapshotToTexture above). Keep the previous snapshot if
+                        // there is nothing to copy yet.
+                        label.uploaded = copyElementSnapshotToTexture(gl, label.texture, gl.TEXTURE_2D, 0, gl.RGBA8, el) || label.uploaded;
+                    } else if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
+                        label.uploaded = true;
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+                        label.uploaded = true;
+                    }
+                } catch (err) {
+                    console.error('texElementSubImage2D / texElementImage2D failed:', err);
+                }
+            }
+
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        }
+
+        const _viewProjection = new THREE.Matrix4();
+        const _model = new THREE.Matrix4();
+        const _center = new THREE.Vector3();
+        const _size = new THREE.Vector3();
+        const _viewPosition = new THREE.Vector3();
+
+        // Place every label quad (billboarded, constant on-screen size, with its bottom-centre pin locked
+        // to the world anchor) and sync each label's DOM hit-testing box with where it is drawn.
+        function updateLabelTransforms() {
+            // renderer.render() has just updated camera.matrixWorldInverse.
+            _viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+
+            for (const label of labels) {
+                if (!label.visible) continue;
+
+                const scale = camera.position.distanceTo(label.world) * 0.125; // 0.125 matches the original 1x label size at default zoom
+                const height = LABEL_HEIGHT * scale;
+                _size.set(height * label.aspect, height, 1);
+                _center.copy(label.world);
+                _center.y += height / 2; // Keep the bottom center (the pin) at the world anchor
+                _model.compose(_center, camera.quaternion, _size); // Face the camera
+                label.mvp.multiplyMatrices(_viewProjection, _model);
+                label.viewZ = _viewPosition.copy(_center).applyMatrix4(camera.matrixWorldInverse).z;
+
+                syncLabelGeometry(label);
+            }
+        }
+
+        // Sync the label's DOM hit-testing/focus box with where WebGL draws it (same approach as
+        // webgl-dragon-example.html). `finalTransform` is built in canvas grid (device) pixels, because WebGL
+        // renders into the canvas backing store, which is larger than the canvas's CSS size (dprX/dprY).
+        //  - Chrome 155+: canvas.updateElementGeometry() expects CSS pixels, so the matrix is converted from
+        //    grid to CSS pixels before passing it in.
+        //  - Chrome < 155: canvas.getElementTransform() does that conversion itself and returns a CSS
+        //    transform to set on the element.
+        function syncLabelGeometry(label) {
+            if (typeof canvas.updateElementGeometry !== 'function' && typeof canvas.getElementTransform !== 'function') return;
+
+            const el = label.el;
+            const dprX = canvas.width / canvas.clientWidth;
+            const dprY = canvas.height / canvas.clientHeight;
+            const gridWidth = el.offsetWidth * dprX;
+            const gridHeight = el.offsetHeight * dprY;
+            if (!gridWidth || !gridHeight) return;
+
+            // Element canvas grid pixels -> label quad model space ([-0.5, 0.5], Y flipped: CSS down, GL up)
+            const toModel = new DOMMatrix()
+                .scale(1 / gridWidth, -1 / gridHeight, 1 / gridHeight)
+                .translate(-gridWidth / 2, -gridHeight / 2);
+
+            // WebGL clip space (-1..1) -> canvas grid pixels (viewport transform)
+            const toCanvasGrid = new DOMMatrix()
+                .translate(canvas.width / 2, canvas.height / 2)
+                .scale(canvas.width / 2, -canvas.height / 2, canvas.height / 2);
+
+            // THREE.Matrix4.elements is column-major, like the DOMMatrix 16-value constructor.
+            const mvp = new DOMMatrix(Array.from(label.mvp.elements));
+            const finalTransform = toCanvasGrid.multiply(mvp).multiply(toModel);
+
+            if (typeof canvas.updateElementGeometry === 'function') {
+                // Chrome 155+: `canvasTransform` maps the element's border box to the canvas in CSS pixels.
+                // Change basis from canvas grid pixels: T_css = S_gridToCss * T_grid * S_gridToCss^-1
+                const canvasTransform = new DOMMatrix()
+                    .scale(1 / dprX, 1 / dprY)
+                    .multiply(finalTransform)
+                    .scale(dprX, dprY);
+                canvas.updateElementGeometry(el, { canvasTransform });
+            } else {
+                let transform = canvas.getElementTransform(el, finalTransform);
+
+                // Workaround for Chromium bug https://crbug.com/512171941 where `transform.is2D` is
+                // incorrectly true for a 3D DOMMatrix. Re-initializing the DOMMatrix corrects is2D.
+                if (transform.is2D)
+                    transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
+
+                el.style.transform = transform.toString();
+            }
+        }
+
+        // Draw the label quads with the raw WebGL program, on top of the scene three.js just rendered.
+        function drawLabels() {
+            // Transparent quads: draw back to front (view-space z is negative in front of the camera).
+            const visibleLabels = labels
+                .filter((label) => label.visible && label.uploaded)
+                .sort((a, b) => a.viewZ - b.viewZ);
+            if (!visibleLabels.length) return;
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null); // The canvas; three.js's viewport is kept as-is
+            gl.useProgram(labelProgram);
+            gl.bindVertexArray(labelVao);
+
+            // Depth-test against the scene so buildings still hide labels, but don't write depth.
+            gl.enable(gl.DEPTH_TEST);
+            gl.depthFunc(gl.LEQUAL);
+            gl.depthMask(false);
+            gl.disable(gl.CULL_FACE);
+            gl.disable(gl.STENCIL_TEST);
+            gl.disable(gl.SCISSOR_TEST);
+            gl.colorMask(true, true, true, true);
+
+            // The texture has straight (non-premultiplied) alpha; the canvas is premultiplied.
+            gl.enable(gl.BLEND);
+            gl.blendEquation(gl.FUNC_ADD);
+            gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.uniform1i(uLabelTexture, 0);
+            for (const label of visibleLabels) {
+                gl.bindTexture(gl.TEXTURE_2D, label.texture);
+                gl.uniformMatrix4fv(uLabelMVP, false, label.mvp.elements);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            }
+
+            gl.bindVertexArray(null);
+        }
 
         const TRANSLATIONS = {
             en: {
@@ -433,24 +660,15 @@
             LABELS.forEach(lbl => {
                 const el = document.getElementById(lbl.id);
                 const trans = data[lbl.id];
-                el.innerHTML = `${trans.main} <span class="sub">${trans.sub}</span>`;
+                el.textContent = `${trans.main} `;
+                const sub = document.createElement('span');
+                sub.className = 'sub';
+                sub.textContent = trans.sub;
+                el.appendChild(sub);
             });
 
-            // 2. Force a browser layout reflow so offsetWidth is updated immediately
-            canvas.offsetHeight;
-
-            // 3. Update the 3D mesh scale factors to match the new aspect ratios!
-            labelMeshes.forEach((mesh) => {
-                const lbl = mesh.userData.lbl;
-                const el = document.getElementById(lbl.id);
-                
-                const newAspect = el.offsetWidth / el.offsetHeight;
-                const originalAspect = mesh.userData.originalAspect;
-                
-                // Store the language scale factor (applied in the paint loop combined with distance)
-                mesh.userData.langScaleX = newAspect / originalAspect;
-            });
-
+            // 2. No mesh rescaling needed: each label's aspect ratio is re-read in updateLabelTextures()
+            //    when the label shows up in the paint event's changedElements.
             canvas.requestPaint();
         });
 
@@ -458,11 +676,11 @@
         const toggleCheckbox = document.getElementById('toggle-labels');
         toggleCheckbox.addEventListener('change', (e) => {
             labelsVisible = e.target.checked;
-            labelMeshes.forEach((mesh) => {
-                mesh.visible = labelsVisible;
-                if (mesh.userData.line) {
-                    mesh.userData.line.visible = labelsVisible;
-                }
+            labels.forEach((label) => {
+                label.visible = labelsVisible;
+                label.line.visible = labelsVisible;
+                // Also take hidden labels out of hit-testing.
+                label.el.style.visibility = labelsVisible ? '' : 'hidden';
             });
             canvas.requestPaint();
         });
@@ -515,12 +733,9 @@
             requestAnimationFrame(raf);
         }
 
-        let isFirstPaint = true;
-
         // ─── Native HTML-in-Canvas Paint Handler (Driven by browser compositor) ───
         canvas.onpaint = (event) => {
             const changed = event.changedElements || [];
-            const gl = renderer.getContext();
 
             // 1. Update Animations, Physics & Controls
             timer.update();
@@ -529,65 +744,23 @@
             controls.update();
             stats.update();
 
-            // 2. Performance-Optimized HIC Texture Update:
-            // We ONLY upload the texture via texElementImage2D if the element (or its children) has changed!
-            // If just rotating the camera, changed is empty, so we skip all uploads entirely, saving massive bandwidth.
-            labelMeshes.forEach((mesh) => {
-                const lbl = mesh.userData.lbl;
-                const el = document.getElementById(lbl.id);
-
-                // Upload on first paint, or if the element (or descendants) has actually changed
-                const hasChanged = isFirstPaint || changed.some(c => el === c || el.contains(c));
-
-                if (hasChanged) {
-                    const textureProperties = renderer.properties.get(mesh.material.map);
-                    if (textureProperties && textureProperties.__webglTexture && gl.texElementImage2D) {
-                        const webglTexture = textureProperties.__webglTexture;
-                        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
-                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-                        try {
-                            if (gl.texElementImage2D.length === 3) {
-                                gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
-                            } else {
-                                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
-                            }
-                        } catch (err) {
-                            console.error('texElementImage2D failed:', err);
-                        }
-                    }
-                }
-            });
-
-            // 3. Billboard all label meshes and scale them based on camera distance
-            // to maintain a perfect, constant screen size (matching the original 2D overlay)!
-            labelMeshes.forEach((mesh) => {
-                mesh.quaternion.copy(camera.quaternion);
-
-                const dist = camera.position.distanceTo(mesh.userData.lbl.world);
-                const scale = dist * 0.125; // 0.125 matches the original 1x label size at default zoom!
-                
-                // Combine distance scaling with the dynamic language horizontal scale
-                mesh.scale.x = scale * (mesh.userData.langScaleX || 1.0);
-                mesh.scale.y = scale;
-                mesh.scale.z = 1;
-
-                // Dynamically offset the Y position so the bottom center (the pin) remains locked at the world anchor!
-                // This keeps the WebGL pixels and the HIC DOM hit-testing elements 100% perfectly aligned.
-                const meshHeight = 0.35;
-                mesh.position.y = mesh.userData.lbl.world.y + (meshHeight * scale) / 2;
-            });
-
-            // 3.5. Billboard all dashed connector lines to face the camera perfectly
+            // 2. Billboard all dashed connector lines (three.js meshes) to face the camera
             labelLines.forEach((line) => {
                 line.quaternion.copy(camera.quaternion);
             });
 
-            // 4. Update HIC InteractionManager for click-routing and positioning
-            interactions.update();
-
-            // 5. Render the 3D Scene
+            // 3. Render the 3D scene (model, sky, connector lines) with three.js
             renderer.render(scene, camera);
+
+            // 4. Labels, with raw WebGL and the native HTML-in-Canvas API only:
+            //    upload changed labels, sync their DOM hit-testing boxes, and draw them on top of the scene
+            //    (depth-tested against the depth buffer three.js just rendered).
+            updateLabelTextures(changed);
+            updateLabelTransforms();
+            drawLabels();
+
+            // The raw WebGL calls above bypassed three.js's GL state cache: resync it before the next render.
+            renderer.resetState();
         };
     </script>
 

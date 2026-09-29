@@ -62,9 +62,9 @@
   }
 </style>
 
-<canvas id="canvas" width="638" height="600" layoutsubtree="true">
-  <div id="draw_element" style="width: 578px">
-    <form id="demo-form" action="#" method="get" onsubmit="event.preventDefault(); alert('Spaceship Launched!')">
+<canvas id="canvas" width="638" height="600" content="drawable" layoutsubtree="true">
+  <div id="draw_element" drawable style="width: 578px">
+    <form id="demo-form" action="#" method="get" onsubmit="event.preventDefault(); console.log('Spaceship Launched!')">
       <fieldset>
         <legend>🚀 Spaceship Control Panel</legend>
         <p>
@@ -115,13 +115,15 @@
   // Track geometry bounds
   observer.observe(canvas, { box: 'device-pixel-content-box' });
 
-  // Chrome layoutsubtree strictly demands drawElementImage is invoked within onpaint
+  // Chrome HTML-in-Canvas demands drawElementImage is invoked within onpaint
   canvas.onpaint = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     try {
-      let transform = ctx.drawElementImage(draw_element, posX, posY);
-      if (transform) {
+      const transform = ctx.drawElementImage(draw_element, posX, posY);
+      if (transform !== undefined && typeof transform?.toString === 'function') {
         draw_element.style.transform = transform.toString();
+      } else if (draw_element.style.transform) {
+        draw_element.style.transform = '';
       }
     } catch (e) {
       console.warn("Skipping frame: Paint record not ready yet");

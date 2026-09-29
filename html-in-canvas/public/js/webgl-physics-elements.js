@@ -81,6 +81,9 @@ export function setupPhysicsRendering(canvas, containerId) {
 class PhysicsElement {
     constructor(domElement) {
         this.domEl = domElement;
+        if (!this.domEl.hasAttribute('drawable')) {
+            this.domEl.setAttribute('drawable', '');
+        }
         
         // Use a random hue offset for the WebGL shader instead of CSS filter
         this.hueOffset = Math.random() * Math.PI * 2;
@@ -153,6 +156,33 @@ class PhysicsElement {
         });
     }
 
+    uploadTexture() {
+        try {
+            gl.bindTexture(gl.TEXTURE_2D, this.tex);
+            if (typeof gl.texElementSubImage2D === 'function') {
+                let width, height;
+                if (typeof gl.canvas?.captureElementImage === 'function') {
+                    const elemImage = gl.canvas.captureElementImage(this.domEl);
+                    width = elemImage?.width;
+                    height = elemImage?.height;
+                }
+                if (!width || !height) {
+                    const dpr = window.devicePixelRatio || 1;
+                    width = Math.max(1, Math.round(this.domEl.offsetWidth * dpr));
+                    height = Math.max(1, Math.round(this.domEl.offsetHeight * dpr));
+                }
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.domEl);
+            } else if (typeof gl.texElementImage2D === 'function') {
+                if (gl.texElementImage2D.length === 3) {
+                    gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
+                } else {
+                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
+                }
+            }
+        } catch {}
+    }
+
     updateSize() {
         this.width = this.domEl.offsetWidth / 80;
         this.height = this.domEl.offsetHeight / 80;
@@ -205,19 +235,7 @@ class PhysicsElement {
             // Apply heavy rotational drag while dragging
             this.rotV[2] *= 0.9;
             this.rot[2] += this.rotV[2] * dt;
-            
-            if (gl.texElementImage2D) {
-                try {
-                    gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                // This if block is used to ensure older browser support before the breaking update in Chromium 150
-                // See https://github.com/WICG/html-in-canvas/pull/128/changes
-                if (gl.texElementImage2D.length === 3) {
-                    gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
-                } else {
-                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
-                }
-                } catch {}
-            }
+            this.uploadTexture();
             return;
         }
 
@@ -289,18 +307,7 @@ class PhysicsElement {
 
         this.rot[2] += this.rotV[2] * dt;
 
-        if (gl.texElementImage2D) {
-            try {
-                gl.bindTexture(gl.TEXTURE_2D, this.tex);
-                // This if block is used to ensure older browser support before the breaking update in Chromium 150
-                // See https://github.com/WICG/html-in-canvas/pull/128/changes
-                if (gl.texElementImage2D.length === 3) {
-                    gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, this.domEl);
-                } else {
-                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.domEl);
-                }
-            } catch {}
-        }
+        this.uploadTexture();
     }
 
     getMatrix() {
@@ -512,7 +519,7 @@ function resolveCollisions(elements) {
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
             // SYNC INTERACTIVITY
-            if (canvas.getElementTransform) {
+            if (typeof canvas.updateElementGeometry === 'function' || typeof canvas.getElementTransform === 'function') {
                 try {
                     // toGLModel maps DOM [0, width] to GL [-0.5, 0.5]
                     const w = p.domEl.offsetWidth;
@@ -526,8 +533,24 @@ function resolveCollisions(elements) {
                     mat4.multiply(mvp, mvp, model);
 
                     const finalT = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
-                    const syncT = canvas.getElementTransform(p.domEl, finalT);
-                    if (syncT) p.domEl.style.transform = syncT.toString();
+                    if (typeof canvas.updateElementGeometry === 'function') {
+                        // Chrome 155+: `canvasTransform` maps the element's border box to the
+                        // canvas in CSS pixels and is used as-is (the legacy
+                        // `getElementTransform()` below converts from canvas grid pixels instead).
+                        // `toGLModel` already takes the element's CSS pixels (offsetWidth), but
+                        // `toCSSViewport` outputs canvas grid (device) pixels, because the canvas
+                        // is sized to innerWidth * devicePixelRatio. So only the output is
+                        // scaled back to CSS pixels: T_css = S_gridToCss * T
+                        const dprX = canvas.width / canvas.clientWidth;
+                        const dprY = canvas.height / canvas.clientHeight;
+                        const canvasTransform = new DOMMatrix()
+                            .scale(1 / dprX, 1 / dprY)
+                            .multiply(finalT);
+                        canvas.updateElementGeometry(p.domEl, { canvasTransform });
+                    } else if (typeof canvas.getElementTransform === 'function') {
+                        const syncT = canvas.getElementTransform(p.domEl, finalT);
+                        if (syncT) p.domEl.style.transform = syncT.toString();
+                    }
                     
                     // Ensure they are visible and hitting properly
                     p.domEl.style.visibility = 'visible';

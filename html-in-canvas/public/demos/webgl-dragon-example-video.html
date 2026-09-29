@@ -66,8 +66,8 @@
   }
 
 </style>
-<canvas id="gl-canvas" layoutsubtree>
-  <form id="ui-background">
+<canvas id="gl-canvas" content="drawable" layoutsubtree>
+  <form id="ui-background" drawable>
     <video id="video" src="../assets/demo-video.mp4" autoplay loop muted playsinline controls></video>
   </form>
 </canvas>
@@ -87,7 +87,7 @@
   observer.observe(canvas, {box: 'device-pixel-content-box'});
 
   if (!gl) {
-    alert('WebGL2 not supported');
+    console.error('WebGL2 not supported');
     throw new Error('WebGL2 not supported');
   }
 
@@ -383,17 +383,50 @@
       gl.useProgram(unlitProgram);
 
       // Update UI Texture
-      if (gl.texElementImage2D) {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, uiTexture);
-        // This if block is used to ensure older browser support before the breaking update in Chromium 150
-        // See https://github.com/WICG/html-in-canvas/pull/128/changes
-        if (gl.texElementImage2D.length === 3) {
-          gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, uiElement);
-        } else {
-          gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+      if (typeof canvas.requestPaint === 'function') {
+        if (!canvas._hicPaintInit) {
+          canvas._hicPaintInit = true;
+          canvas.addEventListener('paint', () => {});
         }
+        canvas.requestPaint();
       }
+      try {
+        if (typeof gl.texElementSubImage2D === 'function') {
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+          let width, height;
+          if (typeof canvas.captureElementImage === 'function') {
+            try {
+              const elemImage = canvas.captureElementImage(uiElement);
+              width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+              height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+            } catch (e) {
+              width = 0;
+              height = 0;
+            }
+          } else {
+            const dpr = window.devicePixelRatio || 1;
+            width = Math.max(1, Math.round(uiElement.offsetWidth * dpr));
+            height = Math.max(1, Math.round(uiElement.offsetHeight * dpr));
+          }
+          if (width > 0 && height > 0) {
+            if (uiTexture._hicW !== width || uiTexture._hicH !== height) {
+              gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+              uiTexture._hicW = width;
+              uiTexture._hicH = height;
+            }
+            gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, uiElement);
+          }
+        } else if (typeof gl.texElementImage2D === 'function') {
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+          if (gl.texElementImage2D.length === 3) {
+            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, uiElement);
+          } else {
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+          }
+        }
+      } catch (e) {}
 
       const projection = mat4.create();
       mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 1000.0);
@@ -411,7 +444,7 @@
       mat4.multiply(uiMVP, projection, view);
       mat4.multiply(uiMVP, uiMVP, uiModel);
 
-      if (canvas.getElementTransform) {
+      if (typeof canvas.updateElementGeometry === 'function' || typeof canvas.getElementTransform === 'function') {
         // 1. Convert the MVP matrix (gl-matrix Float32Array) to a DOMMatrix
         const mvpDOM = new DOMMatrix(Array.from(uiMVP));
 
@@ -439,16 +472,29 @@
         // 4. Combine: Viewport * MVP * Model
         let finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
 
-        let transform = canvas.getElementTransform(uiElement, finalTransform);
+        if (typeof canvas.updateElementGeometry === 'function') {
+          // Chrome 155+: `canvasTransform` maps the element's border box to the
+          // canvas in CSS pixels and is used as-is. Unlike the legacy
+          // `getElementTransform()` below, the browser does not convert it from
+          // canvas grid pixels. `finalTransform` is in canvas grid (device)
+          // pixels, so change basis: T_css = S_gridToCss * T_grid * S_gridToCss^-1
+          const canvasTransform = new DOMMatrix()
+            .scale(1 / dprX, 1 / dprY)
+            .multiply(finalTransform)
+            .scale(dprX, dprY);
+          canvas.updateElementGeometry(uiElement, { canvasTransform });
+        } else {
+          let transform = canvas.getElementTransform(uiElement, finalTransform);
 
-        // Workaround for Chromium bug https://crbug.com/512171941 where
-        // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
-        // assignment below re-initializes the DOMMatrix which corrects is2D to
-        // be false.
-        if (transform.is2D)
-          transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
+          // Workaround for Chromium bug https://crbug.com/512171941 where
+          // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+          // assignment below re-initializes the DOMMatrix which corrects is2D to
+          // be false.
+          if (transform.is2D)
+            transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
 
-        uiElement.style.transform = transform.toString();
+          uiElement.style.transform = transform.toString();
+        }
       }
 
       gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projection);

@@ -96,18 +96,42 @@ const pipeline = device.createRenderPipeline({
 });
 
 // HTML-in-Canvas script BEGIN
+if (!canvas.hasAttribute('content') && !canvas.hasAttribute('layoutsubtree')) {
+  if ('content' in HTMLCanvasElement.prototype) {
+    canvas.setAttribute('content', 'drawable');
+  } else {
+    canvas.setAttribute('layoutsubtree', '');
+  }
+}
+
 if (uiElement) {
+  uiElement.setAttribute('drawable', '');
   canvas.onpaint = (event) => {
-    if (!event.changedElements?.length > 0) {
+    if (!(event.changedElements?.length > 0)) {
       // No canvas children changed -> no re-rendering needed
       console.log("No rerendering of canvas children")
       return
     }
     console.log("Onpaint triggered")
-    if (device.queue.copyElementImageToTexture) {
-      console.log("copyElementImageToTexture method supported")
-      try {
-        // This if block is used to ensure older browser support before the WebGPU signature update
+    try {
+      if ("drawElementImageToTexture" in GPUQueue.prototype) {
+        // Chrome 155+: Explicit source and destination bounds
+        device.queue.drawElementImageToTexture(
+          {
+            source: uiElement,
+            sourceX: 0,
+            sourceY: 0,
+            sourceWidth: 200,
+            sourceHeight: 200,
+          },
+          {
+            texture: targetTexture,
+            size: { width: 200, height: 200 },
+          }
+        );
+        console.log("drawElementImageToTexture method executed successfully")
+      } else if (typeof device.queue.copyElementImageToTexture === "function") {
+        // Chrome 150-154 and Chrome < 150 fallback
         if (device.queue.copyElementImageToTexture.length === 2) {
           const sourceDict = { source: uiElement };
           const destDict = {
@@ -125,13 +149,12 @@ if (uiElement) {
           );
         }
         console.log("copyElementImageToTexture method executed successfully")
-      } catch (err) {
-        console.error("Failed to copy element image to texture:", err);
       }
+    } catch (err) {
+      console.error("Failed to upload element image to WebGPU texture:", err);
     }
 
-    if (canvas.getElementTransform) {
-      console.log("canvas return element transform")
+    if (typeof canvas.updateElementGeometry === "function" || typeof canvas.getElementTransform === "function") {
       const mvpDOM = new DOMMatrix(Array.from(htmlElementMVP));
       const dprX = canvas.width / canvas.clientWidth;
       const dprY = canvas.height / canvas.clientHeight;
@@ -150,9 +173,22 @@ if (uiElement) {
         .multiply(mvpDOM)
         .multiply(cssToUnitSpace);
 
-      const computedTransform = canvas.getElementTransform(uiElement, screenSpaceTransform);
-      if (computedTransform) {
-        uiElement.style.transform = computedTransform.toString();
+      if (typeof canvas.updateElementGeometry === "function") {
+        // Chrome 155+: `canvasTransform` maps the element's border box to the
+        // canvas in CSS pixels and is used as-is. Unlike the legacy
+        // `getElementTransform()` below, the browser does not convert it from
+        // canvas grid pixels. `screenSpaceTransform` is in canvas grid (device)
+        // pixels, so change basis: T_css = S_gridToCss * T_grid * S_gridToCss^-1
+        const canvasTransform = new DOMMatrix()
+          .scale(1 / dprX, 1 / dprY)
+          .multiply(screenSpaceTransform)
+          .scale(dprX, dprY);
+        canvas.updateElementGeometry(uiElement, { canvasTransform });
+      } else if (typeof canvas.getElementTransform === "function") {
+        const computedTransform = canvas.getElementTransform(uiElement, screenSpaceTransform);
+        if (computedTransform) {
+          uiElement.style.transform = computedTransform.toString();
+        }
       }
     }
   };

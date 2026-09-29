@@ -414,7 +414,7 @@
     <div class="canvas-card">
       <div class="canvas-wrapper" id="canvas-wrapper">
         <!-- Outer Canvas: #tv-frame -->
-        <canvas id="tv-frame" layoutsubtree width="800" height="550">
+        <canvas id="tv-frame" content="drawable" layoutsubtree width="800" height="550">
 
           <!-- Direct Child 1 of #tv-frame: TV Casing -->
           <div id="tv-casing" drawable>
@@ -427,7 +427,7 @@
           </div>
 
           <!-- Direct Child 2 of #tv-frame: Inner Canvas #tv-screen -->
-          <canvas id="tv-screen" drawable layoutsubtree width="640" height="360">
+          <canvas id="tv-screen" drawable content="drawable" layoutsubtree width="640" height="360">
             <!-- Direct Child 1 of #tv-screen: Video -->
             <video drawable id="movie-player" src="../assets/demo-video.mp4" loop muted playsinline style="opacity: 0.7;"></video>
             <!-- Direct Child 2 of #tv-screen: Black Screen -->

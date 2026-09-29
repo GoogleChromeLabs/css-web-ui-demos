@@ -170,16 +170,30 @@ export function setupDeformableRendering(canvas, domId) {
     };
 
     function update() {
-        if (!gl.texElementImage2D) return;
         const el = document.getElementById(domId);
         if (!el) return;
+        if (!el.hasAttribute('drawable')) el.setAttribute('drawable', '');
         gl.bindTexture(gl.TEXTURE_2D, tex);
-        // This if block is used to ensure older browser support before the breaking update in Chromium 150
-        // See https://github.com/WICG/html-in-canvas/pull/128/changes
-        if (gl.texElementImage2D.length === 3) {
-            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
-        } else {
-            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+        if (typeof gl.texElementSubImage2D === 'function') {
+            let width, height;
+            if (typeof gl.canvas?.captureElementImage === 'function') {
+                const elemImage = gl.canvas.captureElementImage(el);
+                width = elemImage?.width;
+                height = elemImage?.height;
+            }
+            if (!width || !height) {
+                const dpr = window.devicePixelRatio || 1;
+                width = Math.max(1, Math.round((el.offsetWidth || 800) * dpr));
+                height = Math.max(1, Math.round((el.offsetHeight || 1100) * dpr));
+            }
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, el);
+        } else if (typeof gl.texElementImage2D === 'function') {
+            if (gl.texElementImage2D.length === 3) {
+                gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, el);
+            } else {
+                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+            }
         }
     }
 
@@ -216,7 +230,7 @@ export function setupDeformableRendering(canvas, domId) {
         gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
 
         // SYNC INTERACTIVITY
-        if (canvas.getElementTransform) {
+        if (typeof canvas.updateElementGeometry === 'function' || typeof canvas.getElementTransform === 'function') {
             const el = document.getElementById(domId);
             const toGLModel = new DOMMatrix().scale(PAGE_WIDTH / 800, -PAGE_HEIGHT / 1100, 1).translate(-400, -550);
             const toCSSViewport = new DOMMatrix().translate(canvas.width / 2, canvas.height / 2).scale(canvas.width / 2, -canvas.height / 2, 1);
@@ -226,15 +240,17 @@ export function setupDeformableRendering(canvas, domId) {
             mat4.mul(mvp, mvp, model);
 
             const finalT = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
-            let syncT = canvas.getElementTransform(el, finalT);
-            // Workaround for Chromium bug https://crbug.com/512171941 where
-            // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
-            // assignment below re-initializes the DOMMatrix which corrects is2D to
-            // be false.
-            if (syncT.is2D) {
-                syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+            if (typeof canvas.updateElementGeometry === 'function') {
+                canvas.updateElementGeometry(el, { canvasTransform: finalT });
+            } else if (typeof canvas.getElementTransform === 'function') {
+                let syncT = canvas.getElementTransform(el, finalT);
+                if (syncT) {
+                    if (syncT.is2D) {
+                        syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+                    }
+                    el.style.transform = syncT.toString();
+                }
             }
-            el.style.transform = syncT.toString();
         }
 
         requestAnimationFrame(render);

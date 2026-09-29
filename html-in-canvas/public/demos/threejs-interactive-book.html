@@ -276,14 +276,14 @@
         </div>
     </div>
 
-    <!-- The Canvas must have the 'layoutsubtree' attribute for the HTML-in-Canvas system -->
-    <canvas id="gl-canvas" layoutsubtree>
+    <!-- The Canvas has both 'content="drawable"' and 'layoutsubtree' attributes for cross-version HTML-in-Canvas support -->
+    <canvas id="gl-canvas" content="drawable" layoutsubtree>
         
         <!-- Paper Edge Texture Source -->
-        <div id="paper-edge" style="position: absolute; width: 100px; height: 1200px; background: repeating-linear-gradient(#fcfbf7, #fcfbf7 3px, #e2e8f0 5px); pointer-events: none;"></div>
+        <div id="paper-edge" drawable style="position: absolute; width: 100px; height: 1200px; background: repeating-linear-gradient(#fcfbf7, #fcfbf7 3px, #e2e8f0 5px); pointer-events: none;"></div>
 
         <!-- ================= PAGE 0 (FRONT COVER) ================= -->
-        <div id="page-0" class="book-page cover">
+        <div id="page-0" drawable class="book-page cover">
             <div class="cover-subtitle">A WebGL Experience</div>
             <div class="cover-title">The Chronicle<br>of Light</div>
             <div class="cover-author">Volume I</div>
@@ -291,7 +291,7 @@
         </div>
 
         <!-- ================= PAGE 1 (INSIDE FRONT COVER) ================= -->
-        <div id="page-1" class="book-page">
+        <div id="page-1" drawable class="book-page">
             <div style="margin: auto; text-align: center; font-style: italic; color: #64748b;">
                 This book is a demonstration of advanced HTML-in-Canvas techniques, rendering standard DOM elements as textures on 3D geometry with full interactivity.
             </div>
@@ -299,7 +299,7 @@
         </div>
 
         <!-- ================= PAGE 2 (TITLE PAGE) ================= -->
-        <div id="page-2" class="book-page">
+        <div id="page-2" drawable class="book-page">
             <div class="chapter-number">Book One</div>
             <div class="chapter-title">The Awakening of Pixels</div>
             <div class="page-content">
@@ -310,7 +310,7 @@
         </div>
 
         <!-- ================= PAGE 3 ================= -->
-        <div id="page-3" class="book-page">
+        <div id="page-3" drawable class="book-page">
             <div class="page-header">The Grid Emerges</div>
             <div class="page-content">
                 <p>We watched as the Cartesian plane transformed. What was once a simple two-dimensional surface began to warp and curve under the influence of depth. The third dimension was not just simulated; it was forged in the fires of the GPU.</p>
@@ -320,7 +320,7 @@
         </div>
 
         <!-- ================= PAGE 4 ================= -->
-        <div id="page-4" class="book-page">
+        <div id="page-4" drawable class="book-page">
             <div class="page-header">The Texture of Reality</div>
             <div class="page-content">
                 <p>But geometry alone is a skeletal thing. It requires skin, a surface to catch the light and tell a story. This is where the magic of the fragment shader revealed itself. We learned to map images onto complex meshes, stretching them like canvas over a frame.</p>
@@ -330,7 +330,7 @@
         </div>
 
         <!-- ================= PAGE 5 ================= -->
-        <div id="page-5" class="book-page">
+        <div id="page-5" drawable class="book-page">
             <div class="page-header">The Interaction</div>
             <div class="page-content">
                 <p>To touch the virtual is the ultimate goal. When you click, when you drag, the system must translate your intention from the flat glass of your screen into the deep coordinates of the scene.</p>
@@ -340,14 +340,14 @@
         </div>
 
         <!-- ================= PAGE 6 (CHAPTER 2) ================= -->
-        <div id="page-6" class="book-page chapter-splash">
+        <div id="page-6" drawable class="book-page chapter-splash">
             <div class="chapter-number">Chapter II</div>
             <div class="chapter-title">The Physics of Paper</div>
             <div class="page-number">5</div>
         </div>
 
         <!-- ================= PAGE 7 ================= -->
-        <div id="page-7" class="book-page">
+        <div id="page-7" drawable class="book-page">
             <div class="page-header">Simulating the Fold</div>
             <div class="page-content">
                 <p>Consider the humble page. It seems simple until you attempt to recreate its behavior in code. It does not just rotate; it bends, it resists, it captures the air as it turns.</p>
@@ -357,7 +357,7 @@
         </div>
 
         <!-- ================= PAGE 8 ================= -->
-        <div id="page-8" class="book-page">
+        <div id="page-8" drawable class="book-page">
             <div class="page-header">Lighting the Curve</div>
             <div class="page-content">
                 <p>Without light, there is no form. As the page turns, the normals must update dynamically. A point that was once facing the light source now turns away, falling into shadow.</p>
@@ -367,7 +367,7 @@
         </div>
 
         <!-- ================= PAGE 9 ================= -->
-        <div id="page-9" class="book-page">
+        <div id="page-9" drawable class="book-page">
             <div class="page-header">The Spine Shadow</div>
             <div class="page-content">
                 <p>A book is not just a collection of separate planes. It is a bound object. The center, the spine, is where the pages converge. This area naturally receives less light, creating a distinct gradient of shadow.</p>
@@ -377,7 +377,7 @@
         </div>
 
         <!-- ================= PAGE 10 ================= -->
-        <div id="page-10" class="book-page">
+        <div id="page-10" drawable class="book-page">
             <div class="page-header">Optimization Secrets</div>
             <div class="page-content">
                 <p>Rendering 15 pages simultaneously at high resolution would crush the performance of many devices. We must be clever. We do not update all textures every frame.</p>
@@ -387,14 +387,14 @@
         </div>
 
         <!-- ================= PAGE 11 (CHAPTER 3) ================= -->
-        <div id="page-11" class="book-page chapter-splash">
+        <div id="page-11" drawable class="book-page chapter-splash">
             <div class="chapter-number">Chapter III</div>
             <div class="chapter-title">The Future Unbound</div>
             <div class="page-number">10</div>
         </div>
 
         <!-- ================= PAGE 12 ================= -->
-        <div id="page-12" class="book-page">
+        <div id="page-12" drawable class="book-page">
             <div class="page-header">Beyond the Screen</div>
             <div class="page-content">
                 <p>What we have built here is just a stepping stone. The techniques of mapping HTML to canvas are evolving. Soon, entire interfaces will be rendered this way, breaking free from the rectangle.</p>
@@ -404,7 +404,7 @@
         </div>
 
         <!-- ================= PAGE 13 ================= -->
-        <div id="page-13" class="book-page">
+        <div id="page-13" drawable class="book-page">
             <div class="page-header">Conclusion</div>
             <div class="page-content">
                 <p>And so, our brief journey through the digital manuscript concludes. We have seen pixels become pages, and code become art. The tools are in your hands to build the next chapter.</p>
@@ -414,7 +414,7 @@
         </div>
 
         <!-- ================= PAGE 14 (INSIDE BACK COVER) ================= -->
-        <div id="page-14" class="book-page">
+        <div id="page-14" drawable class="book-page">
             <div style="margin: auto; text-align: center; color: #64748b;">
                 <div style="font-size: 24px; margin-bottom: 20px;">✧</div>
                 Thank you for exploring this demo.<br>
@@ -424,7 +424,7 @@
         </div>
 
         <!-- ================= PAGE 15 (BACK COVER) ================= -->
-        <div id="page-15" class="book-page back-cover">
+        <div id="page-15" drawable class="book-page back-cover">
             <div style="font-family: 'Cinzel', serif; font-size: 24px; color: #ca8a04; margin-bottom: 20px;">FINIS</div>
             <div style="font-size: 14px; color: #64748b;">The Chronicle of Light</div>
             <div class="barcode">
@@ -522,18 +522,52 @@
         }
 
         function updateHijackedTexture(webglTexture, domId) {
-            if (!gl.texElementImage2D) return;
+            if (!gl.texElementSubImage2D && !gl.texElementImage2D) return;
             const element = document.getElementById(domId);
             if (!element) return;
 
-            gl.bindTexture(gl.TEXTURE_2D, webglTexture);
-            // This if block is used to ensure older browser support before the breaking update in Chromium 150
-            // See https://github.com/WICG/html-in-canvas/pull/128/changes
-            if (gl.texElementImage2D.length === 3) {
-                gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, element);
-            } else {
-                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+            if (typeof canvas.requestPaint === 'function') {
+                if (!canvas._hicPaintInit) {
+                    canvas._hicPaintInit = true;
+                    canvas.addEventListener('paint', () => {});
+                }
+                canvas.requestPaint();
             }
+
+            gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+            try {
+                if (typeof gl.texElementSubImage2D === 'function') {
+                    let width, height;
+                    if (typeof gl.canvas?.captureElementImage === 'function') {
+                        try {
+                            const elemImage = gl.canvas.captureElementImage(element);
+                            width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                            height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+                        } catch (e) {
+                            width = 0;
+                            height = 0;
+                        }
+                    } else {
+                        const dpr = window.devicePixelRatio || 1;
+                        width = Math.max(1, Math.round(element.offsetWidth * dpr));
+                        height = Math.max(1, Math.round(element.offsetHeight * dpr));
+                    }
+                    if (width > 0 && height > 0) {
+                        if (webglTexture._hicW !== width || webglTexture._hicH !== height) {
+                            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                            webglTexture._hicW = width;
+                            webglTexture._hicH = height;
+                        }
+                        gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, element);
+                    }
+                } else if (typeof gl.texElementImage2D === 'function') {
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, element);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+                    }
+                }
+            } catch (e) {}
         }
 
         // --- Materials ---
@@ -810,7 +844,7 @@
             }
 
             // --- HTML-in-Canvas DOM Sync ---
-            if (canvas.getElementTransform) {
+            if (canvas.updateElementGeometry || canvas.getElementTransform) {
                 const toGLModel = new DOMMatrix()
                     .scale(PAGE_WIDTH / 800, -PAGE_HEIGHT / 1200, 1)
                     .translate(0, -1200 / 2);
@@ -842,8 +876,24 @@
                     const frontEl = document.getElementById(p.frontId);
                     if (frontEl) {
                         const finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront.elements))).multiply(toGLModel);
-                        const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
-                        if (tFront) frontEl.style.transform = tFront.toString();
+                        if (typeof canvas.updateElementGeometry === 'function') {
+                            // Chrome 155+: `canvasTransform` maps the element's border box to the
+                            // canvas in CSS pixels and is used as-is (the legacy
+                            // `getElementTransform()` below converts from canvas grid pixels instead).
+                            // `toGLModel` already takes the page's 800x1200 CSS pixels, but
+                            // `toCSSViewport` outputs canvas grid (device) pixels, because the
+                            // renderer uses setPixelRatio(devicePixelRatio). So only the output is
+                            // scaled back to CSS pixels: T_css = S_gridToCss * T
+                            const dprX = canvas.width / canvas.clientWidth;
+                            const dprY = canvas.height / canvas.clientHeight;
+                            const canvasTransform = new DOMMatrix()
+                                .scale(1 / dprX, 1 / dprY)
+                                .multiply(finalTransformFront);
+                            canvas.updateElementGeometry(frontEl, { canvasTransform });
+                        } else if (typeof canvas.getElementTransform === 'function') {
+                            const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
+                            if (tFront) frontEl.style.transform = tFront.toString();
+                        }
                         frontEl.style.zIndex = Math.round((p.mesh.position.z + 1.0) * 10000);
                         frontEl.style.pointerEvents = (t < 0.5) ? 'auto' : 'none';
                     }
@@ -856,8 +906,19 @@
                     const backEl = document.getElementById(p.backId);
                     if (backEl) {
                         const finalTransformBack = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpBack.elements))).multiply(toGLModel);
-                        const tBack = canvas.getElementTransform(backEl, finalTransformBack);
-                        if (tBack) backEl.style.transform = tBack.toString();
+                        if (typeof canvas.updateElementGeometry === 'function') {
+                            // Chrome 155+: same conversion as the front page above
+                            // (element CSS px -> canvas grid px, so scale the output to CSS px).
+                            const dprX = canvas.width / canvas.clientWidth;
+                            const dprY = canvas.height / canvas.clientHeight;
+                            const canvasTransform = new DOMMatrix()
+                                .scale(1 / dprX, 1 / dprY)
+                                .multiply(finalTransformBack);
+                            canvas.updateElementGeometry(backEl, { canvasTransform });
+                        } else if (typeof canvas.getElementTransform === 'function') {
+                            const tBack = canvas.getElementTransform(backEl, finalTransformBack);
+                            if (tBack) backEl.style.transform = tBack.toString();
+                        }
                         backEl.style.zIndex = Math.round((p.mesh.position.z + 1.0) * 10000);
                         backEl.style.pointerEvents = (t > 0.5) ? 'auto' : 'none';
                     }

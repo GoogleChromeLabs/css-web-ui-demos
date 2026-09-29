@@ -252,52 +252,52 @@
     <!-- Card 1: Grouped Bar Chart -->
     <div class="card" role="region" aria-label="Grouped Bar Chart">
       <div class="chart-title">Grouped Bar Chart</div>
-      <canvas id="chart1" class="chart-canvas" layoutsubtree>
+      <canvas id="chart1" class="chart-canvas" content="drawable" layoutsubtree>
         <!-- Axis Labels -->
-        <span class="interactive-label group-label" data-group="Q1">Q1</span>
-        <span class="interactive-label group-label" data-group="Q2">Q2</span>
-        <span class="interactive-label group-label" data-group="Q3">Q3</span>
-        <span class="interactive-label group-label" data-group="Q4">Q4</span>
+        <span drawable class="interactive-label group-label" data-group="Q1">Q1</span>
+        <span drawable class="interactive-label group-label" data-group="Q2">Q2</span>
+        <span drawable class="interactive-label group-label" data-group="Q3">Q3</span>
+        <span drawable class="interactive-label group-label" data-group="Q4">Q4</span>
 
         <!-- Interactive hover segments -->
         <!-- Q1 -->
-        <button class="interactive-label bar-segment" data-group="Q1" data-sub="Prod A" data-val="15">
+        <button drawable class="interactive-label bar-segment" data-group="Q1" data-sub="Prod A" data-val="15">
           <span class="bar-text">a bit</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q1" data-sub="Prod B" data-val="55">
+        <button drawable class="interactive-label bar-segment" data-group="Q1" data-sub="Prod B" data-val="55">
           <span class="bar-text">average</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q1" data-sub="Prod C" data-val="65">
+        <button drawable class="interactive-label bar-segment" data-group="Q1" data-sub="Prod C" data-val="65">
           <span class="bar-text">a lot</span>
         </button>
         <!-- Q2 -->
-        <button class="interactive-label bar-segment" data-group="Q2" data-sub="Prod A" data-val="50">
+        <button drawable class="interactive-label bar-segment" data-group="Q2" data-sub="Prod A" data-val="50">
           <span class="bar-text">average</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q2" data-sub="Prod B" data-val="25">
+        <button drawable class="interactive-label bar-segment" data-group="Q2" data-sub="Prod B" data-val="25">
           <span class="bar-text">a bit</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q2" data-sub="Prod C" data-val="75">
+        <button drawable class="interactive-label bar-segment" data-group="Q2" data-sub="Prod C" data-val="75">
           <span class="bar-text">a lot</span>
         </button>
         <!-- Q3 -->
-        <button class="interactive-label bar-segment" data-group="Q3" data-sub="Prod A" data-val="85">
+        <button drawable class="interactive-label bar-segment" data-group="Q3" data-sub="Prod A" data-val="85">
           <span class="bar-text">a lot</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q3" data-sub="Prod B" data-val="65">
+        <button drawable class="interactive-label bar-segment" data-group="Q3" data-sub="Prod B" data-val="65">
           <span class="bar-text">a lot</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q3" data-sub="Prod C" data-val="20">
+        <button drawable class="interactive-label bar-segment" data-group="Q3" data-sub="Prod C" data-val="20">
           <span class="bar-text">a bit</span>
         </button>
         <!-- Q4 -->
-        <button class="interactive-label bar-segment" data-group="Q4" data-sub="Prod A" data-val="70">
+        <button drawable class="interactive-label bar-segment" data-group="Q4" data-sub="Prod A" data-val="70">
           <span class="bar-text">a lot</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q4" data-sub="Prod B" data-val="50">
+        <button drawable class="interactive-label bar-segment" data-group="Q4" data-sub="Prod B" data-val="50">
           <span class="bar-text">average</span>
         </button>
-        <button class="interactive-label bar-segment" data-group="Q4" data-sub="Prod C" data-val="80">
+        <button drawable class="interactive-label bar-segment" data-group="Q4" data-sub="Prod C" data-val="80">
           <span class="bar-text">a lot</span>
         </button>
       </canvas>
@@ -306,31 +306,31 @@
     <!-- Card 2: Donut Chart -->
     <div class="card" role="region" aria-label="Donut Chart">
       <div class="chart-title">Donut Chart</div>
-      <canvas id="chart2" class="chart-canvas" layoutsubtree>
+      <canvas id="chart2" class="chart-canvas" content="drawable" layoutsubtree>
         <!-- Donut Center Element -->
-        <div class="donut-center" style="width: 120px; height: 120px;">
+        <div drawable class="donut-center" style="width: 120px; height: 120px;">
           <span class="val">100%</span>
           <span class="lbl">Fruit</span>
         </div>
 
         <!-- Slice Interactive Overlays with nested HTML/CSS Tooltips -->
-        <button class="interactive-label donut-slice" data-key="Apple" data-val="35" style="--border-color: #ff00cc;">
+        <button drawable class="interactive-label donut-slice" data-key="Apple" data-val="35" style="--border-color: #ff00cc;">
           Apple
           <span class="donut-tooltip">Apple (35%): Apple is a crisp, sweet and juicy pome fruit.</span>
         </button>
-        <button class="interactive-label donut-slice" data-key="Blackberry" data-val="25" style="--border-color: #7b6888;">
+        <button drawable class="interactive-label donut-slice" data-key="Blackberry" data-val="25" style="--border-color: #7b6888;">
           Blackberry
           <span class="donut-tooltip">Blackberry (25%): Blackberry is a delicious aggregate bramble fruit.</span>
         </button>
-        <button class="interactive-label donut-slice" data-key="Durian" data-val="20" style="--border-color: #00d2ff;">
+        <button drawable class="interactive-label donut-slice" data-key="Durian" data-val="20" style="--border-color: #00d2ff;">
           Durian
           <span class="donut-tooltip">Durian (20%): Durian is a spiky, highly aromatic tropical fruit.</span>
         </button>
-        <button class="interactive-label donut-slice" data-key="Cherry" data-val="12" style="--border-color: #ffeb3b;">
+        <button drawable class="interactive-label donut-slice" data-key="Cherry" data-val="12" style="--border-color: #ffeb3b;">
           Cherry
           <span class="donut-tooltip">Cherry (12%): Cherry is a sweet, bright red summer stone fruit.</span>
         </button>
-        <button class="interactive-label donut-slice" data-key="Fig" data-val="8" style="--border-color: #4daf4a;">
+        <button drawable class="interactive-label donut-slice" data-key="Fig" data-val="8" style="--border-color: #4daf4a;">
           Fig
           <span class="donut-tooltip">Fig (8%): Fig is a unique, soft and sweet aggregate flower-fruit.</span>
         </button>
@@ -340,14 +340,14 @@
     <!-- Card 3: Radial Bar Chart -->
     <div class="card" role="region" aria-label="Radial Bar Chart">
       <div class="chart-title">Radial Bar Chart</div>
-      <canvas id="chart3" class="chart-canvas" layoutsubtree>
-        <a class="interactive-label radial-segment" data-country="USA" href="https://en.wikipedia.org/wiki/United_States" target="_blank">USA</a>
-        <a class="interactive-label radial-segment" data-country="China" href="https://en.wikipedia.org/wiki/China" target="_blank">China</a>
-        <a class="interactive-label radial-segment" data-country="India" href="https://en.wikipedia.org/wiki/India" target="_blank">India</a>
-        <a class="interactive-label radial-segment" data-country="Russia" href="https://en.wikipedia.org/wiki/Russia" target="_blank">Russia</a>
-        <a class="interactive-label radial-segment" data-country="Germany" href="https://en.wikipedia.org/wiki/Germany" target="_blank">Germany</a>
-        <a class="interactive-label radial-segment" data-country="Japan" href="https://en.wikipedia.org/wiki/Japan" target="_blank">Japan</a>
-        <a class="interactive-label radial-segment" data-country="UK" href="https://en.wikipedia.org/wiki/United_Kingdom" target="_blank">UK</a>
+      <canvas id="chart3" class="chart-canvas" content="drawable" layoutsubtree>
+        <a drawable class="interactive-label radial-segment" data-country="USA" href="https://en.wikipedia.org/wiki/United_States" target="_blank">USA</a>
+        <a drawable class="interactive-label radial-segment" data-country="China" href="https://en.wikipedia.org/wiki/China" target="_blank">China</a>
+        <a drawable class="interactive-label radial-segment" data-country="India" href="https://en.wikipedia.org/wiki/India" target="_blank">India</a>
+        <a drawable class="interactive-label radial-segment" data-country="Russia" href="https://en.wikipedia.org/wiki/Russia" target="_blank">Russia</a>
+        <a drawable class="interactive-label radial-segment" data-country="Germany" href="https://en.wikipedia.org/wiki/Germany" target="_blank">Germany</a>
+        <a drawable class="interactive-label radial-segment" data-country="Japan" href="https://en.wikipedia.org/wiki/Japan" target="_blank">Japan</a>
+        <a drawable class="interactive-label radial-segment" data-country="UK" href="https://en.wikipedia.org/wiki/United_Kingdom" target="_blank">UK</a>
       </canvas>
     </div>
   </div>
@@ -381,6 +381,15 @@
       ctx.closePath();
       ctx.fillStyle = fillStyle;
       ctx.fill();
+    }
+
+    function drawAndSync2D(ctx, el, x, y) {
+      const transform = ctx.drawElementImage(el, x, y);
+      if (transform !== undefined && typeof transform?.toString === "function") {
+        el.style.transform = transform.toString();
+      } else if (el.style.transform) {
+        el.style.transform = "";
+      }
     }
 
     // Base Canvas setup utility with DPR resize observer
@@ -501,8 +510,7 @@
             if (segment) {
               segment.style.width = `${barW}px`;
               segment.style.height = `${Math.max(barH, 1)}px`;
-              const transform = ctx.drawElementImage(segment, barX, barY);
-              segment.style.transform = transform.toString();
+              drawAndSync2D(ctx, segment, barX, barY);
             }
           });
         });
@@ -520,8 +528,7 @@
           const g = lbl.dataset.group;
           const xPos = margin.left + x0(g) + x0.bandwidth() / 2 - 10;
           const yPos = margin.top + chartHeight + 8;
-          const transform = ctx.drawElementImage(lbl, xPos, yPos);
-          lbl.style.transform = transform.toString();
+          drawAndSync2D(ctx, lbl, xPos, yPos);
         });
       };
 
@@ -588,8 +595,7 @@
             const [cX, cY] = arc.centroid(d);
             const xPos = centerX + cX - slice.offsetWidth / 2;
             const yPos = centerY + cY - slice.offsetHeight / 2;
-            const transform = ctx.drawElementImage(slice, xPos, yPos);
-            slice.style.transform = transform.toString();
+            drawAndSync2D(ctx, slice, xPos, yPos);
           }
         });
 
@@ -598,8 +604,7 @@
         if (center) {
           const cX = centerX - center.offsetWidth / 2;
           const cY = centerY - center.offsetHeight / 2;
-          const transform = ctx.drawElementImage(center, cX, cY);
-          center.style.transform = transform.toString();
+          drawAndSync2D(ctx, center, cX, cY);
         }
       };
 
@@ -666,8 +671,7 @@
             const cY = centerY + Math.sin(midAngle) * radiusAtVal;
 
             segment.textContent = d.Country;
-            const transform = ctx.drawElementImage(segment, cX - segment.offsetWidth/2, cY - segment.offsetHeight/2);
-            segment.style.transform = transform.toString();
+            drawAndSync2D(ctx, segment, cX - segment.offsetWidth/2, cY - segment.offsetHeight/2);
           }
         });
 

@@ -98,7 +98,7 @@
       <input type="checkbox" id="blend-checkbox" style="width: 16px; height: 16px; cursor: pointer;">
       <label for="blend-checkbox" style="color: #fff; font-family: monospace; font-size: 14px; user-select: none; cursor: pointer;">gl.enable(gl.BLEND)</label>
     </div>
-    <canvas id="canvas" layoutsubtree></canvas>
+    <canvas id="canvas" content="drawable" layoutsubtree></canvas>
   </div>
   
   <div id="bottom-container"></div>
@@ -205,6 +205,7 @@
     const canvas = document.getElementById('canvas');
     const canvasForm = document.createElement('form');
     canvasForm.className = 'html-card';
+    canvasForm.setAttribute('drawable', '');
     canvasForm.onsubmit = (e) => e.preventDefault();
     // Note the the canvasForm is the exact same content as the bottomForm, including the styles
     canvasForm.innerHTML = formStyles + cardHtml;
@@ -303,12 +304,59 @@
 
     function uploadTexture() {
       if (!gl || !tex) return;
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      if (gl.texElementImage2D.length === 3) {
-        gl.texElementImage2D(gl.TEXTURE_2D, gl.SRGB8_ALPHA8, canvasForm);
-      } else {
-        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8, gl.RGBA, gl.UNSIGNED_BYTE, canvasForm);
+      if (typeof canvas.requestPaint === 'function') {
+        if (!canvas._hicPaintInit) {
+          canvas._hicPaintInit = true;
+          canvas.addEventListener('paint', () => {});
+        }
+        canvas.requestPaint();
       }
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      try {
+        if (typeof gl.texElementSubImage2D === 'function') {
+          let width, height;
+          let hasPaintRecord = false;
+          if (typeof gl.canvas?.captureElementImage === 'function') {
+            try {
+              const elemImage = gl.canvas.captureElementImage(canvasForm);
+              if (elemImage?.width && elemImage?.height) {
+                width = Math.ceil(elemImage.width);
+                height = Math.ceil(elemImage.height);
+                hasPaintRecord = true;
+              }
+            } catch (e) {
+              hasPaintRecord = false;
+            }
+          }
+          if (!width || !height) {
+            const dpr = window.devicePixelRatio || 1;
+            width = Math.max(1, Math.round(canvasForm.offsetWidth * dpr));
+            height = Math.max(1, Math.round(canvasForm.offsetHeight * dpr));
+          }
+          if (tex._hicW !== width || tex._hicH !== height) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            tex._hicW = width;
+            tex._hicH = height;
+          }
+          if (hasPaintRecord || typeof gl.canvas?.captureElementImage !== 'function') {
+            gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, canvasForm);
+          } else if (canvas && !tex._hicPending) {
+            tex._hicPending = true;
+            canvas.addEventListener('paint', () => {
+              tex._hicPending = false;
+              uploadTexture();
+              drawAndTransform(currentRotX, currentRotY);
+            }, { once: true });
+            canvas.requestPaint?.();
+          }
+        } else if (typeof gl.texElementImage2D === 'function') {
+          if (gl.texElementImage2D.length === 3) {
+            gl.texElementImage2D(gl.TEXTURE_2D, gl.SRGB8_ALPHA8, canvasForm);
+          } else {
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8, gl.RGBA, gl.UNSIGNED_BYTE, canvasForm);
+          }
+        }
+      } catch (e) {}
     }
 
     function drawAndTransform(rx, ry) {
@@ -378,7 +426,7 @@
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
       // --- COMPUTE CSS TRANSFORM FOR HIT TESTING ---
-      if (canvas.getElementTransform) {
+      if (typeof canvas.updateElementGeometry === 'function' || typeof canvas.getElementTransform === 'function') {
         // 1. Convert WebGL MVP Matrix (finalMatrix) to DOM Matrix (already DOMMatrix here)
         const mvpDOM = finalMatrix;
 
@@ -403,12 +451,25 @@
         // 4. Combine: Viewport * MVP * Model
         const screenSpaceTransform = clipToCanvasViewport.multiply(mvpDOM).multiply(cssToUnitSpace);
 
-        // 5. Apply the transform
-        const computedTransform = canvas.getElementTransform(canvasForm, screenSpaceTransform);
-        if (computedTransform) {
-          // Workaround for Chromium bug where transform.is2D is incorrectly true
-          const fixedTransform = new DOMMatrix(computedTransform.toString());
-          canvasForm.style.transform = fixedTransform.toString();
+        // 5. Apply the transform across Chrome versions
+        if (typeof canvas.updateElementGeometry === 'function') {
+          // Chrome 155+: `canvasTransform` maps the element's border box to the
+          // canvas in CSS pixels and is used as-is. Unlike the legacy
+          // `getElementTransform()` below, the browser does not convert it from
+          // canvas grid pixels. `screenSpaceTransform` is in canvas grid (device)
+          // pixels, so change basis: T_css = S_gridToCss * T_grid * S_gridToCss^-1
+          const canvasTransform = new DOMMatrix()
+            .scale(1 / dprX, 1 / dprY)
+            .multiply(screenSpaceTransform)
+            .scale(dprX, dprY);
+          canvas.updateElementGeometry(canvasForm, { canvasTransform });
+        } else {
+          const computedTransform = canvas.getElementTransform(canvasForm, screenSpaceTransform);
+          if (computedTransform) {
+            // Workaround for Chromium bug where transform.is2D is incorrectly true
+            const fixedTransform = new DOMMatrix(computedTransform.toString());
+            canvasForm.style.transform = fixedTransform.toString();
+          }
         }
       }
     }
