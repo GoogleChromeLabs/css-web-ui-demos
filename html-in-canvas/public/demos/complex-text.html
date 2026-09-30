@@ -28,8 +28,8 @@
     }
   </style>
 
-  <canvas id="canvas" width="638" height="318" layoutsubtree>
-    <div id="draw_element" style="width: 550px;">
+  <canvas id="canvas" width="638" height="318" content="drawable" layoutsubtree>
+    <div id="draw_element" drawable style="width: 550px;">
       Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
       <br>I'm multi-line, <b>formatted</b>,
       rotated text with emoji (&#128512;), RTL text
@@ -54,9 +54,12 @@
         ctx.reset();
         ctx.rotate((15 * Math.PI) / 180); // rotates the context 15 degrees 
         ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio); //moves the context to the right a bit 
-        let transform = ctx.drawElementImage(draw_element, 0, 0);
-
-        draw_element.style.transform = transform.toString();
+        const transform = ctx.drawElementImage(draw_element, 0, 0);
+        if (transform !== undefined && typeof transform?.toString === 'function') {
+          draw_element.style.transform = transform.toString();
+        } else if (draw_element.style.transform) {
+          draw_element.style.transform = '';
+        }
     }
 
     const observer = new ResizeObserver(([entry]) => {

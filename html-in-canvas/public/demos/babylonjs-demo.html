@@ -266,7 +266,7 @@
         <span id="switch-label">Continuous</span>
       </div>
     </div>
-    <canvas id="babylon-canvas" layoutsubtree></canvas>
+    <canvas id="babylon-canvas" content="drawable" layoutsubtree></canvas>
   </div>
   <div id="bottom-container"></div>
 
@@ -275,6 +275,103 @@
 
 
   <script>
+    // Bridge Chrome 155+ APIs (texElementSubImage2D, updateElementGeometry) for Babylon.js HtmlTexture & HtmlInteractionManager
+    (function () {
+      const origTexElementImage2D = WebGL2RenderingContext.prototype.texElementImage2D;
+      const origTexElementSubImage2D = WebGL2RenderingContext.prototype.texElementSubImage2D;
+      if (origTexElementSubImage2D || origTexElementImage2D) {
+        WebGL2RenderingContext.prototype.texElementImage2D = function (...args) {
+          let element = args[args.length - 1];
+          if (element && typeof element === 'object' && !(element instanceof Element)) {
+            if (element.element instanceof Element) element = element.element;
+          }
+          if (this.canvas) {
+            if (!this.canvas.hasAttribute('content')) this.canvas.setAttribute('content', 'drawable');
+            if (!this.canvas.hasAttribute('layoutsubtree')) this.canvas.setAttribute('layoutsubtree', '');
+            if (!this.canvas._hicPaintInit) {
+              this.canvas._hicPaintInit = true;
+              this.canvas.addEventListener('paint', () => {});
+            }
+            this.canvas.requestPaint?.();
+          }
+          if (element instanceof Element) {
+            let cur = element;
+            while (cur && cur !== this.canvas && cur !== document.body) {
+              if (!cur.hasAttribute('drawable')) cur.setAttribute('drawable', '');
+              cur = cur.parentElement;
+            }
+          }
+          const target = args[0];
+          const internalformat = (args.length === 3 ? args[1] : args[2]) || this.RGBA8 || this.RGBA;
+          const sizedFormat = internalformat === this.RGBA ? (this.RGBA8 || this.RGBA) : internalformat;
+          const boundTex = this.getParameter(this.TEXTURE_BINDING_2D);
+          const flipY = this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+          const dpr = window.devicePixelRatio || 1;
+          let width = Math.max(1, Math.round((element?.offsetWidth || 450) * dpr));
+          let height = Math.max(1, Math.round((element?.offsetHeight || 320) * dpr));
+
+          if (typeof origTexElementSubImage2D === 'function') {
+            let hasPaintRecord = false;
+            if (typeof this.canvas?.captureElementImage === 'function') {
+              try {
+                const elemImage = this.canvas.captureElementImage(element);
+                if (elemImage?.width && elemImage?.height) {
+                  width = Math.ceil(elemImage.width);
+                  height = Math.ceil(elemImage.height);
+                  hasPaintRecord = true;
+                }
+              } catch (e) {
+                hasPaintRecord = false;
+              }
+            }
+            if (!boundTex || boundTex._hicW !== width || boundTex._hicH !== height) {
+              this.texImage2D(target, 0, sizedFormat, width, height, 0, this.RGBA, this.UNSIGNED_BYTE, null);
+              if (boundTex) {
+                boundTex._hicW = width;
+                boundTex._hicH = height;
+              }
+            }
+            if (hasPaintRecord || typeof this.canvas?.captureElementImage !== 'function') {
+              try {
+                return origTexElementSubImage2D.call(this, target, 0, 0, 0, element);
+              } catch (e) {}
+            }
+            if (this.canvas && boundTex && !boundTex._hicPending) {
+              boundTex._hicPending = true;
+              this.canvas.addEventListener('paint', () => {
+                boundTex._hicPending = false;
+                const prevTex = this.getParameter(this.TEXTURE_BINDING_2D);
+                const prevFlip = this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+                this.bindTexture(target, boundTex);
+                this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, flipY);
+                this.texElementImage2D(target, sizedFormat, element);
+                this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, prevFlip);
+                this.bindTexture(target, prevTex);
+              }, { once: true });
+              this.canvas.requestPaint?.();
+            }
+            return;
+          } else if (origTexElementImage2D.length === 3) {
+            try {
+              return origTexElementImage2D.call(this, target, sizedFormat, element);
+            } catch (e) {}
+          } else {
+            try {
+              return origTexElementImage2D.apply(this, args);
+            } catch (e) {}
+          }
+        };
+      }
+      if (!('getElementTransform' in HTMLCanvasElement.prototype) && ('updateElementGeometry' in HTMLCanvasElement.prototype)) {
+        HTMLCanvasElement.prototype.getElementTransform = function (element, canvasTransform) {
+          try {
+            this.updateElementGeometry(element, { canvasTransform });
+          } catch (e) {}
+          return new DOMMatrix();
+        };
+      }
+    })();
+
     async function initDemo() {
       // 1. Check for browser HTML-in-Canvas support
       if (!('requestPaint' in HTMLCanvasElement.prototype)) {
@@ -406,6 +503,7 @@
       // 9. Create a separate element for the canvas texture rendering
       const canvasForm = document.createElement('form');
       canvasForm.className = 'html-card';
+      canvasForm.setAttribute('drawable', '');
       canvasForm.onsubmit = (event) => event.preventDefault();
       canvasForm.innerHTML = formStyles + cardHtml;
       

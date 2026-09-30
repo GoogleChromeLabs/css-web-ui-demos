@@ -793,9 +793,11 @@ function setupCanvasRedraw() {
                 // Note: drawElementImage(app, 0, 0) draws at (0,0) in the CURRENT transform space
                 const transform = ctx.drawElementImage(app, 0, 0);
                 
-                // Sync the invisible DOM for hit-testing/interaction
-                if (transform) {
+                // Sync the invisible DOM for hit-testing/interaction (needed in Chrome < 155; automatic in Chrome 155+)
+                if (transform !== undefined && typeof transform?.toString === 'function') {
                     app.style.transform = transform.toString();
+                } else if (app.style.transform) {
+                    app.style.transform = '';
                 }
             } catch (e) {
                 // Paint record might not be ready on first frame

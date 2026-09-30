@@ -77,15 +77,15 @@
         Effect: Fluid Prism Metal &bull; Material Design System
     </div>
 
-    <canvas id="gl-canvas" layoutsubtree>
-        <div id="text-source">
+    <canvas id="gl-canvas" content="drawable" layoutsubtree>
+        <div id="text-source" drawable>
             <b>Lorem ipsum</b> dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore
             et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
             ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
             fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
             mollit anim id est laborum. <b>Experimental API:</b> rendering live HTML directly into a WebGL texture with
             a custom displacement shader makes it possible to create immersive 3D text effects while maintaining
-            accessibility and SEO. Using the <b>layoutsubtree</b> attribute, we bridge the gap between high-performance
+            accessibility and SEO. Using the <b>content="drawable"</b> attribute, we bridge the gap between high-performance
             graphics and the flexible, familiar world of web layout. This block of text is continuous and dense to
             showcase the prismatic distortion and fluidity across the entire surface.
         </div>
@@ -268,16 +268,41 @@
         resizeObserver.observe(canvas, { box: 'device-pixel-content-box' });
 
         canvas.onpaint = (e) => {
-            // Update texture using the experimental API
+            // Update texture using the experimental API across Chrome versions
             gl.bindTexture(gl.TEXTURE_2D, texture);
-            // Chromium texElementImage2D implementation
-            // This if block is used to ensure older browser support before the breaking update in Chromium 150
-            // See https://github.com/WICG/html-in-canvas/pull/128/changes
-            if (gl.texElementImage2D.length === 3) {
-                gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, textSource);
-            } else {
-                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textSource);
-            }
+            try {
+                if (typeof gl.texElementSubImage2D === 'function') {
+                    let width, height;
+                    if (typeof gl.canvas?.captureElementImage === 'function') {
+                        try {
+                            const elemImage = gl.canvas.captureElementImage(textSource);
+                            width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                            height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+                        } catch (err) {
+                            width = 0;
+                            height = 0;
+                        }
+                    } else {
+                        const dpr = window.devicePixelRatio || 1;
+                        width = Math.max(1, Math.round(textSource.offsetWidth * dpr));
+                        height = Math.max(1, Math.round(textSource.offsetHeight * dpr));
+                    }
+                    if (width > 0 && height > 0) {
+                        if (texture._hicW !== width || texture._hicH !== height) {
+                            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                            texture._hicW = width;
+                            texture._hicH = height;
+                        }
+                        gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, textSource);
+                    }
+                } else if (typeof gl.texElementImage2D === 'function') {
+                    if (gl.texElementImage2D.length === 3) {
+                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, textSource);
+                    } else {
+                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textSource);
+                    }
+                }
+            } catch (err) {}
         };
 
         function render(time) {
@@ -302,10 +327,14 @@
 
             // Deduplicate style updates to prevent redundant onpaint triggers
             try {
-                const syncTransform = canvas.getElementTransform(textSource, drawTransform);
-                const transformStr = syncTransform.toString();
+                const transformStr = drawTransform.toString();
                 if (transformStr !== textSource.dataset.lastTransform) {
-                    textSource.style.transform = transformStr;
+                    if (typeof canvas.updateElementGeometry === 'function') {
+                        canvas.updateElementGeometry(textSource, { canvasTransform: drawTransform });
+                    } else if (typeof canvas.getElementTransform === 'function') {
+                        const syncTransform = canvas.getElementTransform(textSource, drawTransform);
+                        textSource.style.transform = syncTransform.toString();
+                    }
                     textSource.dataset.lastTransform = transformStr;
                 }
             } catch (e) {

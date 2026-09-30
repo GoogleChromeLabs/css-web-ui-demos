@@ -20,8 +20,8 @@
     <title>WebGL 3D DOM Integration (HTML-in-Canvas)</title>
 </head>
 <body>
-  <canvas id=canvas width="200" height="200" layoutsubtree style="width: 200px; height: 200px;">
-    <div id="child" contenteditable="true">hello<br>world<br>boo!</div>
+  <canvas id=canvas width="200" height="200" content="drawable" layoutsubtree style="width: 200px; height: 200px;">
+    <div id="child" drawable contenteditable="true">hello<br>world<br>boo!</div>
   </canvas>
 
   <script>
@@ -86,14 +86,36 @@
       const tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
 
-      // Initialize texture
-      // This if block is used to ensure older browser support before the breaking update in Chromium 150
-      // See https://github.com/WICG/html-in-canvas/pull/128/changes
-      if (gl.texElementImage2D.length === 3) {
-        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, child);
-      } else {
-        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, child);
-      }
+      // Initialize texture across Chrome versions (<150, 150-154, 155+)
+      try {
+        if (typeof gl.texElementSubImage2D === 'function') {
+          let width, height;
+          if (typeof gl.canvas?.captureElementImage === 'function') {
+            try {
+              const elemImage = gl.canvas.captureElementImage(child);
+              width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+              height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+            } catch (e) {
+              width = 0;
+              height = 0;
+            }
+          } else {
+            const dpr = window.devicePixelRatio || 1;
+            width = Math.max(1, Math.round(child.offsetWidth * dpr));
+            height = Math.max(1, Math.round(child.offsetHeight * dpr));
+          }
+          if (width > 0 && height > 0) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, child);
+          }
+        } else if (typeof gl.texElementImage2D === 'function') {
+          if (gl.texElementImage2D.length === 3) {
+            gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, child);
+          } else {
+            gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, child);
+          }
+        }
+      } catch (e) {}
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // Changed to Linear for better 3D look
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
@@ -145,7 +167,18 @@
       //    This maps the element's pixels through the WebGL transform and back to screen pixels
       const cssTransform = toCSSViewport.multiply(finalMatrix).multiply(toGLModel);
 
-      child.style.transform = canvas.getElementTransform(child, cssTransform).toString();
+      if (typeof canvas.updateElementGeometry === 'function') {
+        canvas.updateElementGeometry(child, { canvasTransform: cssTransform });
+      } else if (typeof canvas.getElementTransform === 'function') {
+        child.style.transform = canvas.getElementTransform(child, cssTransform).toString();
+      }
+  };
+  canvas.onpaint = () => {
+    observerCallback([{ devicePixelContentBoxSize: [{ inlineSize: canvas.width || 200 * devicePixelRatio, blockSize: canvas.height || 200 * devicePixelRatio }] }]);
+  };
+  const observer = new ResizeObserver((entries) => {
+    observerCallback(entries);
+    canvas.requestPaint?.();
   });
   observer.observe(canvas, {box: 'device-pixel-content-box', fireOnEveryPaint: true});
   </script>

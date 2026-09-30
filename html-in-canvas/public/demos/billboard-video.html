@@ -153,8 +153,8 @@
         Video in HTML-in-Canvas: Use Chrome 151+
     </div>
 
-    <canvas id="gl-canvas" layoutsubtree>
-        <form id="billboard-content" onsubmit="event.preventDefault();">
+    <canvas id="gl-canvas" content="drawable" layoutsubtree>
+        <form id="billboard-content" drawable onsubmit="event.preventDefault();">
             <button class="badge" type="button">I'm a button. Click me!</button>
 
             <div id="video-container">
@@ -180,7 +180,8 @@
     <script type="module">
         // --- Ultimate WebGL HIC Signature & Type Compatibility Patch ---
         const originalTexElementImage2D = WebGL2RenderingContext.prototype.texElementImage2D;
-        if (originalTexElementImage2D) {
+        const originalTexElementSubImage2D = WebGL2RenderingContext.prototype.texElementSubImage2D;
+        if (originalTexElementSubImage2D || originalTexElementImage2D) {
             WebGL2RenderingContext.prototype.texElementImage2D = function(...args) {
                 // 1. Resolve Three.js wrapped image objects (e.g. texture.image = { element: DOMElement })
                 let element = args[args.length - 1];
@@ -192,29 +193,83 @@
                 }
 
                 // 2. Workaround: as of r184, ThreeJS enforces RGB8 in texElementImage2D:
-                // https://github.com/mrdoob/three.js/blob/0355c0d1a2d4f4873c3cf9077f6228a3b5d05a18/src/renderers/webgl-fallback/utils/WebGLTextureUtils.js#L639
                 // Our video/HTML billboard content is sRGB, so we want to force it to use gl.SRGB8_ALPHA8.
-                const forceSRGB = true; 
+                const forceSRGB = true;
+                const target = args[0];
+                const internalformat = forceSRGB ? this.SRGB8_ALPHA8 : this.RGBA8;
 
-                // 3. Resolve Chromium 150+ 3-argument vs legacy 6-argument signature
-                if (originalTexElementImage2D.length === 3) {
-                    // Modern 3-argument signature: (target, internalformat, source)
-                    const target = args[0];
-                    const internalformat = forceSRGB ? this.SRGB8_ALPHA8 : this.RGBA8;
-                    const elem = args[args.length - 1];
-                    return originalTexElementImage2D.call(this, target, internalformat, elem);
-                } else {
-                    // Legacy 6-argument signature: (target, level, internalformat, format, type, source)
-                    if (args.length >= 6) {
-                        if (forceSRGB) {
-                            args[2] = this.SRGB8_ALPHA8; // Overwrite internalFormat with gl.SRGB8_ALPHA8
-                            args[3] = this.RGBA;         // Overwrite format with gl.RGBA (must remain unsized in WebGL)
-                        } else {
-                            args[2] = this.RGBA8;        // Overwrite internalFormat with gl.RGBA8
-                            args[3] = this.RGBA;         // Overwrite format with gl.RGBA
+                if (this.canvas) {
+                    if (!this.canvas.hasAttribute('content')) this.canvas.setAttribute('content', 'drawable');
+                    if (!this.canvas.hasAttribute('layoutsubtree')) this.canvas.setAttribute('layoutsubtree', '');
+                    if (!this.canvas._hicPaintInit) {
+                        this.canvas._hicPaintInit = true;
+                        this.canvas.addEventListener('paint', () => {});
+                    }
+                    this.canvas.requestPaint?.();
+                }
+                if (element instanceof Element && !element.hasAttribute('drawable')) {
+                    element.setAttribute('drawable', '');
+                }
+                const boundTex = this.getParameter(this.TEXTURE_BINDING_2D);
+                const flipY = this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+                const dpr = window.devicePixelRatio || 1;
+                let width = Math.max(1, Math.round((element?.offsetWidth || 256) * dpr));
+                let height = Math.max(1, Math.round((element?.offsetHeight || 256) * dpr));
+
+                // 3. Resolve Chrome 155+ texElementSubImage2D vs Chrome 150-154 3-arg vs legacy 6-arg signature
+                if (typeof originalTexElementSubImage2D === 'function') {
+                    let hasPaintRecord = false;
+                    if (typeof this.canvas?.captureElementImage === 'function') {
+                        try {
+                            const elemImage = this.canvas.captureElementImage(element);
+                            if (elemImage?.width && elemImage?.height) {
+                                width = Math.ceil(elemImage.width);
+                                height = Math.ceil(elemImage.height);
+                                hasPaintRecord = true;
+                            }
+                        } catch (e) {
+                            hasPaintRecord = false;
                         }
                     }
-                    return originalTexElementImage2D.apply(this, args);
+                    if (!boundTex || boundTex._hicW !== width || boundTex._hicH !== height) {
+                        this.texImage2D(target, 0, internalformat, width, height, 0, this.RGBA, this.UNSIGNED_BYTE, null);
+                        if (boundTex) {
+                            boundTex._hicW = width;
+                            boundTex._hicH = height;
+                        }
+                    }
+                    if (hasPaintRecord || typeof this.canvas?.captureElementImage !== 'function') {
+                        try {
+                            return originalTexElementSubImage2D.call(this, target, 0, 0, 0, element);
+                        } catch (e) {}
+                    }
+                    if (this.canvas && boundTex && !boundTex._hicPending) {
+                        boundTex._hicPending = true;
+                        this.canvas.addEventListener('paint', () => {
+                            boundTex._hicPending = false;
+                            const prevTex = this.getParameter(this.TEXTURE_BINDING_2D);
+                            const prevFlip = this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+                            this.bindTexture(target, boundTex);
+                            this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, flipY);
+                            this.texElementImage2D(target, internalformat, element);
+                            this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, prevFlip);
+                            this.bindTexture(target, prevTex);
+                        }, { once: true });
+                        this.canvas.requestPaint?.();
+                    }
+                    return;
+                } else if (originalTexElementImage2D.length === 3) {
+                    try {
+                        return originalTexElementImage2D.call(this, target, internalformat, element);
+                    } catch (e) {}
+                } else {
+                    if (args.length >= 6) {
+                        args[2] = internalformat;
+                        args[3] = this.RGBA;
+                    }
+                    try {
+                        return originalTexElementImage2D.apply(this, args);
+                    } catch (e) {}
                 }
             };
         }
@@ -421,8 +476,8 @@
                 }
             }
 
-            // 2. Interactivity Synchronization (Native HIC getElementTransform)
-            if (canvas.getElementTransform && screenMesh) {
+            // 2. Interactivity Synchronization (Native HIC updateElementGeometry / getElementTransform)
+            if ((canvas.updateElementGeometry || canvas.getElementTransform) && screenMesh) {
                 // Ensure camera and screen matrices are fresh before projection
                 camera.updateMatrixWorld();
                 camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
@@ -485,21 +540,40 @@
                 billboardContent.style.top = '0';
                 billboardContent.style.transformOrigin = '0 0';
 
-                // 5. Get the CSS transform from canvas.getElementTransform
-                let syncT = canvas.getElementTransform(billboardContent, new DOMMatrix(Array.from(mvpMatrix)));
-
-                // Workaround for Chromium bug https://crbug.com/512171941 where
-                // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
-                // assignment below re-initializes the DOMMatrix which corrects is2D to
-                // be false.
-                if (syncT && syncT.is2D) {
-                    syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
-                }
-
-                if (syncT) {
-                    billboardContent.style.transform = syncT.toString();
+                const domMvpMatrix = new DOMMatrix(Array.from(mvpMatrix));
+                if (typeof canvas.updateElementGeometry === 'function') {
+                    // Chrome 155+: `canvasTransform` maps the element's border box to the
+                    // canvas in CSS pixels and is used as-is. Unlike the legacy
+                    // `getElementTransform()` below, the browser does not convert it from
+                    // canvas grid pixels. `domMvpMatrix` is in canvas grid (device) pixels,
+                    // so change basis: T_css = S_gridToCss * T_grid * S_gridToCss^-1
+                    // (dprX/dprY are the same grid-to-CSS ratios the legacy API uses).
+                    const dprX = canvas.width / canvas.clientWidth;
+                    const dprY = canvas.height / canvas.clientHeight;
+                    const canvasTransform = new DOMMatrix()
+                        .scale(1 / dprX, 1 / dprY)
+                        .multiply(domMvpMatrix)
+                        .scale(dprX, dprY);
+                    canvas.updateElementGeometry(billboardContent, { canvasTransform });
                     billboardContent.style.zIndex = 10;
                     billboardContent.style.pointerEvents = 'auto';
+                } else if (typeof canvas.getElementTransform === 'function') {
+                    // 5. Get the CSS transform from canvas.getElementTransform
+                    let syncT = canvas.getElementTransform(billboardContent, domMvpMatrix);
+
+                    // Workaround for Chromium bug https://crbug.com/512171941 where
+                    // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
+                    // assignment below re-initializes the DOMMatrix which corrects is2D to
+                    // be false.
+                    if (syncT && syncT.is2D) {
+                        syncT = DOMMatrix.fromFloat64Array(syncT.toFloat64Array());
+                    }
+
+                    if (syncT) {
+                        billboardContent.style.transform = syncT.toString();
+                        billboardContent.style.zIndex = 10;
+                        billboardContent.style.pointerEvents = 'auto';
+                    }
                 }
             }
 

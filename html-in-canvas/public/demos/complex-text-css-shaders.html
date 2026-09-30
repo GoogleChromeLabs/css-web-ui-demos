@@ -132,8 +132,8 @@
 
   <div class="main-layout">
     <div>
-      <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-        <div id="draw_element" style="width: 550px;">
+      <canvas id="canvas" width="638" height="318" content="drawable" layoutsubtree="true">
+        <div id="draw_element" drawable style="width: 550px;">
           Hello from <a href="https://github.com/WICG/html-in-canvas"
             style="color: var(--md-sys-color-primary)">html-in-canvas</a>!
           <br>I'm multi-line, <b>formatted</b>,
@@ -324,13 +324,16 @@
         ctx.rotate((15 * Math.PI) / 180);
         ctx.translate(80 * window.devicePixelRatio, -20 * window.devicePixelRatio);
 
-        let transform = ctx.drawElementImage(drawElement, 0, 0);
-        if (transform) {
+        const transform = ctx.drawElementImage(drawElement, 0, 0);
+        if (transform !== undefined && typeof transform?.toString === 'function') {
           const transformStr = transform.toString();
           if (transformStr !== drawElement.dataset.lastTransform) {
             drawElement.style.transform = transformStr;
             drawElement.dataset.lastTransform = transformStr;
           }
+        } else if (drawElement.style.transform) {
+          drawElement.style.transform = '';
+          delete drawElement.dataset.lastTransform;
         }
       } catch (e) {
         console.warn("Skipping cached frame");

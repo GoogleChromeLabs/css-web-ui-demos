@@ -128,9 +128,9 @@
 
 <body>
 
-    <!-- UI Overlay rendered into Canvas via layoutsubtree -->
-    <canvas id="gl-canvas" layoutsubtree>
-        <div id="eyesight-chart">
+    <!-- UI Overlay rendered into Canvas via content="drawable" and layoutsubtree -->
+    <canvas id="gl-canvas" content="drawable" layoutsubtree>
+        <div id="eyesight-chart" drawable>
             <div class="chart-header">SNELLEN SCALE</div>
             <div class="chart-row level-1">E</div>
             <div class="chart-row level-2">F P</div>
@@ -146,7 +146,7 @@
         </div>
 
         <!-- HD Chart for Glass Effect (Scaled down in CSS but full res for texture) -->
-        <div id="eyesight-chart-hd"
+        <div id="eyesight-chart-hd" drawable
             style="position: absolute; top: 0; left: 0; width: 400px; height: 600px; transform: scale(0.1); transform-origin: top left; opacity: 0.01; background: #ffffff; color: #000000; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; font-family: 'Courier New', Courier, monospace; pointer-events: none;">
             <div style="font-size: 12px; letter-spacing: 5px; font-weight: bold; color: #666;">SNELLEN SCALE</div>
             <div style="font-size: 90px; font-weight: bold; letter-spacing: 15px; text-indent: 15px;">E</div>
@@ -672,23 +672,54 @@
 
                 // --- Draw UI ---
                 gl.useProgram(unlitProgram);
-                if (gl.texElementImage2D) {
+                if (typeof canvas.requestPaint === 'function') {
+                    if (!canvas._hicPaintInit) {
+                        canvas._hicPaintInit = true;
+                        canvas.addEventListener('paint', () => {});
+                    }
+                    canvas.requestPaint();
+                }
+                if (gl.texElementSubImage2D || gl.texElementImage2D) {
+                    const uploadElem = (tex, elem) => {
+                        gl.bindTexture(gl.TEXTURE_2D, tex);
+                        try {
+                            if (typeof gl.texElementSubImage2D === 'function') {
+                                let width, height;
+                                if (typeof gl.canvas?.captureElementImage === 'function') {
+                                    try {
+                                        const elemImage = gl.canvas.captureElementImage(elem);
+                                        width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                                        height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+                                    } catch (e) {
+                                        width = 0;
+                                        height = 0;
+                                    }
+                                } else {
+                                    const dpr = window.devicePixelRatio || 1;
+                                    width = Math.max(1, Math.round(elem.offsetWidth * dpr));
+                                    height = Math.max(1, Math.round(elem.offsetHeight * dpr));
+                                }
+                                if (width > 0 && height > 0) {
+                                    if (tex._hicW !== width || tex._hicH !== height) {
+                                        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8 || gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                                        tex._hicW = width;
+                                        tex._hicH = height;
+                                    }
+                                    gl.texElementSubImage2D(gl.TEXTURE_2D, 0, 0, 0, elem);
+                                }
+                            } else if (typeof gl.texElementImage2D === 'function') {
+                                if (gl.texElementImage2D.length === 3) {
+                                    gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, elem);
+                                } else {
+                                    gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, elem);
+                                }
+                            }
+                        } catch (e) {}
+                    };
                     gl.activeTexture(gl.TEXTURE0);
+                    uploadElem(uiTexture, uiElement);
+                    uploadElem(hdTexture, hdElement);
                     gl.bindTexture(gl.TEXTURE_2D, uiTexture);
-                    // This if block is used to ensure older browser support before the breaking update in Chromium 150
-                    // See https://github.com/WICG/html-in-canvas/pull/128/changes
-                    if (gl.texElementImage2D.length === 3) {
-                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, uiElement);
-                    } else {
-                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
-                    }
-
-                    gl.bindTexture(gl.TEXTURE_2D, hdTexture);
-                    if (gl.texElementImage2D.length === 3) {
-                        gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8, hdElement);
-                    } else {
-                        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, hdElement);
-                    }
                 }
 
                 const uiModel = mat4.create();
@@ -709,7 +740,7 @@
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
                 // Sync DOM position
-                if (canvas.getElementTransform) {
+                if (canvas.updateElementGeometry || canvas.getElementTransform) {
                     const width = uiElement.offsetWidth;
                     const height = uiElement.offsetHeight;
 
@@ -727,17 +758,14 @@
 
                     const finalTransform = toCSSViewport.multiply(new DOMMatrix(Array.from(mvp))).multiply(toGLModel);
 
-                    let transform = canvas.getElementTransform(uiElement, finalTransform);
-                    
-                    // Workaround for Chromium bug https://crbug.com/512171941 where
-                    // `transform.is2D` is incorrectly true for a 3D DOMMatrix. The
-                    // assignment below re-initializes the DOMMatrix which corrects is2D to
-                    // be false.
-                    if (transform.is2D)
-                        transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
-
-                    uiElement.style.transform = transform.toString();
-
+                    if (typeof canvas.updateElementGeometry === 'function') {
+                        canvas.updateElementGeometry(uiElement, { canvasTransform: finalTransform });
+                    } else if (typeof canvas.getElementTransform === 'function') {
+                        let transform = canvas.getElementTransform(uiElement, finalTransform);
+                        if (transform.is2D)
+                            transform = DOMMatrix.fromFloat64Array(transform.toFloat64Array());
+                        uiElement.style.transform = transform.toString();
+                    }
                 }
 
                 // --- Draw Spectacles ---
