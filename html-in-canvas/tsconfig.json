@@ -1,0 +1,17 @@
+{
+  // Type-checks and compiles the TypeScript demos in src/ to public/js/.
+  // Run `npm run typecheck` or `npm run build`.
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "lib": ["es2022", "dom", "dom.iterable"],
+    // HTML-in-Canvas types from DefinitelyTyped (@types/dom-html-in-canvas).
+    // See "TypeScript demos" in README.md.
+    "types": ["dom-html-in-canvas"],
+    "strict": true,
+    "rootDir": "src",
+    "outDir": "public/js",
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]
+}

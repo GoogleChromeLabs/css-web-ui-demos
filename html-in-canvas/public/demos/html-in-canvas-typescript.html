@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<!-- This demo uses the HTML-in-Canvas API from TypeScript, typed by the
+ @types/dom-html-in-canvas package from DefinitelyTyped. The TypeScript source is
+ html-in-canvas/src/html-in-canvas-typescript.ts, compiled to ../js/html-in-canvas-typescript.js. -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="An interactive form drawn into a 2D canvas with HTML-in-Canvas, written in strict TypeScript with the @types/dom-html-in-canvas types.">
+  <meta name="keywords"
+    content="HTML in Canvas, TypeScript, DefinitelyTyped, drawElementImage, requestPaint, paint event, getElementTransform">
+  <title>HTML-in-Canvas with TypeScript</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
+  <link rel="stylesheet" href="../css/theme.css">
+  <script type="module" src="../js/html-in-canvas-typescript.js"></script>
+
+  <style>
+    body {
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .intro {
+      max-width: 640px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    canvas {
+      width: 640px;
+      height: 420px;
+      max-width: 100%;
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: 12px;
+      background-color: var(--md-sys-color-surface-container);
+    }
+
+    #card {
+      width: 320px;
+      padding: 20px;
+      border-radius: 16px;
+      background: var(--md-sys-color-primary-container, #dbe1ff);
+      color: var(--md-sys-color-on-primary-container, #001849);
+      font-size: 16px;
+    }
+
+    #card h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    #card form {
+      display: flex;
+      gap: 8px;
+    }
+
+    #card input,
+    #card button {
+      font: inherit;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    #card input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid currentColor;
+    }
+
+    #card button {
+      border: none;
+      background: var(--md-sys-color-primary, #3b5ba9);
+      color: var(--md-sys-color-on-primary, #fff);
+      cursor: pointer;
+    }
+
+    #card output {
+      display: block;
+      min-height: 1.5em;
+      margin-top: 12px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #status {
+      display: block;
+      white-space: pre;
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      max-width: 640px;
+      overflow-x: auto;
+    }
+
+    #fallback {
+      max-width: 640px;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--md-sys-color-outline);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>HTML-in-Canvas with TypeScript</h1>
+  <p class="intro">
+    The card below is real HTML drawn into a 2D <code>&lt;canvas&gt;</code> with
+    <code>ctx.drawElementImage()</code>, rotated by the canvas transform, and still fully interactive.
+    The code is strict TypeScript, typed by
+    <a href="https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/dom-html-in-canvas"><code>@types/dom-html-in-canvas</code></a>.
+    Read the <a href="https://github.com/WICG/html-in-canvas">HTML-in-Canvas explainer</a> to learn more.
+  </p>
+
+  <p id="fallback" hidden>
+    Your browser doesn't support HTML-in-Canvas yet. Try this demo in Chrome 157 or later.
+  </p>
+
+  <!-- content="drawable" opts the canvas children into layout; each child to draw is marked `drawable`. -->
+  <canvas id="canvas" content="drawable">
+    <div id="card" drawable>
+      <h2>Hello from inside a canvas</h2>
+      <form id="greet-form">
+        <input id="name" name="name" placeholder="Your name" aria-label="Your name">
+        <button type="submit">Say hi</button>
+      </form>
+      <output id="greeting" for="name"></output>
+    </div>
+  </canvas>
+
+  <div class="controls">
+    <label for="angle">Rotation</label>
+    <input id="angle" type="range" min="-45" max="45" value="-8">
+  </div>
+
+  <output id="status"></output>
+
+  <a href="https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/src/html-in-canvas-typescript.ts"
+    class="github-link" target="_blank" rel="noopener noreferrer">
+    View Source
+  </a>
+</body>
+
+</html>
