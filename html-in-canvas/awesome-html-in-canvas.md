@@ -15,6 +15,9 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 | [HTML cloth](https://arrival.space/htmlcanvas) | Customize a form on a hanging cloth inside a game | [Thomas Richter-Trummer](https://github.com/fimbox) | [Source](https://github.com/fimbox/html-in-canvas/blob/main/plugins/html-cloth.mjs) |
 | [PixiJS HTML Laser](https://pixijs-html-in-canvas.vercel.app) | Interactive landing page that shatters and heals over time | [Zyie](https://github.com/Zyie) | [Source](https://github.com/Zyie/pixijs-html-in-canvas) |
 | [Quest Signal](https://vav-labs.com/case-studies/quest-signal/) | A playable Godot scene with accessible, interactive DOM panels rendered as world-space WebGL textures | [Vav Labs](https://vav-labs.com/) | [Source](https://github.com/Vav-Labs/quest-signal) |
+| [Liquid DOM](https://liquid-dom-showcase.vercel.app/) | Liquid Glass UI for the web with live DOM content inside shape-morphing WebGPU glass | [Andrew Prifer](https://github.com/AndrewPrifer) | [Source](https://github.com/AndrewPrifer/liquid-dom) |
+| [HTML in Canvas Demo](https://html-in-canvas.vittoretrivi.dev/) | Shader filters, page curl, CRT screen and vanishing input examples built on live HTML | [Vittorio Retrivi](https://github.com/motiontx) | [Source](https://github.com/motiontx/html-in-canvas) |
+| [Curved Markup](https://random-stuff.jakearchibald.com/apps/curved-markup/) | Selectable text on a curved VHS-style screen | [Jake Archibald](https://github.com/jakearchibald) | [Source](https://github.com/jakearchibald/random-stuff/tree/main/apps/curved-markup) |
 | More | demos | coming | soon... |
 
 ## Framework Support 
