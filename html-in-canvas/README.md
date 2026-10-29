@@ -52,6 +52,23 @@ To view these examples, you must use **Chrome 148** or later and enable the foll
 </script>
 ```
 
+## 🟦 TypeScript Demos
+
+[`demos/html-in-canvas-typescript.html`](public/demos/html-in-canvas-typescript.html) is written in strict TypeScript ([`src/html-in-canvas-typescript.ts`](src/html-in-canvas-typescript.ts)) and typed by [`@types/dom-html-in-canvas`](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/dom-html-in-canvas) from DefinitelyTyped, enabled in [`tsconfig.json`](tsconfig.json) with `"types": ["dom-html-in-canvas"]`. It runs in Chrome 157 or later, no flags needed.
+
+The compiled JavaScript in `public/js/` is committed, so the demos can be served as they are. After you change the TypeScript source, rebuild it:
+
+```bash
+npm install
+npm run typecheck  # tsc --noEmit
+npm run build      # compiles src/*.ts to public/js/
+```
+
+> [!NOTE]
+> **TEMPORARY:** `@types/dom-html-in-canvas` isn't published to npm yet. Until it is, `npm install` installs it from the [`dom-html-in-canvas-package`](https://github.com/ewewraw/DefinitelyTyped/tree/dom-html-in-canvas-package) branch of ewewraw/DefinitelyTyped, a package-only split of [`types/dom-html-in-canvas`](https://github.com/ewewraw/DefinitelyTyped/tree/html-in-canvas/types/dom-html-in-canvas) on the DefinitelyTyped PR branch `html-in-canvas`.
+>
+> Once it's published, replace the devDependency with `npm install --save-dev @types/dom-html-in-canvas` and remove this note. `tsconfig.json` doesn't need to change.
+
 ## ⚖️ License
 
 Apache 2.0 License. See the root [LICENSE](../LICENSE) for details.
