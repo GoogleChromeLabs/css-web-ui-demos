@@ -178,8 +178,14 @@ export function setupDeformableRendering(canvas, domId) {
             let width, height;
             if (typeof gl.canvas?.captureElementImage === 'function') {
                 const elemImage = gl.canvas.captureElementImage(el);
-                width = elemImage?.width;
-                height = elemImage?.height;
+                if (typeof gl.canvas?.getElementImageDefaultSize === 'function') {
+                  const defaultElemImageSize = gl.canvas.getElementImageDefaultSize(elemImage);
+                  width = Math.ceil(defaultElemImageSize.width);
+                  height = Math.ceil(defaultElemImageSize.height);
+                } else {
+                  width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                  height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+                }
             }
             if (!width || !height) {
                 const dpr = window.devicePixelRatio || 1;

@@ -225,8 +225,14 @@
                         let width, height;
                         if (typeof this.canvas?.captureElementImage === 'function') {
                             const elemImage = this.canvas.captureElementImage(element);
-                            width = elemImage?.width;
-                            height = elemImage?.height;
+                            if (typeof this.canvas?.getElementImageDefaultSize === 'function') {
+                              const defaultElemImageSize = this.canvas.getElementImageDefaultSize(elemImage);
+                              width = Math.ceil(defaultElemImageSize.width);
+                              height = Math.ceil(defaultElemImageSize.height);
+                            } else {
+                              width = Math.ceil(elemImage.width);
+                              height = Math.ceil(elemImage.height);
+                            }
                         }
                         if (!width || !height) {
                             const dpr = window.devicePixelRatio || 1;

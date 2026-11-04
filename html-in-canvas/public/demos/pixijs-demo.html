@@ -211,11 +211,15 @@
           if (typeof this.canvas?.captureElementImage === 'function') {
             try {
               const elemImage = this.canvas.captureElementImage(source);
-              if (elemImage?.width && elemImage?.height) {
-                width = Math.ceil(elemImage.width);
-                height = Math.ceil(elemImage.height);
-                hasPaintRecord = true;
+              if (typeof this.canvas?.getElementImageDefaultSize === 'function') {
+                const defaultElemImageSize = this.canvas.getElementImageDefaultSize(elemImage);
+                width = Math.ceil(defaultElemImageSize.width);
+                height = Math.ceil(defaultElemImageSize.height);
+              } else {
+                width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
               }
+              hasPaintRecord = true;
             } catch (e) {
               hasPaintRecord = false;
             }
