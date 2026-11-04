@@ -67,8 +67,14 @@ export function updatePageTextureFromDOM(gl, tex, domId) {
                 return;
             }
             // ElementImage sizes are fractional, while the copy is rounded up: round up as well.
-            width = Math.ceil(elemImage.width);
-            height = Math.ceil(elemImage.height);
+            if (typeof gl.canvas?.getElementImageDefaultSize === 'function') {
+              const defaultElemImageSize = gl.canvas.getElementImageDefaultSize(elemImage);
+              width = Math.ceil(defaultElemImageSize.width);
+              height = Math.ceil(defaultElemImageSize.height);
+            } else {
+              width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+              height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+            }
         }
         if (!width || !height) {
             const dpr = window.devicePixelRatio || 1;

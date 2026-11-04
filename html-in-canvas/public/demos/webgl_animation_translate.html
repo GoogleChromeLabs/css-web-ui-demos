@@ -222,8 +222,14 @@
                 }
                 // ElementImage width/height are fractional (e.g. 246.8), while the snapshot copy is
                 // rounded up (247px). A truncated 246px texture would be too small, so round up as well.
-                width = Math.ceil(elemImage.width);
-                height = Math.ceil(elemImage.height);
+                if (typeof gl.canvas?.getElementImageDefaultSize === 'function') {
+                  const defaultElemImageSize = gl.canvas.getElementImageDefaultSize(elemImage);
+                  width = Math.ceil(defaultElemImageSize.width);
+                  height = Math.ceil(defaultElemImageSize.height);
+                } else {
+                  width = Math.ceil(elemImage.width);
+                  height = Math.ceil(elemImage.height);
+                }
             } else {
                 const dpr = window.devicePixelRatio || 1;
                 width = Math.max(1, Math.round(element.offsetWidth * dpr));

@@ -688,8 +688,14 @@
                                 if (typeof gl.canvas?.captureElementImage === 'function') {
                                     try {
                                         const elemImage = gl.canvas.captureElementImage(elem);
-                                        width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
-                                        height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+                                        if (typeof gl.canvas?.getElementImageDefaultSize === 'function') {
+                                          const defaultElemImageSize = gl.canvas.getElementImageDefaultSize(elemImage);
+                                          width = Math.ceil(defaultElemImageSize.width);
+                                          height = Math.ceil(defaultElemImageSize.height);
+                                        } else {
+                                          width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                                          height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+                                        }
                                     } catch (e) {
                                         width = 0;
                                         height = 0;

@@ -402,8 +402,14 @@
           if (typeof canvas.captureElementImage === 'function') {
             try {
               const elemImage = canvas.captureElementImage(uiElement);
-              width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
-              height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+              if (typeof canvas?.getElementImageDefaultSize === 'function') {
+                const defaultElemImageSize = canvas.getElementImageDefaultSize(elemImage);
+                width = Math.ceil(defaultElemImageSize.width);
+                height = Math.ceil(defaultElemImageSize.height);
+              } else {
+                width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+              }
             } catch (e) {
               width = 0;
               height = 0;

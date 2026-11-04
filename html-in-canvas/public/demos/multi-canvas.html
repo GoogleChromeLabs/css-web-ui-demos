@@ -954,8 +954,14 @@
           let texW, texH;
           if (typeof canvas.captureElementImage === 'function') {
             const elemImage = canvas.captureElementImage(content);
-            texW = elemImage?.width;
-            texH = elemImage?.height;
+            if (typeof canvas?.getElementImageDefaultSize === 'function') {
+              const defaultElemImageSize = canvas.getElementImageDefaultSize(elemImage);
+              texW = Math.ceil(defaultElemImageSize.width);
+              texH = Math.ceil(defaultElemImageSize.height);
+            } else {
+              texW = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+              texH = elemImage?.height ? Math.ceil(elemImage.height) : 0;
+            }
           }
           if (!texW || !texH) {
             texW = Math.max(1, Math.round((content.offsetWidth || width) * dpr));

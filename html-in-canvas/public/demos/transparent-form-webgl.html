@@ -319,11 +319,15 @@
           if (typeof gl.canvas?.captureElementImage === 'function') {
             try {
               const elemImage = gl.canvas.captureElementImage(canvasForm);
-              if (elemImage?.width && elemImage?.height) {
-                width = Math.ceil(elemImage.width);
-                height = Math.ceil(elemImage.height);
-                hasPaintRecord = true;
+              if (typeof gl.canvas?.getElementImageDefaultSize === 'function') {
+                const defaultElemImageSize = gl.canvas.getElementImageDefaultSize(elemImage);
+                width = Math.ceil(defaultElemImageSize.width);
+                height = Math.ceil(defaultElemImageSize.height);
+              } else {
+                width = elemImage?.width ? Math.ceil(elemImage.width) : 0;
+                height = elemImage?.height ? Math.ceil(elemImage.height) : 0;
               }
+              hasPaintRecord = true;
             } catch (e) {
               hasPaintRecord = false;
             }
