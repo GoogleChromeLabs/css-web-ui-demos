@@ -5,7 +5,9 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "gcloud storage rsync --recursive --delete-unmatched-destination-objects public gs://chrome-dev-demos/public/html-in-canvas"
+    "deploy": "gcloud storage rsync --recursive --delete-unmatched-destination-objects public gs://chrome-dev-demos/public/html-in-canvas",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -16,5 +18,9 @@
   "dependencies": {
     "@babylonjs/core": "^9.14.0",
     "babylonjs": "^9.14.0"
+  },
+  "devDependencies": {
+    "@types/dom-html-in-canvas": "github:ewewraw/DefinitelyTyped#a696773c29a519491487758dfe0f6c2303e2b412",
+    "typescript": "^7.0.2"
   }
 }
