@@ -18,6 +18,7 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 | [Liquid DOM](https://liquid-dom-showcase.vercel.app/) | Liquid Glass UI for the web with live DOM content inside shape-morphing WebGPU glass | [Andrew Prifer](https://github.com/AndrewPrifer) | [Source](https://github.com/AndrewPrifer/liquid-dom) |
 | [HTML in Canvas Demo](https://html-in-canvas.vittoretrivi.dev/) | Shader filters, page curl, CRT screen and vanishing input examples built on live HTML | [Vittorio Retrivi](https://github.com/motiontx) | [Source](https://github.com/motiontx/html-in-canvas) |
 | [Curved Markup](https://random-stuff.jakearchibald.com/apps/curved-markup/) | Selectable text on a curved VHS-style screen | [Jake Archibald](https://github.com/jakearchibald) | [Source](https://github.com/jakearchibald/random-stuff/tree/main/apps/curved-markup) |
+| [HTML-in-Canvas PageFlip](https://hic-pageflip.netlify.app/) | A Pageflip/Flipbook Custom Element | [Bramus](https://github.com/bramus) | [Source](https://github.com/bramus/hic-pageflip) |
 | More | demos | coming | soon... |
 
 ## Framework Support 
