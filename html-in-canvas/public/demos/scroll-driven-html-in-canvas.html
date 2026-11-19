@@ -1,0 +1,132 @@
+<!doctype html>
+<!--
+ Copyright 2026 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+-->
+<!-- This demo shows that CSS scroll-driven animations work on HTML drawn into a
+ canvas with HTML-in-Canvas: the paint event fires as you scroll. -->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="CSS scroll-driven animations on HTML drawn into a canvas with HTML-in-Canvas. The paint event fires only when scrolling moves the animations.">
+  <meta name="keywords"
+    content="HTML in Canvas, drawElementImage, scroll-driven animations, animation-timeline, scroll(), paint event">
+  <title>Scroll-driven animations (HTML-in-Canvas)</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <style>
+    body {
+      height: 300vh; /* Something to scroll. */
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #card {
+      box-sizing: border-box; /* drawElementImage() draws the border box. */
+      width: 320px;
+      padding: 24px;
+      border-radius: 16px;
+      background-color: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      font-size: 20px;
+    }
+
+    #card h1 {
+      margin: 0 0 16px;
+      font-size: 32px;
+    }
+
+    /* Both animated elements are grandchildren of the canvas.
+       Transforms on direct canvas children are ignored when drawing. */
+    .progress {
+      height: 12px;
+      background-color: var(--md-sys-color-primary);
+      transform-origin: left;
+      animation: grow linear both;
+      animation-timeline: scroll(root);
+    }
+
+    .spin {
+      display: inline-block;
+      animation: spin linear both;
+      animation-timeline: scroll(root);
+    }
+
+    @keyframes grow {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Outside the canvas, so updating it doesn't trigger another paint event. */
+    #log {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      margin: 0;
+      font: 14px/1.4 monospace;
+    }
+
+    .github-link {
+      position: fixed;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" content="drawable">
+    <div id="card" drawable>
+      <h1>Scroll me <span class="spin">🎄</span></h1>
+      <div class="progress"></div>
+    </div>
+  </canvas>
+  <p id="log">paint events: 0</p>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const card = document.getElementById("card");
+    const log = document.getElementById("log");
+
+    if (!("getElementImageDefaultSize" in HTMLCanvasElement.prototype)) {
+      log.textContent = "This demo needs HTML-in-Canvas (Chrome 157+).";
+    } else {
+      const ctx = canvas.getContext("2d");
+
+      // Match the canvas grid to device pixels.
+      new ResizeObserver(([entry]) => {
+        const box = entry.devicePixelContentBoxSize?.[0];
+        canvas.width = box ? box.inlineSize : Math.round(entry.contentRect.width * devicePixelRatio);
+        canvas.height = box ? box.blockSize : Math.round(entry.contentRect.height * devicePixelRatio);
+        canvas.requestPaint();
+      }).observe(canvas, { box: "device-pixel-content-box" });
+
+      // No requestPaint() loop: paint only fires when the drawable content
+      // changes, which here means only when scrolling moves the animations.
+      let paints = 0;
+      canvas.onpaint = () => {
+        ctx.reset();
+        const { width, height } = canvas.getElementImageDefaultSize(card);
+        ctx.drawElementImage(card, (canvas.width - width) / 2, (canvas.height - height) / 2);
+        log.textContent = `paint events: ${++paints}`;
+      };
+    }
+  </script>
+  <a href="https://github.com/GoogleChromeLabs/css-web-ui-demos/blob/main/html-in-canvas/public/demos/scroll-driven-html-in-canvas.html"
+    class="github-link" target="_blank" rel="noopener noreferrer">View Source</a>
+</body>
+
+</html>
