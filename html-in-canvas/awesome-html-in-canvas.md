@@ -19,6 +19,7 @@ This is a curated list of links to awesome HTML-in-canvas demos created by the e
 | [HTML in Canvas Demo](https://html-in-canvas.vittoretrivi.dev/) | Shader filters, page curl, CRT screen and vanishing input examples built on live HTML | [Vittorio Retrivi](https://github.com/motiontx) | [Source](https://github.com/motiontx/html-in-canvas) |
 | [Curved Markup](https://random-stuff.jakearchibald.com/apps/curved-markup/) | Selectable text on a curved VHS-style screen | [Jake Archibald](https://github.com/jakearchibald) | [Source](https://github.com/jakearchibald/random-stuff/tree/main/apps/curved-markup) |
 | [HTML-in-Canvas PageFlip](https://hic-pageflip.netlify.app/) | A Pageflip/Flipbook Custom Element | [Bramus](https://github.com/bramus) | [Source](https://github.com/bramus/hic-pageflip) |
+| [Webcam pond](https://underglass.dev/examples/pond) | Koi made of plain HTML spans and a text field you type into, refracted by a ripple and a custom WGSL water shader, with an optional camera reflection that stays on the device | [Raanan Weber](https://github.com/RaananW) | [Source](https://github.com/RaananW/underglass/blob/main/examples/showcase/src/pond.tsx) |
 | More | demos | coming | soon... |
 
 ## Framework Support 
@@ -30,6 +31,7 @@ This is a list of frameworks that have added support for HTML-in-Canvas along wi
 | [PixiJS](https://pixijs.com/) | Fast, lightweight 2D rendering library for WebGL & WebGPU | [HTMLSource](https://pixijs.download/release/docs/rendering.HTMLSource.html) | [Sample](https://pixijs-html-in-canvas.vercel.app/) |
 | [Babylon.js](https://babylonjs.com/) | Babylon.js: Powerful, Beautiful, Simple, Open 3D engine for the web | [HTML Texture](https://doc.babylonjs.com/features/featuresDeepDive/materials/using/htmlTexture/) | [Sample](https://playground.babylonjs.com/#8RDVXG#1) |
 | [CanvasUI](https://canvasui.dev/) | An open source library of tasteful html-in-canvas & WebGL components. | [Introduction](https://canvasui.dev/docs) | [Sample](https://canvasui.dev/docs/components/bend) |
+| [Underglass](https://underglass.dev/) | React and Vue adapters that present an app's own DOM controls through WebGPU, for GPU motion and WGSL effects while inputs, focus and clicks stay native | [Getting started](https://underglass.dev/docs/guide/getting-started/) | [Sample](https://underglass.dev/) |
 
 ## Disclaimer
 
